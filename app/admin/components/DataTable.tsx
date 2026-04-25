@@ -52,10 +52,13 @@ export function DataTable<T extends { id: string; name?: string; title?: string;
           <thead className="bg-gray-50">
             <tr>
               {columns.map(col => (
-                <th key={col.key} className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                  {col.label}
-                </th>
-              ))}
+  <th
+    key={String(col.key)}
+    className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider"
+  >
+    {col.label}
+  </th>
+))}
               {(showEdit || showDelete) && (
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                   Actions
@@ -66,11 +69,15 @@ export function DataTable<T extends { id: string; name?: string; title?: string;
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredData.map(item => (
               <tr key={item.id} className="hover:bg-gray-50">
-                {columns.map(col => (
-                  <td key={col.key} className="px-6 py-4 whitespace-nowrap text-sm text-black">
-                    {col.render ? col.render((item as any)[col.key], item) : (item as any)[col.key]}
-                  </td>
-                ))}
+                {columns.map(col => {
+  const value = item[col.key];
+
+  return (
+    <td key={String(col.key)} className="px-6 py-4 whitespace-nowrap text-sm text-black">
+      {col.render ? col.render(value, item) : String(value)}
+    </td>
+  );
+})}
                 {(showEdit || showDelete) && (
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <div className="flex items-center gap-2">

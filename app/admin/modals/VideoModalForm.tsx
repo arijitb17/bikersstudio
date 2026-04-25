@@ -10,14 +10,16 @@ interface Video {
   duration: string;
 }
 
+type VideoFormData = Omit<Video, 'id'>;
+
 interface VideoModalFormProps {
   video: Video | null;
-  onSave: (data: any) => void;
+  onSave: (data: VideoFormData) => void;
   loading: boolean;
 }
 
 export function VideoModalForm({ video, onSave, loading }: VideoModalFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<VideoFormData>({
     title: '',
     videoUrl: '',
     views: '',

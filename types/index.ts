@@ -27,8 +27,17 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  category: string;
   stock: number;
-  bikeId: string;
-  bike?: Bike;
+
+  // ✅ FIXED
+  category: {
+    name: string;
+  };
+
+  bike?: {
+    name: string;
+    brand: {
+      name: string;
+    };
+  };
 }

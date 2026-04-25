@@ -67,12 +67,12 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('=== MENU ITEM CREATE ERROR ===');
     console.error('Error:', error);
-    console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('Error message:', error instanceof Error ? error.message : 'any error');
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     
     return NextResponse.json({ 
       error: 'Failed to create menu item', 
-      details: error instanceof Error ? error.message : 'Unknown error' 
+      details: error instanceof Error ? error.message : 'any error' 
     }, { status: 500 });
   }
 }

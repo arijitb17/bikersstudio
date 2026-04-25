@@ -1,15 +1,10 @@
 "use client";
 
+// app/admin/views/VideosView.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Edit, Trash2, Play } from 'lucide-react';
-
-interface Video {
-  id: string;
-  title: string;
-  videoUrl: string;
-  views: string;
-  duration: string;
-}
+import type { Video } from '../types';
 
 interface VideosViewProps {
   onEdit: (video: Video) => void;
@@ -85,10 +80,10 @@ export function VideosView({ onEdit, onDelete, refreshTrigger }: VideosViewProps
                   <div className="text-sm font-medium text-gray-900">{video.title}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{video.views}</div>
+                  <div className="text-sm text-gray-900">{video.views ?? '—'}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{video.duration}</div>
+                  <div className="text-sm text-gray-900">{video.duration ?? '—'}</div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="text-sm text-blue-600 hover:underline max-w-xs truncate">

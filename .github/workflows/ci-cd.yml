@@ -1,0 +1,246 @@
+# .github/workflows/ci-cd.yml
+#
+# CI/CD Pipeline for the Next.js e-commerce app
+#
+# Triggers:
+#   - push to main    → builds, tests, and deploys to PRODUCTION
+#   - push to develop → builds, tests, and deploys to STAGING
+#   - pull_request    → CI checks only (no deploy) — handled by pr-check.yml
+#
+# Required GitHub Secrets:
+#   DOCKER_USERNAME             Docker Hub username
+#   DOCKER_PASSWORD             Docker Hub token
+#   DEPLOY_HOST                 SSH host of the target server
+#   DEPLOY_USER                 SSH user on the target server
+#   DEPLOY_SSH_KEY              Private SSH key (PEM format)
+#   DATABASE_URL                Production Postgres connection string
+#   DATABASE_URL_STAGING        Staging Postgres connection string
+#   NEXTAUTH_SECRET             Random secret for NextAuth
+#   NEXTAUTH_URL                Production base URL (e.g. https://yourdomain.com)
+#   NEXTAUTH_URL_STAGING        Staging base URL
+#   GOOGLE_CLIENT_ID            Google OAuth client ID
+#   GOOGLE_CLIENT_SECRET        Google OAuth secret
+#   RAZORPAY_KEY_ID             Razorpay key id
+#   RAZORPAY_KEY_SECRET         Razorpay secret key
+#   NEXT_PUBLIC_RAZORPAY_KEY_ID Razorpay public key (exposed to browser)
+#   REDIS_URL                   Redis connection string (production)
+#   REDIS_URL_STAGING           Redis connection string (staging)
+
+name: CI / CD
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/motostore-app
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 1: Lint & Type-check
+  # ───────────────────────────────────────────────────────────────────────────
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript type check
+        run: npx tsc --noEmit
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 2: Build & Push Docker image
+  # ───────────────────────────────────────────────────────────────────────────
+  build:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    needs: lint
+    # Only build on pushes (not PRs — PRs use pr-check.yml)
+    if: github.event_name == 'push'
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+      image_digest: ${{ steps.push.outputs.digest }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=sha,prefix=sha-,format=short
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_TELEMETRY_DISABLED=1
+            NODE_ENV=production
+
+      - name: Image digest
+        run: echo "Image pushed with digest ${{ steps.push.outputs.digest }}"
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 3a: Deploy to STAGING (develop branch)
+  # ───────────────────────────────────────────────────────────────────────────
+  deploy-staging:
+    name: Deploy → Staging
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: ${{ secrets.NEXTAUTH_URL_STAGING }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          # IMAGE_NAME is exported first so docker-compose can resolve it.
+          # Heredoc uses quoted EOF so GitHub Actions expressions expand on the
+          # runner before SSH, but the inner shell vars are literal on the server.
+          script: |
+            set -e
+            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
+            cd ~/motostore-staging
+
+            docker pull ${IMAGE_NAME}:staging
+
+            cat > .env <<'ENVEOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_STAGING }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
+            RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
+            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+            REDIS_URL=${{ secrets.REDIS_URL_STAGING }}
+            ENVEOF
+
+            # Run DB migrations before swapping containers
+            docker run --rm \
+              --env-file .env \
+              --network host \
+              ${IMAGE_NAME}:staging \
+              npx prisma migrate deploy
+
+            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
+            docker image prune -f
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Job 3b: Deploy to PRODUCTION (main branch)
+  # ───────────────────────────────────────────────────────────────────────────
+  deploy-production:
+    name: Deploy → Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: ${{ secrets.NEXTAUTH_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to production server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
+            cd ~/motostore-production
+
+            docker pull ${IMAGE_NAME}:latest
+
+            cat > .env <<'ENVEOF'
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
+            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
+            RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
+            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+            REDIS_URL=${{ secrets.REDIS_URL }}
+            ENVEOF
+
+            # Run DB migrations before swapping containers (zero-downtime)
+            docker run --rm \
+              --env-file .env \
+              --network host \
+              ${IMAGE_NAME}:latest \
+              npx prisma migrate deploy
+
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f
+
+      - name: Mark deployment success on GitHub
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              description: 'Deployed to production',
+              context: 'deployment/production'
+            })

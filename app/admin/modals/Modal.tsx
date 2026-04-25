@@ -1,46 +1,75 @@
-// admin/modals/Modal.tsx - CORRECTED VERSION
-// Only sends fields that exist in the Bike Prisma model
+// admin/modals/Modal.tsx
 
 "use client"
 import React, { useState, useEffect } from 'react';
 import { X, Save, Image as ImageIcon } from 'lucide-react';
+import Image from 'next/image';
 import { api } from '../api';
-import { TabType, ModalType, Product, Category, Brand, Bike } from '../types';
+import { TabType, ModalType, Category, Brand, Bike } from '../types';
 import {
   CategoryForm,
   BrandForm,
   BikeForm,
   BannerForm,
   CouponForm,
-  MenuItemForm
+  MenuItemForm,
+  CategoryFormData,
+  BrandFormData,
+  BikeFormData,
+  BannerFormData,
+  CouponFormData,
+  MenuItemFormData,
 } from './FormComponents';
 import { VideoModalForm } from './VideoModalForm';
 import { UserModalForm } from './UserModalForm';
 import { TestimonialForm } from './TestimonialForm';
 
+// ---------------------------------------------------------------------------
+// Shared types
+// ---------------------------------------------------------------------------
+
+type FormData =
+  | CategoryFormData
+  | BrandFormData
+  | BikeFormData
+  | BannerFormData
+  | CouponFormData
+  | MenuItemFormData
+  | Record<string, unknown>;
+
+interface ModalItem {
+  id?: string;
+  images?: string[];
+  [key: string]: unknown;
+}
+
 interface ModalProps {
   type: ModalType;
   activeTab: TabType;
-  item: any;
+  item: ModalItem | null;
   onClose: () => void;
-  onSave: (endpoint: string, data: any, method: 'POST' | 'PUT') => Promise<void>;
+  onSave: (endpoint: string, data: Record<string, unknown>, method: 'POST' | 'PUT') => Promise<void>;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => void;
   uploadingImage: boolean;
   loading: boolean;
 }
 
-export const Modal: React.FC<ModalProps> = ({ 
-  type, 
-  activeTab, 
-  item, 
-  onClose, 
-  onSave, 
-  onImageUpload, 
-  uploadingImage, 
-  loading 
+// ---------------------------------------------------------------------------
+// Modal
+// ---------------------------------------------------------------------------
+
+export const Modal: React.FC<ModalProps> = ({
+  type,
+  activeTab,
+  item,
+  onClose,
+  onSave,
+  onImageUpload,
+  uploadingImage,
+  loading
 }) => {
-  const [formData, setFormData] = useState<any>(item || {});
-  const [images, setImages] = useState<string[]>(item?.images || []);
+  const [formData, setFormData] = useState<FormData>((item as FormData) ?? {});
+  const [images, setImages] = useState<string[]>(item?.images ?? []);
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [bikes, setBikes] = useState<Bike[]>([]);
@@ -84,73 +113,55 @@ export const Modal: React.FC<ModalProps> = ({
     }
   };
 
-  // Helper function to convert empty strings to null
-  const emptyToNull = (value: any) => {
+  const emptyToNull = (value: unknown): unknown => {
     if (value === '' || value === undefined) return null;
     return value;
   };
 
-  // Helper function to parse integer fields
-  const parseIntField = (value: any) => {
+  const parseIntField = (value: unknown): number | null => {
     if (value === '' || value === null || value === undefined) return null;
-    const parsed = parseInt(value);
+    const parsed = parseInt(String(value));
     return isNaN(parsed) ? null : parsed;
   };
 
-  // Prepare bike data - ONLY FIELDS THAT EXIST IN PRISMA SCHEMA
-  const prepareBikeData = (data: any) => {
+  const prepareBikeData = (data: BikeFormData): Record<string, unknown> => {
     return {
-      name: data.name,           // Required
-      slug: data.slug,           // Required
-      brandId: data.brandId,     // Required
-      model: data.model,         // Required
-      year: parseIntField(data.year),  // Required Int
-      description: emptyToNull(data.description), // Optional
-      image: emptyToNull(data.image),   // Required (but can be empty initially)
-      isActive: data.isActive ?? true,  // Boolean with default
-      position: parseIntField(data.position) ?? 0 // Int with default
+      name: data.name,
+      slug: data.slug,
+      brandId: data.brandId,
+      model: data.model,
+      year: parseIntField(data.year),
+      description: emptyToNull(data.description),
+      image: emptyToNull(data.image),
+      isActive: data.isActive ?? true,
+      position: parseIntField(data.position) ?? 0
     };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('=== MODAL SUBMIT DEBUG ===');
-    console.log('Active Tab:', activeTab);
-    console.log('Modal Type:', type);
-    console.log('Item ID:', item?.id);
-    console.log('Raw Form Data:', formData);
-    
-    let endpoint = `/${activeTab}`;
-    let method: 'POST' | 'PUT' = type === 'create' ? 'POST' : 'PUT';
-    
-    let dataToSend: any;
 
-    // Special handling for bikes tab - ONLY SEND FIELDS THAT EXIST
+    let endpoint = `/${activeTab}`;
+    const method: 'POST' | 'PUT' = type === 'create' ? 'POST' : 'PUT';
+
+    let dataToSend: Record<string, unknown>;
+
     if (activeTab === 'bikes') {
-      dataToSend = prepareBikeData(formData);
-      console.log('Prepared Bike Data (only valid fields):', dataToSend);
-    } 
-    // Special handling for products tab
-    else if (activeTab === 'products') {
-      dataToSend = { ...formData, images };
+      dataToSend = prepareBikeData(formData as BikeFormData);
+    } else if (activeTab === 'products') {
+      const productData = formData as Record<string, unknown>;
+      dataToSend = { ...productData, images };
       if (images.length > 0) {
         dataToSend.thumbnail = images[0];
       }
-    } 
-    // Default handling for other tabs
-    else {
-      dataToSend = { ...formData };
+    } else {
+      dataToSend = { ...(formData as Record<string, unknown>) };
     }
-    
+
     if (type === 'edit' && item?.id) {
       endpoint = `${endpoint}/${item.id}`;
     }
-    
-    console.log('Final Endpoint:', endpoint);
-    console.log('Method:', method);
-    console.log('Data to Send:', JSON.stringify(dataToSend, null, 2));
-    
+
     await onSave(endpoint, dataToSend, method);
   };
 
@@ -162,7 +173,7 @@ export const Modal: React.FC<ModalProps> = ({
     setImages(images.filter((_, i) => i !== index));
   };
 
-  // Special handling for users - render UserModalForm directly
+  // Special handling for users
   if (activeTab === 'users') {
     return (
       <UserModalForm
@@ -175,7 +186,7 @@ export const Modal: React.FC<ModalProps> = ({
     );
   }
 
-  // Special handling for testimonials - render TestimonialForm directly
+  // Special handling for testimonials
   if (activeTab === 'testimonials') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -188,7 +199,6 @@ export const Modal: React.FC<ModalProps> = ({
               <X size={20} />
             </button>
           </div>
-
           <div className="p-6">
             <TestimonialForm
               item={item}
@@ -203,7 +213,6 @@ export const Modal: React.FC<ModalProps> = ({
     );
   }
 
-  // For all other tabs, use the standard modal wrapper
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -218,8 +227,8 @@ export const Modal: React.FC<ModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {activeTab === 'products' && (
-            <ProductForm 
-              formData={formData}
+            <ProductForm
+              formData={formData as Record<string, unknown>}
               setFormData={setFormData}
               images={images}
               addImage={addImage}
@@ -232,8 +241,8 @@ export const Modal: React.FC<ModalProps> = ({
           )}
 
           {activeTab === 'categories' && (
-            <CategoryForm 
-              formData={formData}
+            <CategoryForm
+              formData={formData as CategoryFormData}
               setFormData={setFormData}
               categories={categories}
               currentItemId={item?.id}
@@ -241,8 +250,8 @@ export const Modal: React.FC<ModalProps> = ({
           )}
 
           {activeTab === 'brands' && (
-            <BrandForm 
-              formData={formData}
+            <BrandForm
+              formData={formData as BrandFormData}
               setFormData={setFormData}
               onImageUpload={onImageUpload}
               uploadingImage={uploadingImage}
@@ -250,8 +259,8 @@ export const Modal: React.FC<ModalProps> = ({
           )}
 
           {activeTab === 'bikes' && (
-            <BikeForm 
-              formData={formData}
+            <BikeForm
+              formData={formData as BikeFormData}
               setFormData={setFormData}
               brands={brands}
               onImageUpload={onImageUpload}
@@ -260,8 +269,8 @@ export const Modal: React.FC<ModalProps> = ({
           )}
 
           {activeTab === 'banners' && (
-            <BannerForm 
-              formData={formData}
+            <BannerForm
+              formData={formData as BannerFormData}
               setFormData={setFormData}
               onImageUpload={onImageUpload}
               uploadingImage={uploadingImage}
@@ -269,15 +278,15 @@ export const Modal: React.FC<ModalProps> = ({
           )}
 
           {activeTab === 'coupons' && (
-            <CouponForm 
-              formData={formData}
+            <CouponForm
+              formData={formData as CouponFormData}
               setFormData={setFormData}
             />
           )}
 
           {activeTab === 'menu-items' && (
-            <MenuItemForm 
-              formData={formData}
+            <MenuItemForm
+              formData={formData as MenuItemFormData}
               setFormData={setFormData}
               categories={categories}
               onImageUpload={onImageUpload}
@@ -287,12 +296,12 @@ export const Modal: React.FC<ModalProps> = ({
 
           {activeTab === 'videos' && (
             <VideoModalForm
-              video={item}
+              video={item as Parameters<typeof VideoModalForm>[0]['video']}
               onSave={(data) => {
                 const endpoint = '/api/admin/videos';
-                const method = type === 'edit' ? 'PUT' : 'POST';
-                const payload = type === 'edit' ? { ...data, id: item.id } : data;
-                onSave(endpoint, payload, method);
+                const method: 'POST' | 'PUT' = type === 'edit' ? 'PUT' : 'POST';
+                const payload = type === 'edit' ? { ...data, id: item?.id } : data;
+                onSave(endpoint, payload as Record<string, unknown>, method);
               }}
               loading={loading}
             />
@@ -328,10 +337,13 @@ export const Modal: React.FC<ModalProps> = ({
   );
 };
 
-// Individual Form Components
+// ---------------------------------------------------------------------------
+// Product Form (internal to Modal)
+// ---------------------------------------------------------------------------
+
 interface ProductFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: Record<string, unknown>;
+  setFormData: (data: Record<string, unknown>) => void;
   images: string[];
   addImage: (url: string) => void;
   removeImage: (index: number) => void;
@@ -341,16 +353,16 @@ interface ProductFormProps {
   uploadingImage: boolean;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ 
-  formData, 
-  setFormData, 
-  images, 
-  addImage, 
-  removeImage, 
-  categories, 
-  bikes, 
-  onImageUpload, 
-  uploadingImage 
+const ProductForm: React.FC<ProductFormProps> = ({
+  formData,
+  setFormData,
+  images,
+  addImage,
+  removeImage,
+  categories,
+  bikes,
+  onImageUpload,
+  uploadingImage
 }) => (
   <>
     <div>
@@ -359,8 +371,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
         type="text"
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
-        value={formData.name || ''}
-        onChange={(e) => setFormData({...formData, name: e.target.value})}
+        value={(formData.name as string) || ''}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
       />
     </div>
 
@@ -371,8 +383,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           type="text"
           required
           className="w-full px-4 py-2 border rounded-lg text-black"
-          value={formData.sku || ''}
-          onChange={(e) => setFormData({...formData, sku: e.target.value})}
+          value={(formData.sku as string) || ''}
+          onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
         />
       </div>
       <div>
@@ -382,8 +394,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           required
           step="0.01"
           className="w-full px-4 py-2 border rounded-lg text-black"
-          value={formData.price || ''}
-          onChange={(e) => setFormData({...formData, price: e.target.value})}
+          value={(formData.price as string | number) || ''}
+          onChange={(e) => setFormData({ ...formData, price: e.target.value })}
         />
       </div>
     </div>
@@ -395,8 +407,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           type="number"
           step="0.01"
           className="w-full px-4 py-2 border rounded-lg text-black"
-          value={formData.salePrice || ''}
-          onChange={(e) => setFormData({...formData, salePrice: e.target.value})}
+          value={(formData.salePrice as string | number) || ''}
+          onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
         />
       </div>
       <div>
@@ -405,8 +417,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
           type="number"
           required
           className="w-full px-4 py-2 border rounded-lg text-black"
-          value={formData.stock || ''}
-          onChange={(e) => setFormData({...formData, stock: e.target.value})}
+          value={(formData.stock as string | number) || ''}
+          onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
         />
       </div>
     </div>
@@ -417,8 +429,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
         required
         rows={4}
         className="w-full px-4 py-2 border rounded-lg text-black"
-        value={formData.description || ''}
-        onChange={(e) => setFormData({...formData, description: e.target.value})}
+        value={(formData.description as string) || ''}
+        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
       />
     </div>
 
@@ -427,8 +439,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
       <select
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
-        value={formData.categoryId || ''}
-        onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
+        value={(formData.categoryId as string) || ''}
+        onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
       >
         <option value="">Select Category</option>
         {categories.map(cat => (
@@ -441,8 +453,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
       <label className="block text-sm font-medium mb-2 text-black">Bike (Optional)</label>
       <select
         className="w-full px-4 py-2 border rounded-lg text-black"
-        value={formData.bikeId || ''}
-        onChange={(e) => setFormData({...formData, bikeId: e.target.value})}
+        value={(formData.bikeId as string) || ''}
+        onChange={(e) => setFormData({ ...formData, bikeId: e.target.value })}
       >
         <option value="">General Product</option>
         {bikes.map(bike => (
@@ -457,7 +469,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
         <div className="flex flex-wrap gap-2">
           {images.map((img, idx) => (
             <div key={idx} className="relative w-24 h-24 border rounded">
-              <img src={img} alt="" className="w-full h-full object-cover rounded" />
+              <Image
+                src={img}
+                alt=""
+                width={96}
+                height={96}
+                className="w-full h-full object-cover rounded"
+              />
               <button
                 type="button"
                 onClick={() => removeImage(idx)}
@@ -486,16 +504,16 @@ const ProductForm: React.FC<ProductFormProps> = ({
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
-          checked={formData.isActive ?? true}
-          onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+          checked={(formData.isActive as boolean) ?? true}
+          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
         />
         <span className="text-sm text-black">Active</span>
       </label>
       <label className="flex items-center gap-2">
         <input
           type="checkbox"
-          checked={formData.isFeatured ?? false}
-          onChange={(e) => setFormData({...formData, isFeatured: e.target.checked})}
+          checked={(formData.isFeatured as boolean) ?? false}
+          onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
         />
         <span className="text-sm text-black">Featured</span>
       </label>

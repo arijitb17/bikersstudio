@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus, FileSpreadsheet, LogOut } from 'lucide-react';
+import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import { api } from './api';
 import { MENU_ITEMS } from './constants';
@@ -23,45 +24,33 @@ import {
   UsersView
 } from './views';
 import { Modal } from './modals/Modal';
-import { BulkImportModal } from './modals/BulkImportModal';
-import { TabType, ModalType, DashboardStats } from './types';
+import { BulkImportModal, type ImportResult } from './modals/BulkImportModal';
+import { TabType, ModalType } from './types';
+
+// ---------------------------------------------------------------------------
+// Shared item shape used across all views
+// ---------------------------------------------------------------------------
+interface AdminItem {
+  id?: string;
+  [key: string]: unknown;
+}
 
 export default function AdminPanel() {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<ModalType>('create');
-  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<AdminItem | null>(null);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const [stats, setStats] = useState<DashboardStats>({
-    totalProducts: 0,
-    totalOrders: 0,
-    totalUsers: 0,
-    revenue: 0,
-    pendingOrders: 0,
-    lowStock: 0
-  });
 
-  useEffect(() => {
-    if (activeTab === 'dashboard') {
-      loadDashboardStats();
-    }
-  }, [activeTab]);
 
-  const loadDashboardStats = async () => {
-    try {
-      const data = await api.fetchData<DashboardStats>('/dashboard/stats');
-      setStats(data);
-    } catch (error) {
-      console.error('Failed to load dashboard stats:', error);
-    }
-  };
 
-  const openModal = (type: ModalType, item: any = null) => {
+
+  const openModal = (type: ModalType, item: AdminItem | null = null) => {
     setModalType(type);
     setSelectedItem(item);
     setShowModal(true);
@@ -70,7 +59,7 @@ export default function AdminPanel() {
   const closeModal = () => {
     setShowModal(false);
     setSelectedItem(null);
-    setModalType('create');
+    setModalType('edit'); 
   };
 
   const handleImageUpload = async (
@@ -85,27 +74,30 @@ export default function AdminPanel() {
       const url = await api.uploadImage(file);
       callback(url);
     } catch (error) {
-      alert('Upload failed: ' + (error as Error).message);
+      alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setUploadingImage(false);
     }
   };
 
-  const handleBulkImport = async (type: string, file: File) => {
-    setLoading(true);
-    try {
-      const result = await api.bulkImport(type, file);
-      alert(`Import completed! Success: ${result.successRows}, Failed: ${result.failedRows}`);
-      setShowBulkImport(false);
-      setRefreshTrigger(prev => prev + 1);
-    } catch (error) {
-      alert('Import failed: ' + (error as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  };
+const handleBulkImport = async (type: string, file: File): Promise<ImportResult> => {
+  setLoading(true);
+  try {
+    const result = await api.bulkImport(type, file);
+    setRefreshTrigger(prev => prev + 1);
+    return result as ImportResult;
+  } catch (err) {
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+};
 
-  const handleSave = async (endpoint: string, data: any, method: 'POST' | 'PUT' = 'POST') => {
+  const handleSave = async (
+    endpoint: string,
+    data: Record<string, unknown>,
+    method: 'POST' | 'PUT' = 'POST'
+  ) => {
     try {
       setLoading(true);
       await api.saveData(endpoint, data, method);
@@ -113,7 +105,7 @@ export default function AdminPanel() {
       closeModal();
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
-      alert('Save failed: ' + (error as Error).message);
+      alert('Save failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -127,7 +119,7 @@ export default function AdminPanel() {
       alert('Deleted successfully!');
       setRefreshTrigger(prev => prev + 1);
     } catch (error) {
-      alert('Delete failed: ' + (error as Error).message);
+      alert('Delete failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
     }
   };
 
@@ -140,11 +132,11 @@ export default function AdminPanel() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <DashboardView stats={stats} />;
+        return <DashboardView />;
       case 'users':
         return (
           <UsersView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/users', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -152,7 +144,7 @@ export default function AdminPanel() {
       case 'products':
         return (
           <ProductsView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/products', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -160,7 +152,7 @@ export default function AdminPanel() {
       case 'categories':
         return (
           <CategoriesView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/categories', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -168,7 +160,7 @@ export default function AdminPanel() {
       case 'brands':
         return (
           <BrandsView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/brands', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -176,7 +168,7 @@ export default function AdminPanel() {
       case 'bikes':
         return (
           <BikesView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/bikes', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -186,7 +178,7 @@ export default function AdminPanel() {
       case 'menu-items':
         return (
           <MenuItemsView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/menu-items', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -196,7 +188,7 @@ export default function AdminPanel() {
       case 'banners':
         return (
           <BannersView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/banners', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -204,7 +196,7 @@ export default function AdminPanel() {
       case 'coupons':
         return (
           <CouponsView
-            onEdit={(item: any) => openModal('edit', item)}
+            onEdit={(item: AdminItem) => openModal('edit', item)}
             onDelete={(id: string, name: string) => handleDelete('/coupons', id, name)}
             refreshTrigger={refreshTrigger}
           />
@@ -216,30 +208,29 @@ export default function AdminPanel() {
             refreshTrigger={refreshTrigger}
           />
         );
-        case 'testimonials':
-  return (
-    <TestimonialsView
-      onEdit={(item: any) => openModal('edit', item)}
-      onDelete={(id: string, name: string) => handleDelete('/testimonials', id, name)}
-      refreshTrigger={refreshTrigger}
-    />
-  );
+      case 'testimonials':
+        return (
+          <TestimonialsView
+            onEdit={(item: AdminItem) => openModal('edit', item)}
+            onDelete={(id: string, name: string) => handleDelete('/testimonials', id, name)}
+            refreshTrigger={refreshTrigger}
+          />
+        );
       case 'images':
         return <ImagesView refreshTrigger={refreshTrigger} />;
       case 'videos':
-  return (
-    <VideosView
-      onEdit={(item: any) => openModal('edit', item)}
-      onDelete={(id: string, name: string) => handleDelete('/admin/videos', id, name)}
-      refreshTrigger={refreshTrigger}
-    />
-  );
+        return (
+          <VideosView
+            onEdit={(item: AdminItem) => openModal('edit', item)}
+            onDelete={(id: string, name: string) => handleDelete('/admin/videos', id, name)}
+            refreshTrigger={refreshTrigger}
+          />
+        );
       default:
-        return <DashboardView stats={stats} />;
+        return <DashboardView/>;
     }
   };
 
-  // Show loading while checking auth
   if (status === 'loading') {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -251,7 +242,6 @@ export default function AdminPanel() {
     );
   }
 
-  // Redirect if not authenticated (handled by middleware usually, but as fallback)
   if (status === 'unauthenticated' || !session) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
@@ -263,7 +253,7 @@ export default function AdminPanel() {
   }
 
   const userInitials = session.user?.name
-    ? session.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    ? session.user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
     : session.user?.email?.[0].toUpperCase() || 'A';
 
   return (
@@ -299,10 +289,12 @@ export default function AdminPanel() {
         <div className="p-6 border-t border-gray-800">
           <div className="flex items-center gap-3 mb-3">
             {session.user?.image ? (
-              <img 
-                src={session.user.image} 
-                alt={session.user.name || 'User'} 
-                className="w-10 h-10 rounded-full object-cover"
+              <Image
+                src={session.user.image}
+                alt={session.user.name || 'User'}
+                width={40}
+                height={40}
+                className="rounded-full object-cover"
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
@@ -337,11 +329,11 @@ export default function AdminPanel() {
             </h2>
 
             <div className="flex items-center gap-4">
-              {activeTab !== 'dashboard' && 
-               activeTab !== 'orders' && 
-               activeTab !== 'reviews' && 
-               activeTab !== 'images' && 
-               activeTab !== 'users' && 
+              {activeTab !== 'dashboard' &&
+               activeTab !== 'orders' &&
+               activeTab !== 'reviews' &&
+               activeTab !== 'images' &&
+               activeTab !== 'users' &&
                activeTab !== 'menu-json' && (
                 <>
                   <button
@@ -359,15 +351,6 @@ export default function AdminPanel() {
                     <span className="text-white">Add New</span>
                   </button>
                 </>
-              )}
-              {activeTab === 'users' && (
-                <button
-                  onClick={() => openModal('create')}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Plus size={20} />
-                  <span className="text-white">Add User</span>
-                </button>
               )}
             </div>
           </div>

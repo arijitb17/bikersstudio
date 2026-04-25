@@ -1,26 +1,10 @@
 // app/admin/views/UsersView.tsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Edit, Trash2, Mail, Phone, Calendar, Shield, User as UserIcon } from 'lucide-react';
 import { api } from '../api';
-
-interface User {
-  id: string;
-  email: string;
-  name: string | null;
-  phone: string | null;
-  role: 'USER' | 'ADMIN';
-  image: string | null;
-  emailVerified: string | null;
-  createdAt: string;
-  updatedAt: string;
-  _count?: {
-    orders: number;
-    reviews: number;
-    addresses: number;
-  };
-}
-
+import type { User } from '../types';
+import Image from 'next/image';
 interface UsersViewProps {
   onEdit: (user: User) => void;
   onDelete: (id: string, name: string) => void;
@@ -51,21 +35,22 @@ export function UsersView({ onEdit, onDelete, refreshTrigger }: UsersViewProps) 
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+    const matchesSearch =
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phone?.includes(searchTerm);
-    
+      (user.name ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.phone ?? '').includes(searchTerm);
+
     const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
-    
+
     return matchesSearch && matchesRole;
   });
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   };
 
@@ -135,10 +120,10 @@ export function UsersView({ onEdit, onDelete, refreshTrigger }: UsersViewProps) 
               className="text-gray-600 w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          
+
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value as any)}
+            onChange={(e) => setRoleFilter(e.target.value as 'ALL' | 'USER' | 'ADMIN')}
             className="text-gray-600 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="ALL">All Roles</option>
@@ -190,21 +175,23 @@ export function UsersView({ onEdit, onDelete, refreshTrigger }: UsersViewProps) 
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         {user.image ? (
-                          <img
-                            src={user.image}
-                            alt={user.name || 'User'}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
+                          <Image
+  src={user.image}
+  alt={user.name ?? 'User'}
+  width={40}
+  height={40}
+  className="rounded-full object-cover"
+/>
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <span className="text-blue-600 font-semibold text-sm">
-                              {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+                              {user.name?.[0]?.toUpperCase() ?? user.email[0].toUpperCase()}
                             </span>
                           </div>
                         )}
                         <div className="ml-3">
                           <p className="text-sm font-medium text-gray-900">
-                            {user.name || 'No name'}
+                            {user.name ?? 'No name'}
                           </p>
                           <p className="text-sm text-gray-500">{user.email}</p>
                         </div>
@@ -213,25 +200,29 @@ export function UsersView({ onEdit, onDelete, refreshTrigger }: UsersViewProps) 
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Phone size={14} />
-                        {user.phone || 'N/A'}
+                        {user.phone ?? 'N/A'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === 'ADMIN'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          user.role === 'ADMIN'
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
                         <Shield size={12} />
                         {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.emailVerified
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          user.emailVerified
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
                         <Mail size={12} />
                         {user.emailVerified ? 'Verified' : 'Unverified'}
                       </span>
@@ -262,7 +253,7 @@ export function UsersView({ onEdit, onDelete, refreshTrigger }: UsersViewProps) 
                           <Edit size={18} />
                         </button>
                         <button
-                          onClick={() => onDelete(user.id, user.name || user.email)}
+                          onClick={() => onDelete(user.id, user.name ?? user.email)}
                           className="text-red-600 hover:text-red-900"
                           title="Delete"
                         >

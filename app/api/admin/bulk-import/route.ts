@@ -3,36 +3,76 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
+import { ImportType } from "@/app/generated/prisma";
 
-// Validation helpers
-function validateRequired(value: any, fieldName: string): string {
+interface ImportError {
+  row: number;
+  name: string;
+  error: string;
+}
+
+interface ExcelRow {
+  name?: unknown;
+  slug?: unknown;
+  price?: unknown;
+  salePrice?: unknown;
+  stock?: unknown;
+  sku?: unknown;
+  categoryId?: unknown;
+  bikeId?: unknown;
+  images?: unknown;
+  thumbnail?: unknown;
+  isActive?: unknown;
+  isFeatured?: unknown;
+  metaTitle?: unknown;
+  metaDescription?: unknown;
+  weight?: unknown;
+  dimensions?: unknown;
+  material?: unknown;
+  color?: unknown;
+  size?: unknown;
+  description?: unknown;
+  parentId?: unknown;
+  logo?: unknown;
+  position?: unknown;
+  showInMenu?: unknown;
+  model?: unknown;
+  year?: unknown;
+  brandId?: unknown;
+  image?: unknown;
+  type?: unknown;
+}
+
+type MenuItemType = 'BRAND_MENU' | 'CATEGORY_MENU' | 'CUSTOM_MENU';
+
+function validateRequired(value: unknown, fieldName: string): string {
   if (!value || value === '') {
     throw new Error(`${fieldName} is required`);
   }
   return String(value).trim();
 }
 
-function parseNumber(value: any, fieldName: string, isRequired = true): number | null {
+function parseNumber(value: unknown, fieldName: string, isRequired = true): number | null {
   if (!value || value === '') {
     if (isRequired) throw new Error(`${fieldName} is required`);
     return null;
   }
-  const num = parseFloat(value);
+  const num = parseFloat(String(value));
   if (isNaN(num)) throw new Error(`${fieldName} must be a valid number`);
   return num;
 }
 
-function parseInteger(value: any, fieldName: string, isRequired = true): number | null {
+function parseInteger(value: unknown, fieldName: string, isRequired = true): number | null {
   if (!value || value === '') {
     if (isRequired) throw new Error(`${fieldName} is required`);
     return null;
   }
-  const num = parseInt(value);
+  const num = parseInt(String(value));
   if (isNaN(num)) throw new Error(`${fieldName} must be a valid integer`);
   return num;
 }
 
-function parseBoolean(value: any): boolean {
+function parseBoolean(value: unknown): boolean {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'string') {
     return value.toUpperCase() === 'TRUE' || value === '1';
@@ -40,21 +80,45 @@ function parseBoolean(value: any): boolean {
   return false;
 }
 
+function mapToImportType(type: string): ImportType {
+  const mapping: Record<string, ImportType> = {
+    products: 'PRODUCTS',
+    categories: 'CATEGORIES',
+    brands: 'BRANDS',
+    bikes: 'BIKES',
+    'menu-items': 'MENU_ITEMS',
+  };
+  const mapped = mapping[type.toLowerCase()];
+  if (!mapped) throw new Error(`Invalid import type: ${type}`);
+  return mapped;
+}
+
+function getString(value: unknown): string {
+  return value != null ? String(value).trim() : '';
+}
+
 function generateSlug(name: string, existingSlugs: Set<string>): string {
-  let baseSlug = name.toLowerCase()
+  const baseSlug = name
+    .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  
+
   let slug = baseSlug;
   let counter = 1;
-  
   while (existingSlugs.has(slug)) {
     slug = `${baseSlug}-${counter}`;
     counter++;
   }
-  
   existingSlugs.add(slug);
   return slug;
+}
+
+function resolveSlug(rawSlug: unknown, name: string, existingSlugs: Set<string>): string {
+  const custom = getString(rawSlug);
+  if (!custom) return generateSlug(name, existingSlugs);
+  if (existingSlugs.has(custom)) return generateSlug(name, existingSlugs);
+  existingSlugs.add(custom);
+  return custom;
 }
 
 export async function POST(request: Request) {
@@ -67,7 +131,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Read Excel file
     const arrayBuffer = await file.arrayBuffer();
     const workbook = XLSX.read(arrayBuffer);
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -75,233 +138,180 @@ export async function POST(request: Request) {
 
     let successCount = 0;
     let failCount = 0;
-    const errors: any[] = [];
+    const errors: ImportError[] = [];
 
-    // Create bulk import record
     const bulkImport = await prisma.bulkImport.create({
       data: {
-        type: type.toUpperCase().replace('-', '_') as any,
+        type: mapToImportType(type),
         status: 'PROCESSING',
         fileName: file.name,
         fileUrl: '',
         totalRows: data.length,
-        createdBy: 'admin' // Replace with actual user ID from session
-      }
+        createdBy: 'admin',
+      },
     });
 
-    // Track existing slugs to prevent duplicates within the batch
     const existingSlugs = new Set<string>();
 
-    // Process based on type
     try {
       switch (type) {
-        case 'products':
-          // Pre-load existing product slugs and SKUs
+        case 'products': {
           const existingProducts = await prisma.product.findMany({
-            select: { slug: true, sku: true }
+            select: { slug: true, sku: true },
           });
-          existingProducts.forEach(p => {
-            existingSlugs.add(p.slug);
-          });
-          const existingSkus = new Set(existingProducts.map(p => p.sku));
+          existingProducts.forEach((p) => existingSlugs.add(p.slug));
+          const existingSkus = new Set(existingProducts.map((p) => p.sku));
 
           for (let i = 0; i < data.length; i++) {
-            const row = data[i] as any;
-            const rowNumber = i + 2; // Excel row number (accounting for header)
-
-            try {
-              // Validate required fields
-              const name = validateRequired(row.name, 'Name');
-              const price = parseNumber(row.price, 'Price', true)!;
-              const stock = parseInteger(row.stock, 'Stock', true)!;
-              const categoryId = validateRequired(row.categoryId, 'Category ID');
-              
-              // Validate SKU
-              let sku = validateRequired(row.sku, 'SKU');
-              if (existingSkus.has(sku)) {
-                throw new Error(`SKU '${sku}' already exists`);
-              }
-              existingSkus.add(sku);
-
-              // Generate or validate slug
-              let slug = row.slug?.trim() || '';
-              if (!slug) {
-                slug = generateSlug(name, existingSlugs);
-              } else {
-                // Check if custom slug already exists
-                if (existingSlugs.has(slug)) {
-                  slug = generateSlug(name, existingSlugs);
-                } else {
-                  existingSlugs.add(slug);
-                }
-              }
-
-              // Verify category exists
-              const category = await prisma.category.findUnique({
-                where: { id: categoryId }
-              });
-              if (!category) {
-                throw new Error(`Category ID '${categoryId}' not found`);
-              }
-
-              // Verify bike exists if provided
-              let bikeId = row.bikeId?.trim() || null;
-              if (bikeId) {
-                const bike = await prisma.bike.findUnique({
-                  where: { id: bikeId }
-                });
-                if (!bike) {
-                  throw new Error(`Bike ID '${bikeId}' not found`);
-                }
-              }
-
-              // Parse optional fields
-              const salePrice = parseNumber(row.salePrice, 'Sale Price', false);
-              const weight = parseNumber(row.weight, 'Weight', false);
-              
-              // Parse images (comma-separated URLs)
-              let images: string[] = [];
-              if (row.images) {
-                images = String(row.images)
-                  .split(',')
-                  .map(url => url.trim())
-                  .filter(url => url.length > 0);
-              }
-
-              // Set thumbnail (use first image or provided thumbnail)
-              let thumbnail = row.thumbnail?.trim() || '';
-              if (!thumbnail && images.length > 0) {
-                thumbnail = images[0];
-              }
-
-              // Create product
-              await prisma.product.create({
-                data: {
-                  name,
-                  slug,
-                  description: row.description?.trim() || '',
-                  price,
-                  salePrice,
-                  stock,
-                  sku,
-                  categoryId,
-                  bikeId,
-                  images,
-                  thumbnail,
-                  isActive: parseBoolean(row.isActive ?? true),
-                  isFeatured: parseBoolean(row.isFeatured ?? false),
-                  metaTitle: row.metaTitle?.trim() || null,
-                  metaDescription: row.metaDescription?.trim() || null,
-                  weight,
-                  dimensions: row.dimensions?.trim() || null,
-                  material: row.material?.trim() || null,
-                  color: row.color?.trim() || null,
-                  size: row.size?.trim() || null
-                }
-              });
-              
-              successCount++;
-            } catch (error: any) {
-              failCount++;
-              errors.push({ 
-                row: rowNumber,
-                name: row.name || 'Unknown',
-                error: error.message 
-              });
-            }
-          }
-          break;
-
-        case 'categories':
-          // Pre-load existing category slugs
-          const existingCategories = await prisma.category.findMany({
-            select: { slug: true }
-          });
-          existingCategories.forEach(c => existingSlugs.add(c.slug));
-
-          for (let i = 0; i < data.length; i++) {
-            const row = data[i] as any;
+            const row = data[i] as ExcelRow;
             const rowNumber = i + 2;
 
             try {
               const name = validateRequired(row.name, 'Name');
-              
-              // Generate or validate slug
-              let slug = row.slug?.trim() || '';
-              if (!slug) {
-                slug = generateSlug(name, existingSlugs);
-              } else {
-                if (existingSlugs.has(slug)) {
-                  slug = generateSlug(name, existingSlugs);
-                } else {
-                  existingSlugs.add(slug);
-                }
+              const price = parseNumber(row.price, 'Price', true)!;
+              const stock = parseInteger(row.stock, 'Stock', true)!;
+              const categoryId = validateRequired(row.categoryId, 'Category ID');
+
+              const sku = validateRequired(row.sku, 'SKU');
+              if (existingSkus.has(sku)) throw new Error(`SKU '${sku}' already exists`);
+              existingSkus.add(sku);
+
+              const slug = resolveSlug(row.slug, name, existingSlugs);
+
+              // Resolve category by id or slug
+              const category = await prisma.category.findFirst({
+                where: {
+                  OR: [{ id: categoryId }, { slug: categoryId }],
+                },
+              });
+              if (!category) throw new Error(`Category '${categoryId}' not found`);
+
+              // Resolve bike by id or slug (optional)
+              const rawBikeId = getString(row.bikeId) || null;
+              let resolvedBikeId: string | null = null;
+              if (rawBikeId) {
+                const bike = await prisma.bike.findFirst({
+                  where: {
+                    OR: [{ id: rawBikeId }, { slug: rawBikeId }],
+                  },
+                });
+                if (!bike) throw new Error(`Bike '${rawBikeId}' not found`);
+                resolvedBikeId = bike.id;
               }
 
+              const salePrice = parseNumber(row.salePrice, 'Sale Price', false);
+              const weight = parseNumber(row.weight, 'Weight', false);
+
+              let images: string[] = [];
+              if (row.images) {
+                images = String(row.images)
+                  .split(',')
+                  .map((url) => url.trim())
+                  .filter((url) => url.length > 0);
+              }
+
+              const thumbnail = getString(row.thumbnail) || images[0] || '';
+
+              await prisma.product.create({
+                data: {
+                  name,
+                  slug,
+                  description: getString(row.description),
+                  price,
+                  salePrice,
+                  stock,
+                  sku,
+                  categoryId: category.id,
+                  bikeId: resolvedBikeId,
+                  images,
+                  thumbnail,
+                  isActive: parseBoolean(row.isActive ?? true),
+                  isFeatured: parseBoolean(row.isFeatured ?? false),
+                  metaTitle: getString(row.metaTitle) || null,
+                  metaDescription: getString(row.metaDescription) || null,
+                  weight,
+                  dimensions: getString(row.dimensions) || null,
+                  material: getString(row.material) || null,
+                  color: getString(row.color) || null,
+                  size: getString(row.size) || null,
+                },
+              });
+
+              successCount++;
+            } catch (error: unknown) {
+              failCount++;
+              errors.push({
+                row: rowNumber,
+                name: getString(row.name) || 'unknown',
+                error: error instanceof Error ? error.message : 'Unknown error',
+              });
+            }
+          }
+          break;
+        }
+
+        case 'categories': {
+          const existingCategories = await prisma.category.findMany({ select: { slug: true } });
+          existingCategories.forEach((c) => existingSlugs.add(c.slug));
+
+          for (let i = 0; i < data.length; i++) {
+            const row = data[i] as ExcelRow;
+            const rowNumber = i + 2;
+
+            try {
+              const name = validateRequired(row.name, 'Name');
+              const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
 
-              // Verify parent category if provided
-              let parentId = row.parentId?.trim() || null;
-              if (parentId) {
-                const parent = await prisma.category.findUnique({
-                  where: { id: parentId }
+              const rawParentId = getString(row.parentId) || null;
+              let resolvedParentId: string | null = null;
+              if (rawParentId) {
+                const parent = await prisma.category.findFirst({
+                  where: {
+                    OR: [{ id: rawParentId }, { slug: rawParentId }],
+                  },
                 });
-                if (!parent) {
-                  throw new Error(`Parent Category ID '${parentId}' not found`);
-                }
+                if (!parent) throw new Error(`Parent Category '${rawParentId}' not found`);
+                resolvedParentId = parent.id;
               }
 
               await prisma.category.create({
                 data: {
                   name,
                   slug,
-                  description: row.description?.trim() || null,
+                  description: getString(row.description) || null,
                   position,
                   showInMenu: parseBoolean(row.showInMenu ?? true),
                   isActive: parseBoolean(row.isActive ?? true),
-                  parentId
-                }
+                  parentId: resolvedParentId,
+                },
               });
-              
+
               successCount++;
-            } catch (error: any) {
+            } catch (error: unknown) {
               failCount++;
-              errors.push({ 
+              errors.push({
                 row: rowNumber,
-                name: row.name || 'Unknown',
-                error: error.message 
+                name: getString(row.name) || 'unknown',
+                error: error instanceof Error ? error.message : 'Unknown error',
               });
             }
           }
           break;
+        }
 
-        case 'brands':
-          // Pre-load existing brand slugs
-          const existingBrands = await prisma.brand.findMany({
-            select: { slug: true }
-          });
-          existingBrands.forEach(b => existingSlugs.add(b.slug));
+        case 'brands': {
+          const existingBrands = await prisma.brand.findMany({ select: { slug: true } });
+          existingBrands.forEach((b) => existingSlugs.add(b.slug));
 
           for (let i = 0; i < data.length; i++) {
-            const row = data[i] as any;
+            const row = data[i] as ExcelRow;
             const rowNumber = i + 2;
 
             try {
               const name = validateRequired(row.name, 'Name');
               const logo = validateRequired(row.logo, 'Logo');
-              
-              // Generate or validate slug
-              let slug = row.slug?.trim() || '';
-              if (!slug) {
-                slug = generateSlug(name, existingSlugs);
-              } else {
-                if (existingSlugs.has(slug)) {
-                  slug = generateSlug(name, existingSlugs);
-                } else {
-                  existingSlugs.add(slug);
-                }
-              }
-
+              const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
 
               await prisma.brand.create({
@@ -309,62 +319,49 @@ export async function POST(request: Request) {
                   name,
                   slug,
                   logo,
-                  description: row.description?.trim() || null,
+                  description: getString(row.description) || null,
                   position,
-                  isActive: parseBoolean(row.isActive ?? true)
-                }
+                  isActive: parseBoolean(row.isActive ?? true),
+                },
               });
-              
+
               successCount++;
-            } catch (error: any) {
+            } catch (error: unknown) {
               failCount++;
-              errors.push({ 
+              errors.push({
                 row: rowNumber,
-                name: row.name || 'Unknown',
-                error: error.message 
+                name: getString(row.name) || 'unknown',
+                error: error instanceof Error ? error.message : 'Unknown error',
               });
             }
           }
           break;
+        }
 
-        case 'bikes':
-          // Pre-load existing bike slugs
-          const existingBikes = await prisma.bike.findMany({
-            select: { slug: true }
-          });
-          existingBikes.forEach(b => existingSlugs.add(b.slug));
+        case 'bikes': {
+          const existingBikes = await prisma.bike.findMany({ select: { slug: true } });
+          existingBikes.forEach((b) => existingSlugs.add(b.slug));
 
           for (let i = 0; i < data.length; i++) {
-            const row = data[i] as any;
+            const row = data[i] as ExcelRow;
             const rowNumber = i + 2;
 
             try {
               const name = validateRequired(row.name, 'Name');
               const model = validateRequired(row.model, 'Model');
               const year = parseInteger(row.year, 'Year', true)!;
-              const brandId = validateRequired(row.brandId, 'Brand ID');
+              const rawBrandId = validateRequired(row.brandId, 'Brand ID');
               const image = validateRequired(row.image, 'Image');
 
-              // Verify brand exists
-              const brand = await prisma.brand.findUnique({
-                where: { id: brandId }
+              // Resolve brand by id or slug
+              const brand = await prisma.brand.findFirst({
+                where: {
+                  OR: [{ id: rawBrandId }, { slug: rawBrandId }],
+                },
               });
-              if (!brand) {
-                throw new Error(`Brand ID '${brandId}' not found`);
-              }
+              if (!brand) throw new Error(`Brand '${rawBrandId}' not found`);
 
-              // Generate or validate slug
-              let slug = row.slug?.trim() || '';
-              if (!slug) {
-                slug = generateSlug(name, existingSlugs);
-              } else {
-                if (existingSlugs.has(slug)) {
-                  slug = generateSlug(name, existingSlugs);
-                } else {
-                  existingSlugs.add(slug);
-                }
-              }
-
+              const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
 
               await prisma.bike.create({
@@ -373,125 +370,114 @@ export async function POST(request: Request) {
                   slug,
                   model,
                   year,
-                  brandId,
+                  brandId: brand.id,
                   image,
-                  description: row.description?.trim() || null,
+                  description: getString(row.description) || null,
                   position,
-                  isActive: parseBoolean(row.isActive ?? true)
-                }
+                  isActive: parseBoolean(row.isActive ?? true),
+                },
               });
-              
+
               successCount++;
-            } catch (error: any) {
+            } catch (error: unknown) {
               failCount++;
-              errors.push({ 
+              errors.push({
                 row: rowNumber,
-                name: row.name || 'Unknown',
-                error: error.message 
+                name: getString(row.name) || 'unknown',
+                error: error instanceof Error ? error.message : 'Unknown error',
               });
             }
           }
           break;
+        }
 
-        case 'menu-items':
-          // Pre-load existing menu item slugs
-          const existingMenuItems = await prisma.menuItem.findMany({
-            select: { slug: true }
-          });
-          existingMenuItems.forEach(m => existingSlugs.add(m.slug));
+        case 'menu-items': {
+          const existingMenuItems = await prisma.menuItem.findMany({ select: { slug: true } });
+          existingMenuItems.forEach((m) => existingSlugs.add(m.slug));
 
           for (let i = 0; i < data.length; i++) {
-            const row = data[i] as any;
+            const row = data[i] as ExcelRow;
             const rowNumber = i + 2;
 
             try {
               const name = validateRequired(row.name, 'Name');
-              const type = validateRequired(row.type, 'Type');
+              const menuType = validateRequired(row.type, 'Type');
 
-              // Validate type
-              const validTypes = ['BRAND_MENU', 'CATEGORY_MENU', 'CUSTOM_MENU'];
-              if (!validTypes.includes(type)) {
+              const validTypes: MenuItemType[] = ['BRAND_MENU', 'CATEGORY_MENU', 'CUSTOM_MENU'];
+              if (!validTypes.includes(menuType as MenuItemType)) {
                 throw new Error(`Type must be one of: ${validTypes.join(', ')}`);
               }
 
-              // Generate or validate slug
-              let slug = row.slug?.trim() || '';
-              if (!slug) {
-                slug = generateSlug(name, existingSlugs);
-              } else {
-                if (existingSlugs.has(slug)) {
-                  slug = generateSlug(name, existingSlugs);
-                } else {
-                  existingSlugs.add(slug);
-                }
-              }
-
+              const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
 
-              // Verify parent if provided
-              let parentId = row.parentId?.trim() || null;
-              if (parentId) {
-                const parent = await prisma.menuItem.findUnique({
-                  where: { id: parentId }
+              const rawParentId = getString(row.parentId) || null;
+              let resolvedParentId: string | null = null;
+              if (rawParentId) {
+                const parent = await prisma.menuItem.findFirst({
+                  where: {
+                    OR: [{ id: rawParentId }, { slug: rawParentId }],
+                  },
                 });
-                if (!parent) {
-                  throw new Error(`Parent Menu ID '${parentId}' not found`);
-                }
+                if (!parent) throw new Error(`Parent Menu '${rawParentId}' not found`);
+                resolvedParentId = parent.id;
               }
 
-              // Verify brand if provided
-              let brandId = row.brandId?.trim() || null;
-              if (brandId) {
-                const brand = await prisma.brand.findUnique({
-                  where: { id: brandId }
+              const rawBrandId = getString(row.brandId) || null;
+              let resolvedBrandId: string | null = null;
+              if (rawBrandId) {
+                const brand = await prisma.brand.findFirst({
+                  where: {
+                    OR: [{ id: rawBrandId }, { slug: rawBrandId }],
+                  },
                 });
-                if (!brand) {
-                  throw new Error(`Brand ID '${brandId}' not found`);
-                }
+                if (!brand) throw new Error(`Brand '${rawBrandId}' not found`);
+                resolvedBrandId = brand.id;
               }
 
-              // Verify category if provided
-              let categoryId = row.categoryId?.trim() || null;
-              if (categoryId) {
-                const category = await prisma.category.findUnique({
-                  where: { id: categoryId }
+              const rawCategoryId = getString(row.categoryId) || null;
+              let resolvedCategoryId: string | null = null;
+              if (rawCategoryId) {
+                const category = await prisma.category.findFirst({
+                  where: {
+                    OR: [{ id: rawCategoryId }, { slug: rawCategoryId }],
+                  },
                 });
-                if (!category) {
-                  throw new Error(`Category ID '${categoryId}' not found`);
-                }
+                if (!category) throw new Error(`Category '${rawCategoryId}' not found`);
+                resolvedCategoryId = category.id;
               }
 
               await prisma.menuItem.create({
                 data: {
                   name,
                   slug,
-                  type: type as any,
-                  description: row.description?.trim() || null,
+                  type: menuType as MenuItemType,
+                  description: getString(row.description) || null,
                   position,
                   isActive: parseBoolean(row.isActive ?? true),
-                  parentId,
-                  brandId,
-                  categoryId
-                }
+                  parentId: resolvedParentId,
+                  brandId: resolvedBrandId,
+                  categoryId: resolvedCategoryId,
+                },
               });
-              
+
               successCount++;
-            } catch (error: any) {
+            } catch (error: unknown) {
               failCount++;
-              errors.push({ 
+              errors.push({
                 row: rowNumber,
-                name: row.name || 'Unknown',
-                error: error.message 
+                name: getString(row.name) || 'unknown',
+                error: error instanceof Error ? error.message : 'Unknown error',
               });
             }
           }
           break;
+        }
 
         default:
           throw new Error('Invalid import type');
       }
 
-      // Update bulk import record
       await prisma.bulkImport.update({
         where: { id: bulkImport.id },
         data: {
@@ -499,8 +485,8 @@ export async function POST(request: Request) {
           successRows: successCount,
           failedRows: failCount,
           errors: errors.length > 0 ? JSON.stringify(errors) : null,
-          completedAt: new Date()
-        }
+          completedAt: new Date(),
+        },
       });
 
       return NextResponse.json({
@@ -508,27 +494,25 @@ export async function POST(request: Request) {
         totalRows: data.length,
         successRows: successCount,
         failedRows: failCount,
-        errors: errors.length > 0 ? errors : null
+        errors: errors.length > 0 ? errors : null,
       });
-    } catch (error: any) {
-      // Update bulk import as failed
+    } catch (error: unknown) {
       await prisma.bulkImport.update({
         where: { id: bulkImport.id },
         data: {
           status: 'FAILED',
           successRows: successCount,
           failedRows: failCount,
-          errors: JSON.stringify([{ error: error.message }]),
-          completedAt: new Date()
-        }
+          errors: JSON.stringify([{ error: error instanceof Error ? error.message : 'Unknown error' }]),
+          completedAt: new Date(),
+        },
       });
-
       throw error;
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Bulk import error:', error);
     return NextResponse.json(
-      { error: 'Bulk import failed: ' + error.message },
+      { error: 'Bulk import failed: ' + (error instanceof Error ? error.message : 'Unknown error') },
       { status: 500 }
     );
   }

@@ -10,14 +10,12 @@ const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'images');
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-// Ensure upload directory exists
 async function ensureUploadDir() {
   if (!existsSync(UPLOAD_DIR)) {
     await mkdir(UPLOAD_DIR, { recursive: true });
   }
 }
 
-// Generate unique filename
 function generateFileName(originalName: string): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(7);
@@ -48,7 +46,6 @@ export async function POST(request: Request) {
       const file = files[i];
       
       try {
-        // Validate file type
         if (!ALLOWED_TYPES.includes(file.type)) {
           errors.push({
             file: file.name,
@@ -57,7 +54,6 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Validate file size
         if (file.size > MAX_FILE_SIZE) {
           errors.push({
             file: file.name,
@@ -66,11 +62,9 @@ export async function POST(request: Request) {
           continue;
         }
 
-        // Convert to buffer
         const bytes = await file.arrayBuffer();
         const buffer = Buffer.from(bytes);
 
-        // Process with Sharp (resize and convert to WebP)
         const processedImage = await sharp(buffer)
           .resize(1920, 1920, {
             fit: 'inside',
@@ -79,12 +73,10 @@ export async function POST(request: Request) {
           .webp({ quality: 85 })
           .toBuffer();
 
-        // Generate filename and save
         const fileName = generateFileName(file.name);
         const filePath = path.join(UPLOAD_DIR, fileName);
         await writeFile(filePath, processedImage);
 
-        // Return public URL
         const publicUrl = `/uploads/images/${fileName}`;
         
         results.push({
@@ -94,12 +86,12 @@ export async function POST(request: Request) {
           size: processedImage.length
         });
 
-      } catch (error: any) {
-        errors.push({
-          file: file.name,
-          error: error.message
-        });
-      }
+     } catch (error: unknown) {
+  errors.push({
+    file: file.name,
+    error: error instanceof Error ? error.message : 'Unknown error'
+  });
+}
     }
 
     return NextResponse.json({
@@ -110,17 +102,11 @@ export async function POST(request: Request) {
       errors: errors.length > 0 ? errors : null
     });
 
-  } catch (error: any) {
-    console.error('Batch upload error:', error);
-    return NextResponse.json(
-      { error: 'Batch upload failed: ' + error.message },
-      { status: 500 }
-    );
-  }
+  } catch (error: unknown) {
+  console.error('Batch upload error:', error);
+  return NextResponse.json(
+    { error: 'Batch upload failed: ' + (error instanceof Error ? error.message : 'Unknown error') },
+    { status: 500 }
+  );
 }
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+}

@@ -1,5 +1,4 @@
 // app/profile/page.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -49,7 +48,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
-  const [editingAddress, setEditingAddress] = useState<string | null>(null);
+  const [,] = useState<string | null>(null);
 
   // Form states
   const [name, setName] = useState('');

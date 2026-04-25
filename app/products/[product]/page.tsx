@@ -1,4 +1,5 @@
 // app/products/[product]/page.tsx
+export const dynamic = 'force-dynamic'
 import { getProductBySlug, getRelatedProducts } from '@/lib/actions';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';

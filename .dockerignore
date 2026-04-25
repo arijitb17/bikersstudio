@@ -1,0 +1,55 @@
+# .dockerignore
+# Keep the Docker build context lean
+
+# Dependencies (installed fresh inside the image)
+node_modules
+npm-debug.log*
+
+# Next.js build output
+.next
+out
+
+# Version control
+.git
+.gitignore
+
+# Local env files (secrets should come from CI/CD, not the image)
+.env
+.env.*
+!.env.example
+
+# Dev tooling
+.eslintrc*
+.prettierrc*
+.editorconfig
+jest.config*
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+__tests__
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode
+.idea
+*.swp
+
+# Docs
+README.md
+CHANGELOG.md
+docs/
+
+# CI/CD
+.github/
+
+# Docker files (not needed inside the image)
+Dockerfile*
+docker-compose*
+
+# Coverage & reports
+coverage/
+.nyc_output/

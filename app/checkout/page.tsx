@@ -9,11 +9,32 @@ import { useCart } from '@/components/CartContext';
 import { Loader2, MapPin, CreditCard, Tag } from 'lucide-react';
 import Script from 'next/script';
 import AddressForm from '@/components/AddressForm';
-
+import Image from 'next/image';
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: new (options: RazorpayOptions) => { open: () => void };
   }
+}
+interface RazorpayResponse {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
+interface RazorpayOptions {
+  key: string;
+  amount: number;
+  currency: string;
+  name: string;
+  description: string;
+  order_id: string;
+  handler: (response: RazorpayResponse) => Promise<void>;
+  prefill: { name: string; email: string };
+  theme: { color: string };
+  modal: { ondismiss: () => void };
+}   
+interface AppliedCoupon {
+  code: string;
+  discount: number;
 }
 
 interface Address {
@@ -37,7 +58,7 @@ export default function CheckoutPage() {
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [discount, setDiscount] = useState(0);
   const [showAddressForm, setShowAddressForm] = useState(false);
 
@@ -141,52 +162,37 @@ export default function CheckoutPage() {
       }
 
       // Initialize Razorpay
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        amount: Math.round(finalTotal * 100), // Amount in paise
-        currency: 'INR',
-        name: 'Your Store Name',
-        description: `Order #${orderData.orderNumber}`,
-        order_id: orderData.razorpayOrderId,
-        handler: async function (response: any) {
-          // Verify payment on backend
-          const verifyResponse = await fetch('/api/orders/verify-payment', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              orderId: orderData.orderId,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
-
-          const verifyData = await verifyResponse.json();
-
-          if (verifyResponse.ok) {
-            // Clear cart and redirect to success page
-            clearCart();
-            sessionStorage.removeItem('appliedCoupon');
-            router.push(`/orders/${orderData.orderId}?success=true`);
-          } else {
-            alert('Payment verification failed. Please contact support.');
-          }
-        },
-        prefill: {
-          name: session?.user?.name || '',
-          email: session?.user?.email || '',
-        },
-        theme: {
-          color: '#DC2626', // red-600
-        },
-        modal: {
-          ondismiss: function() {
-            setIsProcessing(false);
-          }
-        }
-      };
+      const options: RazorpayOptions = {
+  key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+  amount: Math.round(finalTotal * 100),
+  currency: 'INR',
+  name: 'Your Store Name',
+  description: `Order #${orderData.orderNumber}`,
+  order_id: orderData.razorpayOrderId,
+  handler: async function (response: RazorpayResponse) {  // now typed, not any
+    const verifyResponse = await fetch('/api/orders/verify-payment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: orderData.orderId,
+        razorpay_order_id: response.razorpay_order_id,
+        razorpay_payment_id: response.razorpay_payment_id,
+        razorpay_signature: response.razorpay_signature,
+      }),
+    });
+    await verifyResponse.json();
+    if (verifyResponse.ok) {
+      clearCart();
+      sessionStorage.removeItem('appliedCoupon');
+      router.push(`/orders/${orderData.orderId}?success=true`);
+    } else {
+      alert('Payment verification failed. Please contact support.');
+    }
+  },
+  prefill: { name: session?.user?.name || '', email: session?.user?.email || '' },
+  theme: { color: '#DC2626' },
+  modal: { ondismiss: () => { setIsProcessing(false); } },
+};
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
@@ -305,11 +311,12 @@ export default function CheckoutPage() {
                     return (
                       <div key={item.productId} className="flex gap-4 pb-4 border-b">
                         <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
-                          <img
-                            src={item.thumbnail}
-                            alt={item.name}
-                            className="w-full h-full object-contain"
-                          />
+                          <Image
+    src={item.thumbnail}
+    alt={item.name}
+    fill
+    className="object-contain"
+  />
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>

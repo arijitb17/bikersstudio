@@ -34,7 +34,7 @@ export default function SignInPage() {
         router.push("/");
         router.refresh();
       }
-    } catch (error) {
+    } catch {
       setError("Something went wrong");
     } finally {
       setLoading(false);
@@ -178,6 +178,7 @@ export default function SignInPage() {
 
           {/* Sign Up Link */}
           <p className="mt-6 text-center text-sm text-gray-600">
+        {/* eslint-disable-next-line react/no-unescaped-entities */}
             Don't have an account?{" "}
             <Link
               href="/auth/signup"

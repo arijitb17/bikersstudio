@@ -2,13 +2,76 @@
 
 "use client"
 import React from 'react';
+import Image from 'next/image';
 import { Image as ImageIcon } from 'lucide-react';
 import { Category, Brand } from '../types';
 
+// ---------------------------------------------------------------------------
+// Shared form-data shapes
+// ---------------------------------------------------------------------------
+
+export interface CategoryFormData {
+  name?: string;
+  slug?: string;
+  description?: string;
+  position?: number | string;
+  parentId?: string;
+  showInMenu?: boolean;
+  isActive?: boolean;
+}
+
+export interface BrandFormData {
+  name?: string;
+  slug?: string;
+  logo?: string;
+}
+
+export interface BikeFormData {
+  name?: string;
+  slug?: string;
+  brandId?: string;
+  model?: string;
+  year?: number;
+  description?: string;
+  image?: string;
+  isActive?: boolean;
+  position?: number;
+}
+
+export interface BannerFormData {
+  title?: string;
+  subtitle?: string;
+  image?: string;
+  link?: string;
+  position?: number | string;
+  isActive?: boolean;
+}
+
+export interface CouponFormData {
+  code?: string;
+  discountType?: 'PERCENTAGE' | 'FIXED';
+  discountValue?: number | string;
+  validFrom?: string;
+  validUntil?: string;
+}
+
+export interface MenuItemFormData {
+  name?: string;
+  slug?: string;
+  type?: 'CATEGORY_MENU' | 'BRAND_MENU' | 'CUSTOM_MENU';
+  categoryId?: string;
+  image?: string;
+  position?: number;
+  isActive?: boolean;
+}
+
+// ---------------------------------------------------------------------------
 // Category Form
+// ---------------------------------------------------------------------------
+
 interface CategoryFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: CategoryFormData;
+  setFormData: (data: CategoryFormData) => void;
   categories: Category[];
   currentItemId?: string;
 }
@@ -22,7 +85,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.name || ''}
-        onChange={(e) => setFormData({...formData, name: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
       />
     </div>
     <div>
@@ -32,7 +95,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.slug || ''}
-        onChange={(e) => setFormData({...formData, slug: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
       />
     </div>
     <div>
@@ -41,7 +104,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
         rows={3}
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.description || ''}
-        onChange={(e) => setFormData({...formData, description: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
       />
     </div>
     <div>
@@ -49,8 +112,8 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
       <input
         type="number"
         className="w-full px-4 py-2 border rounded-lg text-black"
-        value={formData.position || 0}
-        onChange={(e) => setFormData({...formData, position: e.target.value})}
+        value={formData.position ?? 0}
+        onChange={(e) => setFormData({ ...formData, position: e.target.value })}
       />
     </div>
     <div>
@@ -58,7 +121,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
       <select
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.parentId || ''}
-        onChange={(e) => setFormData({...formData, parentId: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
       >
         <option value="">None (Top Level)</option>
         {categories.filter(c => c.id !== currentItemId).map(cat => (
@@ -71,7 +134,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
         <input
           type="checkbox"
           checked={formData.showInMenu ?? true}
-          onChange={(e) => setFormData({...formData, showInMenu: e.target.checked})}
+          onChange={(e) => setFormData({ ...formData, showInMenu: e.target.checked })}
         />
         <span className="text-sm text-black">Show in Menu</span>
       </label>
@@ -79,7 +142,7 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
         <input
           type="checkbox"
           checked={formData.isActive ?? true}
-          onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
         />
         <span className="text-sm text-black">Active</span>
       </label>
@@ -87,10 +150,13 @@ export const CategoryForm: React.FC<CategoryFormProps> = ({ formData, setFormDat
   </>
 );
 
+// ---------------------------------------------------------------------------
 // Brand Form
+// ---------------------------------------------------------------------------
+
 interface BrandFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: BrandFormData;
+  setFormData: (data: BrandFormData) => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => void;
   uploadingImage: boolean;
 }
@@ -104,7 +170,7 @@ export const BrandForm: React.FC<BrandFormProps> = ({ formData, setFormData, onI
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.name || ''}
-        onChange={(e) => setFormData({...formData, name: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
       />
     </div>
     <div>
@@ -114,14 +180,20 @@ export const BrandForm: React.FC<BrandFormProps> = ({ formData, setFormData, onI
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.slug || ''}
-        onChange={(e) => setFormData({...formData, slug: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
       />
     </div>
     <div>
       <label className="block text-sm font-medium mb-2 text-black">Logo URL</label>
       <div className="space-y-2">
         {formData.logo && (
-          <img src={formData.logo} alt="Logo" className="w-32 h-32 object-contain border rounded" />
+          <Image
+            src={formData.logo}
+            alt="Logo"
+            width={128}
+            height={128}
+            className="object-contain border rounded"
+          />
         )}
         <label className="inline-block px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200">
           <ImageIcon size={16} className="inline mr-2" />
@@ -130,7 +202,7 @@ export const BrandForm: React.FC<BrandFormProps> = ({ formData, setFormData, onI
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => onImageUpload(e, (url) => setFormData({...formData, logo: url}))}
+            onChange={(e) => onImageUpload(e, (url) => setFormData({ ...formData, logo: url }))}
             disabled={uploadingImage}
           />
         </label>
@@ -139,31 +211,31 @@ export const BrandForm: React.FC<BrandFormProps> = ({ formData, setFormData, onI
   </>
 );
 
-// ============================================
-// BIKE FORM - FIXED VERSION WITH ALL REQUIRED FIELDS
-// ============================================
+// ---------------------------------------------------------------------------
+// Bike Form
+// ---------------------------------------------------------------------------
+
 interface BikeFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: BikeFormData;
+  setFormData: (data: BikeFormData) => void;
   brands: Brand[];
   onImageUpload?: (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => void;
   uploadingImage?: boolean;
 }
 
-export const BikeForm: React.FC<BikeFormProps> = ({ 
-  formData, 
-  setFormData, 
+export const BikeForm: React.FC<BikeFormProps> = ({
+  formData,
+  setFormData,
   brands,
   onImageUpload,
-  uploadingImage 
+  uploadingImage
 }) => {
-  // Auto-generate slug from name
   const handleNameChange = (name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     setFormData({
-      ...formData, 
+      ...formData,
       name,
-      slug: formData.slug || slug // Only auto-set if slug is empty
+      slug: formData.slug || slug
     });
   };
 
@@ -180,7 +252,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
           placeholder="e.g., Ninja 400"
         />
       </div>
-      
+
       <div>
         <label className="block text-sm font-medium mb-2 text-black">Slug *</label>
         <input
@@ -188,7 +260,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
           required
           className="w-full px-4 py-2 border rounded-lg text-black bg-gray-50"
           value={formData.slug || ''}
-          onChange={(e) => setFormData({...formData, slug: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
           placeholder="Auto-generated from name"
         />
         <p className="text-xs text-gray-500 mt-1">Auto-generated from name (URL-friendly)</p>
@@ -200,7 +272,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
           required
           className="w-full px-4 py-2 border rounded-lg text-black"
           value={formData.brandId || ''}
-          onChange={(e) => setFormData({...formData, brandId: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
         >
           <option value="">Select Brand</option>
           {brands.map(brand => (
@@ -208,7 +280,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
           ))}
         </select>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium mb-2 text-black">Model *</label>
@@ -217,7 +289,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
             required
             className="w-full px-4 py-2 border rounded-lg text-black"
             value={formData.model || ''}
-            onChange={(e) => setFormData({...formData, model: e.target.value})}
+            onChange={(e) => setFormData({ ...formData, model: e.target.value })}
             placeholder="e.g., 400"
           />
         </div>
@@ -230,7 +302,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
             max={new Date().getFullYear() + 1}
             className="w-full px-4 py-2 border rounded-lg text-black"
             value={formData.year || new Date().getFullYear()}
-            onChange={(e) => setFormData({...formData, year: parseInt(e.target.value) || new Date().getFullYear()})}
+            onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) || new Date().getFullYear() })}
           />
         </div>
       </div>
@@ -241,7 +313,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
           rows={3}
           className="w-full px-4 py-2 border rounded-lg text-black"
           value={formData.description || ''}
-          onChange={(e) => setFormData({...formData, description: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           placeholder="Optional description of the bike"
         />
       </div>
@@ -250,10 +322,12 @@ export const BikeForm: React.FC<BikeFormProps> = ({
         <label className="block text-sm font-medium mb-2 text-black">Bike Image *</label>
         <div className="space-y-2">
           {formData.image && (
-            <img 
-              src={formData.image} 
-              alt="Bike preview" 
-              className="w-full h-48 object-cover border rounded" 
+            <Image
+              src={formData.image}
+              alt="Bike preview"
+              width={800}
+              height={192}
+              className="w-full object-cover border rounded"
             />
           )}
           {onImageUpload && (
@@ -264,7 +338,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => onImageUpload(e, (url) => setFormData({...formData, image: url}))}
+                onChange={(e) => onImageUpload(e, (url) => setFormData({ ...formData, image: url }))}
                 disabled={uploadingImage}
               />
             </label>
@@ -282,7 +356,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
           min="0"
           className="w-full px-4 py-2 border rounded-lg text-black"
           value={formData.position ?? 0}
-          onChange={(e) => setFormData({...formData, position: parseInt(e.target.value) || 0})}
+          onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) || 0 })}
         />
         <p className="text-xs text-gray-500 mt-1">Display order (lower numbers appear first)</p>
       </div>
@@ -291,7 +365,7 @@ export const BikeForm: React.FC<BikeFormProps> = ({
         <input
           type="checkbox"
           checked={formData.isActive ?? true}
-          onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
         />
         <span className="text-sm text-black">Active (visible on website)</span>
       </div>
@@ -299,18 +373,22 @@ export const BikeForm: React.FC<BikeFormProps> = ({
   );
 };
 
+// ---------------------------------------------------------------------------
+// Banner Form
+// ---------------------------------------------------------------------------
+
 interface BannerFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: BannerFormData;
+  setFormData: (data: BannerFormData) => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => void;
   uploadingImage: boolean;
 }
 
-export const BannerForm: React.FC<BannerFormProps> = ({ 
-  formData, 
+export const BannerForm: React.FC<BannerFormProps> = ({
+  formData,
   setFormData,
   onImageUpload,
-  uploadingImage 
+  uploadingImage
 }) => (
   <>
     <div>
@@ -320,7 +398,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.title || ''}
-        onChange={(e) => setFormData({...formData, title: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
       />
     </div>
     <div>
@@ -329,14 +407,20 @@ export const BannerForm: React.FC<BannerFormProps> = ({
         type="text"
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.subtitle || ''}
-        onChange={(e) => setFormData({...formData, subtitle: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
       />
     </div>
     <div>
       <label className="block text-sm font-medium mb-2 text-black">Banner Image</label>
       <div className="space-y-2">
         {formData.image && (
-          <img src={formData.image} alt="Banner" className="w-full h-48 object-cover border rounded" />
+          <Image
+            src={formData.image}
+            alt="Banner"
+            width={800}
+            height={192}
+            className="w-full object-cover border rounded"
+          />
         )}
         <label className="inline-block px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200">
           <ImageIcon size={16} className="inline mr-2" />
@@ -345,7 +429,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
             type="file"
             accept="image/*"
             className="hidden"
-            onChange={(e) => onImageUpload(e, (url) => setFormData({...formData, image: url}))}
+            onChange={(e) => onImageUpload(e, (url) => setFormData({ ...formData, image: url }))}
             disabled={uploadingImage}
           />
         </label>
@@ -357,7 +441,7 @@ export const BannerForm: React.FC<BannerFormProps> = ({
         type="url"
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.link || ''}
-        onChange={(e) => setFormData({...formData, link: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, link: e.target.value })}
       />
     </div>
     <div>
@@ -365,26 +449,28 @@ export const BannerForm: React.FC<BannerFormProps> = ({
       <input
         type="number"
         className="w-full px-4 py-2 border rounded-lg text-black"
-        value={formData.position || 0}
-        onChange={(e) => setFormData({...formData, position: e.target.value})}
+        value={formData.position ?? 0}
+        onChange={(e) => setFormData({ ...formData, position: e.target.value })}
       />
     </div>
-
     <div className="flex items-center gap-2">
       <input
         type="checkbox"
         checked={formData.isActive ?? true}
-        onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
       />
       <span className="text-sm text-black">Active (visible on website)</span>
     </div>
   </>
 );
 
+// ---------------------------------------------------------------------------
 // Coupon Form
+// ---------------------------------------------------------------------------
+
 interface CouponFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: CouponFormData;
+  setFormData: (data: CouponFormData) => void;
 }
 
 export const CouponForm: React.FC<CouponFormProps> = ({ formData, setFormData }) => (
@@ -396,7 +482,7 @@ export const CouponForm: React.FC<CouponFormProps> = ({ formData, setFormData })
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.code || ''}
-        onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
+        onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
       />
     </div>
     <div>
@@ -405,7 +491,7 @@ export const CouponForm: React.FC<CouponFormProps> = ({ formData, setFormData })
         required
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.discountType || 'PERCENTAGE'}
-        onChange={(e) => setFormData({...formData, discountType: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, discountType: e.target.value as 'PERCENTAGE' | 'FIXED' })}
       >
         <option value="PERCENTAGE">Percentage</option>
         <option value="FIXED">Fixed Amount</option>
@@ -421,7 +507,7 @@ export const CouponForm: React.FC<CouponFormProps> = ({ formData, setFormData })
         step="0.01"
         className="w-full px-4 py-2 border rounded-lg text-black"
         value={formData.discountValue || ''}
-        onChange={(e) => setFormData({...formData, discountValue: e.target.value})}
+        onChange={(e) => setFormData({ ...formData, discountValue: e.target.value })}
       />
     </div>
     <div className="grid grid-cols-2 gap-4">
@@ -432,7 +518,7 @@ export const CouponForm: React.FC<CouponFormProps> = ({ formData, setFormData })
           required
           className="w-full px-4 py-2 border rounded-lg text-black"
           value={formData.validFrom || ''}
-          onChange={(e) => setFormData({...formData, validFrom: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, validFrom: e.target.value })}
         />
       </div>
       <div>
@@ -442,37 +528,38 @@ export const CouponForm: React.FC<CouponFormProps> = ({ formData, setFormData })
           required
           className="w-full px-4 py-2 border rounded-lg text-black"
           value={formData.validUntil || ''}
-          onChange={(e) => setFormData({...formData, validUntil: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, validUntil: e.target.value })}
         />
       </div>
     </div>
   </>
 );
 
-// admin/modals/FormComponents.tsx - MenuItemForm only
+// ---------------------------------------------------------------------------
+// MenuItem Form
+// ---------------------------------------------------------------------------
 
 interface MenuItemFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: MenuItemFormData;
+  setFormData: (data: MenuItemFormData) => void;
   categories?: Category[];
   onImageUpload?: (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => void;
   uploadingImage?: boolean;
 }
 
-export const MenuItemForm: React.FC<MenuItemFormProps> = ({ 
-  formData, 
+export const MenuItemForm: React.FC<MenuItemFormProps> = ({
+  formData,
   setFormData,
   categories = [],
   onImageUpload,
-  uploadingImage 
+  uploadingImage
 }) => {
-  // Auto-generate slug from name
   const handleNameChange = (name: string) => {
     const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     setFormData({
-      ...formData, 
+      ...formData,
       name,
-      slug: formData.slug || slug // Only auto-set if slug is empty
+      slug: formData.slug || slug
     });
   };
 
@@ -496,7 +583,7 @@ export const MenuItemForm: React.FC<MenuItemFormProps> = ({
           type="text"
           className="w-full px-4 py-2 border rounded-lg text-black bg-gray-50"
           value={formData.slug || ''}
-          onChange={(e) => setFormData({...formData, slug: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
           placeholder="Auto-generated from name"
         />
         <p className="text-xs text-gray-500 mt-1">Auto-generated from name or category</p>
@@ -508,7 +595,7 @@ export const MenuItemForm: React.FC<MenuItemFormProps> = ({
           required
           className="w-full px-4 py-2 border rounded-lg text-black"
           value={formData.type || ''}
-          onChange={(e) => setFormData({...formData, type: e.target.value})}
+          onChange={(e) => setFormData({ ...formData, type: e.target.value as MenuItemFormData['type'] })}
         >
           <option value="">Select Type</option>
           <option value="CATEGORY_MENU">Category Menu</option>
@@ -527,7 +614,7 @@ export const MenuItemForm: React.FC<MenuItemFormProps> = ({
             onChange={(e) => {
               const selectedCat = categories.find(c => c.id === e.target.value);
               setFormData({
-                ...formData, 
+                ...formData,
                 categoryId: e.target.value,
                 slug: selectedCat?.slug || formData.slug
               });
@@ -546,10 +633,12 @@ export const MenuItemForm: React.FC<MenuItemFormProps> = ({
         <label className="block text-sm font-medium mb-2 text-black">Display Image *</label>
         <div className="space-y-2">
           {formData.image && (
-            <img 
-              src={formData.image} 
-              alt="Preview" 
-              className="w-full h-48 object-cover border rounded" 
+            <Image
+              src={formData.image}
+              alt="Preview"
+              width={800}
+              height={192}
+              className="w-full object-cover border rounded"
             />
           )}
           {onImageUpload && (
@@ -560,7 +649,7 @@ export const MenuItemForm: React.FC<MenuItemFormProps> = ({
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={(e) => onImageUpload(e, (url) => setFormData({...formData, image: url}))}
+                onChange={(e) => onImageUpload(e, (url) => setFormData({ ...formData, image: url }))}
                 disabled={uploadingImage}
               />
             </label>
@@ -576,7 +665,7 @@ export const MenuItemForm: React.FC<MenuItemFormProps> = ({
           min="0"
           className="w-full px-4 py-2 border rounded-lg text-black"
           value={formData.position ?? 0}
-          onChange={(e) => setFormData({...formData, position: parseInt(e.target.value) || 0})}
+          onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) || 0 })}
         />
         <div className="text-xs text-gray-500 mt-1 space-y-1">
           <p>Position determines where the item appears in the bento grid (0-13+)</p>
@@ -588,7 +677,7 @@ export const MenuItemForm: React.FC<MenuItemFormProps> = ({
         <input
           type="checkbox"
           checked={formData.isActive ?? true}
-          onChange={(e) => setFormData({...formData, isActive: e.target.checked})}
+          onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
         />
         <span className="text-sm text-black">Active (visible on website)</span>
       </div>

@@ -17,7 +17,7 @@ import {
   Calendar,
   IndianRupee
 } from 'lucide-react';
-
+import Image from 'next/image';
 interface OrderItem {
   id: string;
   productId: string;
@@ -77,7 +77,7 @@ const statusIcons = {
 };
 
 export default function OrdersPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -114,13 +114,13 @@ export default function OrdersPage() {
   };
 
   // Helper function to convert Decimal to number
-  const toNumber = (value: any): number => {
-    if (typeof value === 'number') return value;
-    if (typeof value === 'string') return parseFloat(value);
-    if (value && typeof value.toNumber === 'function') return value.toNumber();
-    return parseFloat(value);
-  };
+ type DecimalLike = number | string | { toNumber: () => number };
 
+const toNumber = (value: DecimalLike): number => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return parseFloat(value);
+  return value.toNumber();
+};
   const filteredOrders = filter === 'ALL' 
     ? orders 
     : orders.filter(order => order.status === filter);
@@ -246,13 +246,11 @@ export default function OrdersPage() {
                     <div className="space-y-4 mb-4">
                       {order.items.map((item) => (
                         <div key={item.id} className="flex gap-4">
-                          <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
-                            <img
-                              src={item.product.thumbnail}
-                              alt={item.product.name}
-                              className="w-full h-full object-contain"
-                            />
+                          
+                          <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
+                            <Image src={item.product.thumbnail} alt={item.product.name} fill className="object-contain" />
                           </div>
+
                           <div className="flex-1">
                             <Link
                               href={`/products/${item.product.slug}`}

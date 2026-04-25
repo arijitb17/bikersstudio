@@ -1,5 +1,8 @@
 // app/admin/types.ts
 
+import React from 'react';
+import type { LucideIcon } from 'lucide-react';
+
 // ---------------------
 // Admin Dashboard Types
 // ---------------------
@@ -14,10 +17,20 @@ export interface DashboardStats {
 }
 
 // ---------------------
-// DB Entities (API / Prisma / Backend)
+// Base Admin Item (index signature for contravariance compatibility)
 // ---------------------
 
-export interface Product {
+export interface AdminItem {
+  id?: string;
+  [key: string]: unknown;
+}
+
+// ---------------------
+// DB Entities
+// All extend AdminItem to satisfy index-signature contravariance constraints
+// ---------------------
+
+export interface Product extends AdminItem {
   id: string;
   name: string;
   sku: string;
@@ -36,7 +49,7 @@ export interface Product {
   createdAt?: string;
 }
 
-export interface Category {
+export interface Category extends AdminItem {
   id: string;
   name: string;
   slug: string;
@@ -47,7 +60,7 @@ export interface Category {
   isActive: boolean;
 }
 
-export interface Brand {
+export interface Brand extends AdminItem {
   id: string;
   name: string;
   slug: string;
@@ -56,7 +69,7 @@ export interface Brand {
   isActive: boolean;
 }
 
-export interface Bike {
+export interface Bike extends AdminItem {
   id: string;
   name: string;
   brandId: string;
@@ -66,7 +79,7 @@ export interface Bike {
   isActive: boolean;
 }
 
-export interface MenuEntity {
+export interface MenuEntity extends AdminItem {
   id: string;
   name: string;
   type: 'BRAND_MENU' | 'CATEGORY_MENU' | 'CUSTOM_MENU';
@@ -74,7 +87,7 @@ export interface MenuEntity {
   isActive: boolean;
 }
 
-export interface Order {
+export interface Order extends AdminItem {
   id: string;
   orderNumber: string;
   userId: string;
@@ -87,7 +100,7 @@ export interface Order {
   createdAt: string;
 }
 
-export interface Banner {
+export interface Banner extends AdminItem {
   id: string;
   title: string;
   subtitle?: string;
@@ -97,7 +110,7 @@ export interface Banner {
   isActive: boolean;
 }
 
-export interface Coupon {
+export interface Coupon extends AdminItem {
   id: string;
   code: string;
   discountType: 'PERCENTAGE' | 'FIXED';
@@ -107,17 +120,66 @@ export interface Coupon {
   isActive: boolean;
 }
 
+export interface Testimonial extends AdminItem {
+  id: string;
+  name: string;
+  review: string;
+  rating: number;
+  image?: string;
+  location?: string;
+}
+
+export interface Video extends AdminItem {
+  id: string;
+  title: string;
+  videoUrl: string;
+  views?: string;
+  duration?: string;
+  thumbnail?: string;
+  isActive?: boolean;
+}
+
+export interface User extends AdminItem {
+  id: string;
+  email: string;
+  name?: string | null;
+  phone?: string | null;
+  role: 'USER' | 'ADMIN';
+  image?: string | null;
+  emailVerified?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  _count?: {
+    orders: number;
+    reviews: number;
+    addresses: number;
+  };
+}
+
+// ---------------------
+// Modal Form Data Types
+// ---------------------
+
+export interface UserFormData extends AdminItem {
+  id: string;
+  email: string;
+  name: string;
+  phone: string;
+  role: 'USER' | 'ADMIN';
+  password: string;
+}
+
 // ---------------------
 // Table Config Types
 // ---------------------
 
-export interface TableColumn<T = any> {
-  key: string;
+export interface TableColumn<T = AdminItem> {
+  key: keyof T;
   label: string;
-  render?: (value: any, row: T) => React.ReactNode;
+  render?: (value: T[keyof T], row: T) => React.ReactNode;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data?: T;
   error?: string;
   successRows?: number;
@@ -144,8 +206,6 @@ export type TabType =
   | 'coupons'
   | 'images'
   | 'videos';
-
-import type { LucideIcon } from 'lucide-react';
 
 export interface MenuItem {
   id: TabType;

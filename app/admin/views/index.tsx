@@ -4,16 +4,14 @@
 import React, { useState, useEffect } from 'react';
 import { DataTable } from '../components/DataTable';
 import { api } from '../api';
-import { ORDER_STATUS_COLORS } from '../constants';
-import { 
-  Product, 
-  Category, 
-  Brand, 
-  Bike, 
-  MenuItem, 
-  Order, 
-  Banner, 
-  Coupon 
+import {
+  Product,
+  Category,
+  Brand,
+  Bike,
+  MenuEntity,
+  Banner,
+  Coupon
 } from '../types';
 
 interface ViewProps<T> {
@@ -22,44 +20,54 @@ interface ViewProps<T> {
   refreshTrigger: number;
 }
 
-// Products View
+// ─── Helper: unwrap { data: T[] } | T[] ───────────────────────────────────────
+function unwrapArray<T>(response: { data?: T[] } | T[]): T[] {
+  if (Array.isArray(response)) return response;
+  if (response && Array.isArray((response as { data?: T[] }).data)) {
+    return (response as { data: T[] }).data;
+  }
+  return [];
+}
+
+// ─── Products View ────────────────────────────────────────────────────────────
 export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadProducts();
-  }, [refreshTrigger]);
+  useEffect(() => { loadProducts(); }, [refreshTrigger]);
 
   const loadProducts = async () => {
     try {
       setLoading(true);
+      setError('');
       const response = await api.fetchData<{ data?: Product[] } | Product[]>('/products');
-      setProducts(Array.isArray(response) ? response : response.data || []);
-    } catch (error) {
-      console.error('Failed to load products:', error);
-      alert('Failed to load products');
+      setProducts(unwrapArray(response));
+    } catch (err: unknown) {
+      console.error('Failed to load products:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-black">Loading products...</div>;
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading products…</div>;
+  if (error)   return <div className="text-center py-12 text-red-500">{error}</div>;
 
   return (
-    <DataTable 
+    <DataTable
       data={products}
       columns={[
-        { key: 'name', label: 'Product Name' },
-        { key: 'sku', label: 'SKU' },
-        { key: 'price', label: 'Price', render: (val) => `₹${val}` },
-        { key: 'stock', label: 'Stock' },
-        { key: 'category', label: 'Category', render: (val, row) => row.category?.name || 'N/A' },
-        { key: 'isActive', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${val ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {val ? 'Active' : 'Inactive'}
+        { key: 'name',       label: 'Product Name' },
+        { key: 'sku',        label: 'SKU' },
+        { key: 'price',      label: 'Price',    render: (v) => `₹${v}` },
+        { key: 'stock',      label: 'Stock' },
+        { key: 'categoryId', label: 'Category', render: (_v, row) => row.category?.name ?? 'N/A' },
+        { key: 'isActive',   label: 'Status',   render: (v) => (
+          <span className={`px-2 py-1 rounded text-xs ${v ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {v ? 'Active' : 'Inactive'}
           </span>
-        )}
+        )},
       ]}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -67,42 +75,51 @@ export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, r
   );
 };
 
-// Categories View
+// ─── Categories View ──────────────────────────────────────────────────────────
 export const CategoriesView: React.FC<ViewProps<Category>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadCategories();
-  }, [refreshTrigger]);
+  useEffect(() => { loadCategories(); }, [refreshTrigger]);
 
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const data = await api.fetchData<Category[]>('/categories');
-      setCategories(data);
-    } catch (error) {
-      console.error('Failed to load categories:', error);
+      setError('');
+      const response = await api.fetchData<{ data?: Category[] } | Category[]>('/categories');
+      setCategories(unwrapArray(response));
+    } catch (err: unknown) {
+      console.error('Failed to load categories:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load categories');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-black">Loading categories...</div>;
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading categories…</div>;
+  if (error)   return (
+    <div className="text-center py-12">
+      <p className="text-red-500 mb-3">{error}</p>
+      <button onClick={loadCategories} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        Retry
+      </button>
+    </div>
+  );
 
   return (
-    <DataTable 
+    <DataTable
       data={categories}
       columns={[
-        { key: 'name', label: 'Category Name' },
-        { key: 'slug', label: 'Slug' },
-        { key: 'position', label: 'Position' },
-        { key: 'showInMenu', label: 'In Menu', render: (val) => val ? '✓' : '✗' },
-        { key: 'isActive', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${val ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {val ? 'Active' : 'Inactive'}
+        { key: 'name',       label: 'Category Name' },
+        { key: 'slug',       label: 'Slug' },
+        { key: 'position',   label: 'Position' },
+        { key: 'showInMenu', label: 'In Menu', render: (v) => (v ? '✓' : '✗') },
+        { key: 'isActive',   label: 'Status',  render: (v) => (
+          <span className={`px-2 py-1 rounded text-xs ${v ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {v ? 'Active' : 'Inactive'}
           </span>
-        )}
+        )},
       ]}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -110,41 +127,48 @@ export const CategoriesView: React.FC<ViewProps<Category>> = ({ onEdit, onDelete
   );
 };
 
-// Brands View
+// ─── Brands View ──────────────────────────────────────────────────────────────
 export const BrandsView: React.FC<ViewProps<Brand>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadBrands();
-  }, [refreshTrigger]);
+  useEffect(() => { loadBrands(); }, [refreshTrigger]);
 
   const loadBrands = async () => {
     try {
       setLoading(true);
-      const data = await api.fetchData<Brand[]>('/brands');
-      setBrands(data);
-    } catch (error) {
-      console.error('Failed to load brands:', error);
+      setError('');
+      const response = await api.fetchData<{ data?: Brand[] } | Brand[]>('/brands');
+      setBrands(unwrapArray(response));
+    } catch (err: unknown) {
+      console.error('Failed to load brands:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load brands');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-black">Loading brands...</div>;
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading brands…</div>;
+  if (error)   return (
+    <div className="text-center py-12">
+      <p className="text-red-500 mb-3">{error}</p>
+      <button onClick={loadBrands} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
+    </div>
+  );
 
   return (
-    <DataTable 
+    <DataTable
       data={brands}
       columns={[
-        { key: 'name', label: 'Brand Name' },
-        { key: 'slug', label: 'Slug' },
+        { key: 'name',     label: 'Brand Name' },
+        { key: 'slug',     label: 'Slug' },
         { key: 'position', label: 'Position' },
-        { key: 'isActive', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${val ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {val ? 'Active' : 'Inactive'}
+        { key: 'isActive', label: 'Status', render: (v) => (
+          <span className={`px-2 py-1 rounded text-xs ${v ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {v ? 'Active' : 'Inactive'}
           </span>
-        )}
+        )},
       ]}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -152,42 +176,49 @@ export const BrandsView: React.FC<ViewProps<Brand>> = ({ onEdit, onDelete, refre
   );
 };
 
-// Bikes View
+// ─── Bikes View ───────────────────────────────────────────────────────────────
 export const BikesView: React.FC<ViewProps<Bike>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const [bikes, setBikes] = useState<Bike[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadBikes();
-  }, [refreshTrigger]);
+  useEffect(() => { loadBikes(); }, [refreshTrigger]);
 
   const loadBikes = async () => {
     try {
       setLoading(true);
-      const data = await api.fetchData<Bike[]>('/bikes');
-      setBikes(data);
-    } catch (error) {
-      console.error('Failed to load bikes:', error);
+      setError('');
+      const response = await api.fetchData<{ data?: Bike[] } | Bike[]>('/bikes');
+      setBikes(unwrapArray(response));
+    } catch (err: unknown) {
+      console.error('Failed to load bikes:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load bikes');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-black">Loading bikes...</div>;
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading bikes…</div>;
+  if (error)   return (
+    <div className="text-center py-12">
+      <p className="text-red-500 mb-3">{error}</p>
+      <button onClick={loadBikes} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
+    </div>
+  );
 
   return (
-    <DataTable 
+    <DataTable
       data={bikes}
       columns={[
-        { key: 'name', label: 'Bike Name' },
-        { key: 'brand', label: 'Brand', render: (val, row) => row.brand?.name || 'N/A' },
-        { key: 'model', label: 'Model' },
-        { key: 'year', label: 'Year' },
-        { key: 'isActive', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${val ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {val ? 'Active' : 'Inactive'}
+        { key: 'name',     label: 'Bike Name' },
+        { key: 'brandId',  label: 'Brand',  render: (_v, row) => row.brand?.name ?? 'N/A' },
+        { key: 'model',    label: 'Model' },
+        { key: 'year',     label: 'Year' },
+        { key: 'isActive', label: 'Status', render: (v) => (
+          <span className={`px-2 py-1 rounded text-xs ${v ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {v ? 'Active' : 'Inactive'}
           </span>
-        )}
+        )},
       ]}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -195,41 +226,50 @@ export const BikesView: React.FC<ViewProps<Bike>> = ({ onEdit, onDelete, refresh
   );
 };
 
-// Menu Items View
-export const MenuItemsView: React.FC<ViewProps<MenuItem>> = ({ onEdit, onDelete, refreshTrigger }) => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+// ─── Menu Items View ──────────────────────────────────────────────────────────
+// MenuEntity = DB record ({ id, name, type, position, isActive })
+// MenuItem   = sidebar nav config ({ id: TabType, label, icon }) — DO NOT use here
+export const MenuItemsView: React.FC<ViewProps<MenuEntity>> = ({ onEdit, onDelete, refreshTrigger }) => {
+  const [menuItems, setMenuItems] = useState<MenuEntity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadMenuItems();
-  }, [refreshTrigger]);
+  useEffect(() => { loadMenuItems(); }, [refreshTrigger]);
 
   const loadMenuItems = async () => {
     try {
       setLoading(true);
-      const data = await api.fetchData<MenuItem[]>('/menu-items');
-      setMenuItems(data);
-    } catch (error) {
-      console.error('Failed to load menu items:', error);
+      setError('');
+      const response = await api.fetchData<{ data?: MenuEntity[] } | MenuEntity[]>('/menu-items');
+      setMenuItems(unwrapArray(response));
+    } catch (err: unknown) {
+      console.error('Failed to load menu items:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load menu items');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-black">Loading menu items...</div>;
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading menu items…</div>;
+  if (error)   return (
+    <div className="text-center py-12">
+      <p className="text-red-500 mb-3">{error}</p>
+      <button onClick={loadMenuItems} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
+    </div>
+  );
 
   return (
-    <DataTable 
+    <DataTable
       data={menuItems}
       columns={[
-        { key: 'name', label: 'Menu Name' },
-        { key: 'type', label: 'Type' },
+        { key: 'name',     label: 'Menu Name' },
+        { key: 'type',     label: 'Type' },
         { key: 'position', label: 'Position' },
-        { key: 'isActive', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${val ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {val ? 'Active' : 'Inactive'}
+        { key: 'isActive', label: 'Status', render: (v) => (
+          <span className={`px-2 py-1 rounded text-xs ${v ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {v ? 'Active' : 'Inactive'}
           </span>
-        )}
+        )},
       ]}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -237,83 +277,51 @@ export const MenuItemsView: React.FC<ViewProps<MenuItem>> = ({ onEdit, onDelete,
   );
 };
 
-// Orders View
-export const OrdersView: React.FC<{ refreshTrigger: number }> = ({ refreshTrigger }) => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+// ─── Orders View ──────────────────────────────────────────────────────────────
+// Delegated to the full-featured OrdersView component
+export { OrdersView } from './OrdersView';
 
-  useEffect(() => {
-    loadOrders();
-  }, [refreshTrigger]);
-
-  const loadOrders = async () => {
-    try {
-      setLoading(true);
-      const response = await api.fetchData<{ data?: Order[] } | Order[]>('/orders');
-      setOrders(Array.isArray(response) ? response : response.data || []);
-    } catch (error) {
-      console.error('Failed to load orders:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) return <div className="text-center py-12 text-black">Loading orders...</div>;
-
-  return (
-    <DataTable 
-      data={orders}
-      columns={[
-        { key: 'orderNumber', label: 'Order #' },
-        { key: 'user', label: 'Customer', render: (val, row) => row.user?.name || row.user?.email || 'N/A' },
-        { key: 'total', label: 'Total', render: (val) => `₹${val}` },
-        { key: 'status', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${ORDER_STATUS_COLORS[val] || 'bg-gray-100 text-gray-800'}`}>
-            {val}
-          </span>
-        )},
-        { key: 'createdAt', label: 'Date', render: (val) => new Date(val).toLocaleDateString() }
-      ]}
-      showEdit={false}
-      showDelete={false}
-    />
-  );
-};
-
-// Banners View
+// ─── Banners View ─────────────────────────────────────────────────────────────
 export const BannersView: React.FC<ViewProps<Banner>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadBanners();
-  }, [refreshTrigger]);
+  useEffect(() => { loadBanners(); }, [refreshTrigger]);
 
   const loadBanners = async () => {
     try {
       setLoading(true);
-      const data = await api.fetchData<Banner[]>('/banners');
-      setBanners(data);
-    } catch (error) {
-      console.error('Failed to load banners:', error);
+      setError('');
+      const response = await api.fetchData<{ data?: Banner[] } | Banner[]>('/banners');
+      setBanners(unwrapArray(response));
+    } catch (err: unknown) {
+      console.error('Failed to load banners:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load banners');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-black">Loading banners...</div>;
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading banners…</div>;
+  if (error)   return (
+    <div className="text-center py-12">
+      <p className="text-red-500 mb-3">{error}</p>
+      <button onClick={loadBanners} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
+    </div>
+  );
 
   return (
-    <DataTable 
+    <DataTable
       data={banners}
       columns={[
-        { key: 'title', label: 'Title' },
+        { key: 'title',    label: 'Title' },
         { key: 'position', label: 'Position' },
-        { key: 'isActive', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${val ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {val ? 'Active' : 'Inactive'}
+        { key: 'isActive', label: 'Status', render: (v) => (
+          <span className={`px-2 py-1 rounded text-xs ${v ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {v ? 'Active' : 'Inactive'}
           </span>
-        )}
+        )},
       ]}
       onEdit={onEdit}
       onDelete={onDelete}
@@ -321,51 +329,59 @@ export const BannersView: React.FC<ViewProps<Banner>> = ({ onEdit, onDelete, ref
   );
 };
 
-// Coupons View
+// ─── Coupons View ─────────────────────────────────────────────────────────────
 export const CouponsView: React.FC<ViewProps<Coupon>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    loadCoupons();
-  }, [refreshTrigger]);
+  useEffect(() => { loadCoupons(); }, [refreshTrigger]);
 
   const loadCoupons = async () => {
     try {
       setLoading(true);
-      const data = await api.fetchData<Coupon[]>('/coupons');
-      setCoupons(data);
-    } catch (error) {
-      console.error('Failed to load coupons:', error);
+      setError('');
+      const response = await api.fetchData<{ data?: Coupon[] } | Coupon[]>('/coupons');
+      setCoupons(unwrapArray(response));
+    } catch (err: unknown) {
+      console.error('Failed to load coupons:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load coupons');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="text-center py-12 text-black">Loading coupons...</div>;
+  if (loading) return <div className="text-center py-12 text-gray-500">Loading coupons…</div>;
+  if (error)   return (
+    <div className="text-center py-12">
+      <p className="text-red-500 mb-3">{error}</p>
+      <button onClick={loadCoupons} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
+    </div>
+  );
 
   return (
-    <DataTable 
+    <DataTable
       data={coupons}
       columns={[
-        { key: 'code', label: 'Code' },
-        { key: 'discountType', label: 'Type' },
-        { key: 'discountValue', label: 'Value', render: (val, row) => 
-          row.discountType === 'PERCENTAGE' ? `${val}%` : `₹${val}`
+        { key: 'code',          label: 'Code' },
+        { key: 'discountType',  label: 'Type' },
+        { key: 'discountValue', label: 'Value', render: (v, row) =>
+          row.discountType === 'PERCENTAGE' ? `${v}%` : `₹${v}`
         },
-        { key: 'isActive', label: 'Status', render: (val) => (
-          <span className={`px-2 py-1 rounded text-xs ${val ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {val ? 'Active' : 'Inactive'}
+        { key: 'isActive', label: 'Status', render: (v) => (
+          <span className={`px-2 py-1 rounded text-xs ${v ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {v ? 'Active' : 'Inactive'}
           </span>
-        )}
+        )},
       ]}
       onEdit={onEdit}
       onDelete={onDelete}
     />
   );
 };
-export { ImagesView } from './ImagesView';
-export { ReviewsView } from './ReviewsView';
+
+export { ImagesView }   from './ImagesView';
+export { ReviewsView }  from './ReviewsView';
 export { MenuJsonView } from './MenuJsonView';
-export {UsersView} from "./UsersView"
-export { VideosView } from './VideosView';
+export { UsersView }    from './UsersView';
+export { VideosView }   from './VideosView';

@@ -1,9 +1,16 @@
 // app/api/admin/testimonials/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-
+interface Testimonial {
+  id: string;
+  name: string;
+  review: string;
+  rating: number;
+  location: string;
+  image: string;
+}
 const TESTIMONIALS_FILE = join(process.cwd(), 'data', 'testimonials.json');
 
 async function readTestimonials() {
@@ -17,7 +24,7 @@ async function readTestimonials() {
   }
 }
 
-async function writeTestimonials(testimonials: any[]) {
+async function writeTestimonials(testimonials: Testimonial[]): Promise<void> {
   const data = { testimonials };
   await writeFile(TESTIMONIALS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -39,9 +46,9 @@ export async function PUT(
     const testimonials = await readTestimonials();
     
     console.log('PUT - Looking for ID:', id);
-    console.log('Available testimonials:', testimonials.map((t: any) => ({ id: t.id, name: t.name })));
+    console.log('Available testimonials:', testimonials.map((t: Testimonial) => ({ id: t.id, name: t.name })));
     
-    const index = testimonials.findIndex((t: any) => t.id === id);
+    const index = testimonials.findIndex((t: Testimonial) => t.id === id);
     
     if (index === -1) {
       console.log('Testimonial not found with ID:', id);
@@ -89,9 +96,9 @@ export async function DELETE(
     const testimonials = await readTestimonials();
     
     console.log('DELETE - Looking for ID:', id);
-    console.log('Available testimonials:', testimonials.map((t: any) => ({ id: t.id, name: t.name })));
+    console.log('Available testimonials:', testimonials.map((t: Testimonial) => ({ id: t.id, name: t.name })));
     
-    const index = testimonials.findIndex((t: any) => t.id === id);
+   const index = testimonials.findIndex((t: Testimonial) => t.id === id);
     
     if (index === -1) {
       console.log('Testimonial not found with ID:', id);

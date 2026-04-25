@@ -103,7 +103,7 @@ export function MenuJsonView() {
         const parsed = JSON.parse(content);
         setJsonText(JSON.stringify(parsed, null, 2));
         setError('');
-      } catch (err) {
+      } catch {
         setError('Invalid JSON file');
       }
     };
@@ -121,7 +121,7 @@ export function MenuJsonView() {
       const parsed = JSON.parse(jsonText);
       setJsonText(JSON.stringify(parsed, null, 2));
       setError('');
-    } catch (err) {
+    } catch {
       setError('Invalid JSON format');
     }
   };
@@ -219,6 +219,7 @@ export function MenuJsonView() {
           </label>
           <p className="text-xs text-gray-500 mb-4">
             Edit the JSON below. Each top-level key represents a menu section (motorcycleAccessories, ridingGears, etc.).
+        {/* eslint-disable-next-line react/no-unescaped-entities */}
             Each section contains category groups with items having 'name' and 'slug' properties.
           </p>
         </div>

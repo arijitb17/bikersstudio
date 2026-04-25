@@ -1,8 +1,8 @@
 // app/admin/views/ReviewsView.tsx
 import { useState, useEffect } from 'react';
-import { Star, CheckCircle, XCircle, Eye, Trash2 } from 'lucide-react';
+import { Star, CheckCircle, XCircle,  Trash2 } from 'lucide-react';
 import { api } from '../api';
-
+import Image from 'next/image';
 interface Review {
   id: string;
   rating: number;
@@ -41,8 +41,8 @@ export function ReviewsView({ onDelete, refreshTrigger }: ReviewsViewProps) {
       setLoading(true);
       const data = await api.fetchData<Review[]>('/reviews');
       setReviews(data);
-    } catch (error) {
-      console.error('Failed to load reviews:', error);
+    } catch (err) {
+      console.error('Failed to load reviews:', err);
     } finally {
       setLoading(false);
     }
@@ -52,7 +52,7 @@ export function ReviewsView({ onDelete, refreshTrigger }: ReviewsViewProps) {
     try {
       await api.saveData(`/reviews/${id}/approve`, { isApproved: !currentStatus }, 'PUT');
       loadReviews();
-    } catch (error) {
+    } catch {
       alert('Failed to update review status');
     }
   };
@@ -169,12 +169,14 @@ export function ReviewsView({ onDelete, refreshTrigger }: ReviewsViewProps) {
                   {review.images && review.images.length > 0 && (
                     <div className="flex gap-2 mb-3">
                       {review.images.map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`Review image ${idx + 1}`}
-                          className="w-20 h-20 object-cover rounded border"
-                        />
+                        <Image
+  key={idx}
+  src={img}
+  alt={`Review image ${idx + 1}`}
+  width={80}
+  height={80}
+  className="object-cover rounded border"
+/>
                       ))}
                     </div>
                   )}

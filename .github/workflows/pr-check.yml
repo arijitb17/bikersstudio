@@ -1,0 +1,55 @@
+# .github/workflows/pr-check.yml
+#
+# Fast feedback on Pull Requests — runs lint + type-check + build check.
+# Does NOT push images or deploy anywhere.
+
+name: PR Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint / Type / Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npx prisma generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build (verify it compiles)
+        run: npm run build
+        env:
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
+          NEXTAUTH_SECRET: "ci-secret-stub"
+          NEXTAUTH_URL: "http://localhost:3000"
+          GOOGLE_CLIENT_ID: "stub"
+          GOOGLE_CLIENT_SECRET: "stub"
+          RAZORPAY_KEY_ID: "stub"
+          RAZORPAY_KEY_SECRET: "stub"
+          NEXT_PUBLIC_RAZORPAY_KEY_ID: "stub"
+          NEXT_TELEMETRY_DISABLED: "1"

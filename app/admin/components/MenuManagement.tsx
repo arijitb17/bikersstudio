@@ -1,8 +1,8 @@
 // admin/components/MenuManagement.tsx
 "use client";
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash, GripVertical, ChevronDown, ChevronRight, Eye, EyeOff } from 'lucide-react';
-
+import { Plus, Edit, Trash, GripVertical, ChevronDown, ChevronRight } from 'lucide-react';
+type MenuType = 'BRAND_MENU' | 'CATEGORY_MENU' | 'CUSTOM_MENU';
 interface MenuItem {
   id: string;
   name: string;
@@ -338,6 +338,7 @@ export default function MenuManagement() {
       <div className="bg-white rounded-lg shadow">
         {hierarchicalMenus.length === 0 ? (
           <div className="p-12 text-center text-gray-500">
+        {/* eslint-disable-next-line react/no-unescaped-entities */}
             No menu items yet. Click "Add Menu Item" to create one.
           </div>
         ) : (
@@ -400,7 +401,7 @@ export default function MenuManagement() {
                   required
                   className="w-full px-4 py-2 border rounded-lg text-black"
                   value={formData.type}
-                  onChange={(e) => setFormData({...formData, type: e.target.value as any})}
+                  onChange={(e) => setFormData({...formData, type: e.target.value as MenuType})}
                 >
                   <option value="BRAND_MENU">Brand Menu (Shop by Bike)</option>
                   <option value="CATEGORY_MENU">Category Menu (Products)</option>

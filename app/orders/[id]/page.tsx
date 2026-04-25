@@ -2,15 +2,13 @@
 
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use} from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   Loader2, 
-  Package, 
   MapPin,
-  Calendar,
   IndianRupee,
   CheckCircle,
   ArrowLeft,
@@ -18,7 +16,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
-
+import Image from 'next/image';
 interface OrderItem {
   id: string;
   productId: string;
@@ -59,17 +57,15 @@ interface Order {
 }
 
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // Unwrap params Promise
   const { id } = use(params);
 
-  // Check for success parameter
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
       setShowSuccess(true);
@@ -77,50 +73,43 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
     }
   }, [searchParams]);
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/orders');
     }
   }, [status, router]);
 
-  // Load order
+  // Single effect — no useCallback needed with React Compiler
   useEffect(() => {
-    if (status === 'authenticated') {
-      loadOrder();
-    }
-  }, [status, id]);
+    if (status !== 'authenticated') return;
 
-  const loadOrder = async () => {
-    try {
-      console.log('Loading order with ID:', id);
-      const response = await fetch(`/api/user/orders/${id}`);
-      const data = await response.json();
-      
-      console.log('Order response:', { ok: response.ok, data });
-      
-      if (response.ok) {
-        setOrder(data.order);
-      } else {
-        console.error('Failed to load order:', data);
+    const loadOrder = async () => {
+      try {
+        const response = await fetch(`/api/user/orders/${id}`);
+        const data = await response.json();
+        if (response.ok) {
+          setOrder(data.order);
+        } else {
+          router.push('/orders');
+        }
+      } catch (error) {
+        console.error('Error loading order:', error);
         router.push('/orders');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading order:', error);
-      router.push('/orders');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  // Helper function to convert Decimal to number
-  const toNumber = (value: any): number => {
+    loadOrder();
+  }, [status, id, router]);
+
+  type DecimalLike = number | string | { toNumber: () => number };
+
+  const toNumber = (value: DecimalLike): number => {
     if (typeof value === 'number') return value;
     if (typeof value === 'string') return parseFloat(value);
-    if (value && typeof value.toNumber === 'function') return value.toNumber();
-    return parseFloat(value);
+    return value.toNumber();
   };
-
   if (status === 'loading' || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -233,11 +222,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 {order.items.map((item) => (
                   <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
                     <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
-                      <img
-                        src={item.product.thumbnail}
-                        alt={item.product.name}
-                        className="w-full h-full object-contain"
-                      />
+                      <Image
+    src={item.product.thumbnail}
+    alt={item.product.name}
+    fill
+    className="object-contain"
+  />
                     </div>
                     <div className="flex-1">
                       <Link

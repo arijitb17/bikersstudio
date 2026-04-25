@@ -1,19 +1,14 @@
-// views/TestimonialsView.tsx
-import React, { useState, useEffect } from 'react';
-import { Edit2, Trash2, Star } from 'lucide-react';
-import { api } from '../api';
+// app/admin/views/TestimonialsView.tsx
+"use client";
 
-interface Testimonial {
-  id: string;
-  name: string;
-  review: string;
-  rating: number;
-  image?: string;
-  location?: string;
-}
+import React, { useEffect, useState } from 'react';
+import { Trash2, Edit, Star } from 'lucide-react';
+import Image from 'next/image';
+import { api } from '../api';
+import { AdminItem, Testimonial } from '../types';
 
 interface TestimonialsViewProps {
-  onEdit: (item: Testimonial) => void;
+  onEdit: (item: AdminItem) => void;
   onDelete: (id: string, name: string) => void;
   refreshTrigger: number;
 }
@@ -21,7 +16,6 @@ interface TestimonialsViewProps {
 export function TestimonialsView({ onEdit, onDelete, refreshTrigger }: TestimonialsViewProps) {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     loadTestimonials();
@@ -34,111 +28,83 @@ export function TestimonialsView({ onEdit, onDelete, refreshTrigger }: Testimoni
       setTestimonials(data);
     } catch (error) {
       console.error('Failed to load testimonials:', error);
-      alert('Failed to load testimonials');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTestimonials = testimonials.filter(testimonial =>
-    testimonial.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    testimonial.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    testimonial.review.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <input
-          type="text"
-          placeholder="Search testimonials..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-96"
-        />
-        <div className="text-sm text-gray-600">
-          Total: {filteredTestimonials.length} testimonials
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTestimonials.map((testimonial) => (
-          <div
-            key={testimonial.id}
-            className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-200"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                {testimonial.image ? (
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-blue-500"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                    {testimonial.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div>
-                  <h3 className="font-semibold text-gray-900">{testimonial.name}</h3>
-                  {testimonial.location && (
-                    <p className="text-sm text-gray-500">{testimonial.location}</p>
-                  )}
-                </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {testimonials.map((testimonial) => (
+        <div key={testimonial.id} className="bg-white rounded-lg shadow p-6 flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            {testimonial.image ? (
+              <Image
+                src={testimonial.image as string}
+                alt={testimonial.name as string}
+                width={48}
+                height={48}
+                className="rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
+                {(testimonial.name as string)?.[0]?.toUpperCase() ?? '?'}
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => onEdit(testimonial)}
-                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                  title="Edit"
-                >
-                  <Edit2 size={18} />
-                </button>
-                <button
-                  onClick={() => onDelete(testimonial.id, testimonial.name)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  title="Delete"
-                >
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            </div>
-
-            <p className="text-gray-700 text-sm mb-4 italic line-clamp-3">
-              "{testimonial.review}"
-            </p>
-
-            <div className="flex items-center gap-1 pt-4 border-t border-gray-100">
-              {[...Array(5)].map((_, index) => (
-                <Star
-                  key={index}
-                  className={`w-5 h-5 ${
-                    index < testimonial.rating
-                      ? 'fill-yellow-400 text-yellow-400'
-                      : 'fill-gray-200 text-gray-200'
-                  }`}
-                />
-              ))}
-              <span className="ml-2 text-sm text-gray-600 font-medium">
-                {testimonial.rating}.0
-              </span>
+            )}
+            <div>
+              <p className="font-semibold text-gray-900">{testimonial.name as string}</p>
+              {testimonial.location && (
+                <p className="text-sm text-gray-500">{testimonial.location as string}</p>
+              )}
             </div>
           </div>
-        ))}
-      </div>
 
-      {filteredTestimonials.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No testimonials found</p>
+          <div className="flex gap-0.5">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <Star
+                key={star}
+                size={16}
+                className={
+                  star <= (testimonial.rating as number)
+                    ? 'fill-yellow-400 text-yellow-400'
+                    : 'fill-gray-200 text-gray-200'
+                }
+              />
+            ))}
+          </div>
+
+          <p className="text-gray-700 text-sm flex-1 line-clamp-4">{testimonial.review as string}</p>
+
+          <div className="flex gap-2 pt-2 border-t">
+            <button
+              onClick={() => onEdit(testimonial)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+            >
+              <Edit size={14} />
+              Edit
+            </button>
+            <button
+              onClick={() => onDelete(testimonial.id as string, testimonial.name as string)}
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+            >
+              <Trash2 size={14} />
+              Delete
+            </button>
+          </div>
+        </div>
+      ))}
+
+      {testimonials.length === 0 && (
+        <div className="col-span-full text-center py-16 text-gray-500">
+          No testimonials yet. Add your first one!
         </div>
       )}
     </div>

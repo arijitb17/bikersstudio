@@ -1,28 +1,32 @@
-import { NextResponse } from 'next/server';
+// app/api/brands/route.ts
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { applyRateLimit, API_LIMITER } from '@/lib/rateLimiter';
+import { withCache, CacheKey, TTL } from '@/lib/cache';
+import { handleApiError, ok } from '@/lib/apiHelpers';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = await applyRateLimit(req, API_LIMITER);
+  if (limited) return limited;
+
   try {
-    const brands = await prisma.brand.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' },
-      select: {
-        name: true,
-        slug: true,
-        bikes: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' },
-          select: {
-            name: true,
-            slug: true,
-          }
-        }
-      }
-    });
-
-    return NextResponse.json(brands);
-  } catch (error) {
-    console.error('Failed to fetch brands:', error);
-    return NextResponse.json({ error: 'Failed to fetch brands' }, { status: 500 });
+    const data = await withCache(CacheKey.brandsPublic(), TTL.MEDIUM, () =>
+      prisma.brand.findMany({
+        where: { isActive: true },
+        orderBy: { name: 'asc' },
+        select: {
+          name: true,
+          slug: true,
+          bikes: {
+            where: { isActive: true },
+            orderBy: { name: 'asc' },
+            select: { name: true, slug: true },
+          },
+        },
+      })
+    );
+    return ok(data);
+  } catch (e) {
+    return handleApiError(e, 'GET /api/brands');
   }
 }

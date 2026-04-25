@@ -1,136 +1,126 @@
-import { NextResponse } from 'next/server';
+// app/api/admin/categories/[id]/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { applyRateLimit, ADMIN_WRITE_LIMITER } from '@/lib/rateLimiter';
+import { invalidateKeys, invalidatePattern, CacheKey, InvalidationPattern } from '@/lib/cache';
+import { handleApiError, ok } from '@/lib/apiHelpers';
 
-// ============================================
-// FILE: app/api/admin/categories/[id]/route.ts
-// ============================================
+async function requireAdmin(_req: NextRequest): Promise<{ userId: string } | NextResponse> {
+  const session = await getServerSession(authOptions) as Session | null;
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: { id: true, role: true },
+  });
+  if (!user || user.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  return { userId: user.id };
+}
 
 async function checkCircularReference(categoryId: string, newParentId: string): Promise<boolean> {
   let currentId = newParentId;
   const visited = new Set<string>();
-  
   while (currentId) {
-    if (visited.has(currentId)) return true;
-    if (currentId === categoryId) return true;
-    
+    if (visited.has(currentId) || currentId === categoryId) return true;
     visited.add(currentId);
-    
     const parent = await prisma.category.findUnique({
       where: { id: currentId },
-      select: { parentId: true }
+      select: { parentId: true },
     });
-    
-    if (!parent || !parent.parentId) break;
+    if (!parent?.parentId) break;
     currentId = parent.parentId;
   }
-  
   return false;
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAdmin(_req);
+  if (auth instanceof NextResponse) return auth;
+
+  const limited = await applyRateLimit(_req, ADMIN_WRITE_LIMITER, auth.userId);
+  if (limited) return limited;
+
   try {
-    const body = await request.json();
-    console.log('📝 Updating category:', params.id);
-    
-    if (!body.name || !body.name.trim()) {
+    const { id } = await params;
+    const body = await _req.json();
+
+    if (!body.name?.trim()) {
       return NextResponse.json({ error: 'Category name is required' }, { status: 400 });
     }
 
-    const existingCategory = await prisma.category.findUnique({
-      where: { id: params.id }
-    });
-
-    if (!existingCategory) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
-    }
+    const existing = await prisma.category.findUnique({ where: { id } });
+    if (!existing) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
 
     const slugConflict = await prisma.category.findFirst({
-      where: {
-        slug: body.slug.trim(),
-        NOT: { id: params.id }
-      }
+      where: { slug: body.slug?.trim(), NOT: { id } },
     });
-
     if (slugConflict) {
-      return NextResponse.json({ error: 'Category slug already exists' }, { status: 400 });
+      return NextResponse.json({ error: 'Category slug already exists' }, { status: 409 });
     }
 
     if (body.parentId && body.parentId !== '') {
-      if (body.parentId === params.id) {
+      if (body.parentId === id) {
         return NextResponse.json({ error: 'Category cannot be its own parent' }, { status: 400 });
       }
-
-      const isCircular = await checkCircularReference(params.id, body.parentId);
-      if (isCircular) {
+      if (await checkCircularReference(id, body.parentId)) {
         return NextResponse.json({ error: 'Circular parent reference detected' }, { status: 400 });
       }
     }
 
-    const bikeId = body.bikeId && body.bikeId !== '' ? body.bikeId : null;
-    const parentId = body.parentId && body.parentId !== '' ? body.parentId : null;
-
     const category = await prisma.category.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         name: body.name.trim(),
-        slug: body.slug.trim(),
+        slug: body.slug?.trim(),
         description: body.description?.trim() || null,
         image: body.image?.trim() || null,
         icon: body.icon?.trim() || null,
         showInMenu: body.showInMenu ?? true,
         menuColumns: parseInt(body.menuColumns) || 1,
         isActive: body.isActive ?? true,
-        bikeId: bikeId,
-        parentId: parentId
-        // Removed position field
+        bikeId: body.bikeId || null,
+        parentId: body.parentId || null,
       },
       include: {
         parent: { select: { id: true, name: true } },
-        bike: { select: { id: true, name: true } }
-      }
+        bike: { select: { id: true, name: true } },
+      },
     });
 
-    console.log('✅ Category updated:', category.id);
-    return NextResponse.json(category);
-  } catch (error: any) {
-    console.error('❌ Category update error:', error);
-    
-    if (error.code === 'P2002') {
-      return NextResponse.json({ error: 'Category with this name or slug already exists' }, { status: 400 });
-    }
-    
-    return NextResponse.json({ 
-      error: 'Failed to update category',
-      details: error.message 
-    }, { status: 500 });
+    await Promise.all([
+      invalidateKeys(CacheKey.category(id)),
+      invalidatePattern(InvalidationPattern.categories()),
+    ]);
+
+    return ok(category);
+  } catch (e) {
+    return handleApiError(e, 'PUT /api/admin/categories/[id]');
   }
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    console.log('🗑️ Deleting category:', params.id);
-    
-    const category = await prisma.category.findUnique({
-      where: { id: params.id },
-      include: {
-        _count: {
-          select: {
-            products: true,
-            children: true
-          }
-        }
-      }
-    });
+  const auth = await requireAdmin(_req);
+  if (auth instanceof NextResponse) return auth;
 
-    if (!category) {
-      return NextResponse.json({ error: 'Category not found' }, { status: 404 });
-    }
+  const limited = await applyRateLimit(_req, ADMIN_WRITE_LIMITER, auth.userId);
+  if (limited) return limited;
+
+  try {
+    const { id } = await params;
+
+    const category = await prisma.category.findUnique({
+      where: { id },
+      include: { _count: { select: { products: true, children: true } } },
+    });
+    if (!category) return NextResponse.json({ error: 'Category not found' }, { status: 404 });
 
     if (category._count.products > 0) {
       return NextResponse.json(
@@ -138,7 +128,6 @@ export async function DELETE(
         { status: 400 }
       );
     }
-
     if (category._count.children > 0) {
       return NextResponse.json(
         { error: `Cannot delete category with ${category._count.children} subcategories` },
@@ -146,17 +135,15 @@ export async function DELETE(
       );
     }
 
-    await prisma.category.delete({
-      where: { id: params.id }
-    });
+    await prisma.category.delete({ where: { id } });
 
-    console.log('✅ Category deleted:', params.id);
-    return NextResponse.json({ success: true, message: 'Category deleted successfully' });
-  } catch (error: any) {
-    console.error('❌ Category delete error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to delete category',
-      details: error.message 
-    }, { status: 500 });
+    await Promise.all([
+      invalidateKeys(CacheKey.category(id)),
+      invalidatePattern(InvalidationPattern.categories()),
+    ]);
+
+    return ok({ success: true, message: 'Category deleted successfully' });
+  } catch (e) {
+    return handleApiError(e, 'DELETE /api/admin/categories/[id]');
   }
 }

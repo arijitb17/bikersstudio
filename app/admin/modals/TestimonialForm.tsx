@@ -1,17 +1,36 @@
 // modals/forms/TestimonialForm.tsx
 import React, { useState, useEffect } from 'react';
 import { Star, Upload, X } from 'lucide-react';
+import Image from 'next/image';
+
+interface TestimonialItem {
+  id?: string;
+  name?: string;
+  review?: string;
+  rating?: number;
+  image?: string;
+  location?: string;
+}
+
+interface TestimonialFormData {
+  name: string;
+  review: string;
+  rating: number;
+  image: string;
+  location: string;
+  [key: string]: unknown; // satisfies Record<string, unknown> — fixes contravariance error
+}
 
 interface TestimonialFormProps {
-  item: any;
-  onSave: (endpoint: string, data: any, method: 'POST' | 'PUT') => void;
+  item: TestimonialItem | null;
+  onSave: (endpoint: string, data: Record<string, unknown>, method: 'POST' | 'PUT') => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>, callback: (url: string) => void) => void;
   uploadingImage: boolean;
   loading: boolean;
 }
 
 export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, loading }: TestimonialFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TestimonialFormData>({
     name: '',
     review: '',
     rating: 5,
@@ -34,7 +53,7 @@ export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, l
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       alert('Please enter a name');
       return;
@@ -49,7 +68,7 @@ export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, l
     }
 
     const endpoint = item?.id ? `/testimonials/${item.id}` : '/testimonials';
-    const method = item?.id ? 'PUT' : 'POST';
+    const method: 'POST' | 'PUT' = item?.id ? 'PUT' : 'POST';
     onSave(endpoint, formData, method);
   };
 
@@ -133,10 +152,12 @@ export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, l
         <div className="flex items-center gap-4">
           {formData.image && (
             <div className="relative">
-              <img
-                src={formData.image}
+              <Image
+                src={formData.image as string}
                 alt="Preview"
-                className="w-20 h-20 rounded-full object-cover border-2 border-gray-300"
+                width={80}
+                height={80}
+                className="rounded-full object-cover border-2 border-gray-300"
               />
               <button
                 type="button"

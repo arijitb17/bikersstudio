@@ -1,23 +1,19 @@
-// app/api/user/addresses/[id]/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-// DELETE address
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const { id } = await params;
+    const session = await getServerSession(authOptions) as Session | null;
 
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -25,58 +21,38 @@ export async function DELETE(
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Verify address belongs to user
     const address = await prisma.address.findFirst({
-      where: {
-        id: params.id,
-        userId: user.id,
-      },
+      where: { id, userId: user.id },
     });
 
     if (!address) {
-      return NextResponse.json(
-        { error: 'Address not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Address not found' }, { status: 404 });
     }
 
-    // Delete address
     await prisma.address.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Address deleted successfully',
-    });
-  } catch (error: any) {
-    console.error('Error deleting address:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete address', details: error.message },
-      { status: 500 }
-    );
-  }
+    return NextResponse.json({ success: true, message: 'Address deleted successfully' });
+  } catch (error: unknown) {
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  return NextResponse.json({ error: 'Failed to delete address', details: message }, { status: 500 });
+}
 }
 
-// UPDATE address
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const { id } = await params;
+    const session = await getServerSession(authOptions) as Session | null;
 
     if (!session?.user?.email) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -84,64 +60,33 @@ export async function PUT(
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Verify address belongs to user
     const existingAddress = await prisma.address.findFirst({
-      where: {
-        id: params.id,
-        userId: user.id,
-      },
+      where: { id, userId: user.id },
     });
 
     if (!existingAddress) {
-      return NextResponse.json(
-        { error: 'Address not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Address not found' }, { status: 404 });
     }
 
-    const {
-      fullName,
-      phone,
-      street,
-      city,
-      state,
-      pincode,
-      country,
-      isDefault,
-    } = await request.json();
+    const { fullName, phone, street, city, state, pincode, country, isDefault } = await request.json();
 
-    // Validation
     if (!fullName?.trim() || !phone?.trim() || !street?.trim() || 
         !city?.trim() || !state?.trim() || !pincode?.trim()) {
-      return NextResponse.json(
-        { error: 'All fields are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
     }
 
-    // If setting as default, unset other defaults
     if (isDefault) {
       await prisma.address.updateMany({
-        where: {
-          userId: user.id,
-          isDefault: true,
-          id: { not: params.id },
-        },
-        data: {
-          isDefault: false,
-        },
+        where: { userId: user.id, isDefault: true, id: { not: id } },
+        data: { isDefault: false },
       });
     }
 
-    // Update address
     const address = await prisma.address.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         fullName: fullName.trim(),
         phone: phone.trim(),
@@ -154,16 +99,9 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      address,
-    });
-  } catch (error: any) {
-    console.error('Error updating address:', error);
-    return NextResponse.json(
-      { error: 'Failed to update address', details: error.message },
-      { status: 500 }
-    );
-  }
+    return NextResponse.json({ success: true, address });
+  } catch (error: unknown) {
+  const message = error instanceof Error ? error.message : 'Unknown error';
+  return NextResponse.json({ error: 'Failed to update address', details: message }, { status: 500 });
 }
-
+}

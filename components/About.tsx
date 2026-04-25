@@ -1,3 +1,4 @@
+import Image from 'next/image';
 export default function AboutUs() {
   return (
     <section className="min-h-screen py-20 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 flex items-center relative">
@@ -15,17 +16,20 @@ export default function AboutUs() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Image */}
               <div className="relative overflow-hidden rounded-2xl shadow-xl">
-                <img 
-                  src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80" 
+                <Image
+                  src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80"
                   alt="Motorcycle showroom"
-                  className="w-full h-full object-cover aspect-video"
+                  fill
+                  className="object-cover"
                 />
               </div>
 
               {/* Text Content */}
               <div>
                 <p className="text-gray-900 text-base leading-relaxed text-justify">
-                  <strong>Our bike store is dedicated to delivering high-quality motorcycles that combine performance, comfort, and reliability.</strong> We offer a wide range of bikes to suit every rider's needs, from daily commuters to high-performance models, all sourced from trusted brands. With a focus on innovation and design, each bike in our collection is carefully selected to ensure a smooth, safe, and enjoyable riding experience.
+        
+        
+                  <strong>Our bike store is dedicated to delivering high-quality motorcycles that combine performance, comfort, and reliability.</strong> We offer a wide range of bikes to suit every rider&apos;s needs, from daily commuters to high-performance models, all sourced from trusted brands. With a focus on innovation and design, each bike in our collection is carefully selected to ensure a smooth, safe, and enjoyable riding experience.
                 </p>
               </div>
             </div>
@@ -43,10 +47,11 @@ export default function AboutUs() {
 
               {/* Image */}
               <div className="relative overflow-hidden rounded-2xl shadow-xl lg:order-2 order-1">
-                <img 
-                  src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&q=80" 
+                <Image
+                  src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&q=80"
                   alt="Motorcycle display"
-                  className="w-full h-full object-cover aspect-video"
+                  fill
+                  className="object-cover"
                 />
               </div>
             </div>

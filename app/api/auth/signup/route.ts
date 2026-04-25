@@ -1,60 +1,50 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+// app/api/auth/signup/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+import { applyRateLimit, AUTH_LIMITER } from '@/lib/rateLimiter';
+import { handleApiError, ok } from '@/lib/apiHelpers';
 
-export async function POST(request: Request) {
+export async function POST(req: NextRequest) {
+  const limited = await applyRateLimit(req, AUTH_LIMITER);
+  if (limited) return limited;
+
   try {
-    const body = await request.json();
+    const body = await req.json();
     const { email, name, password, phone } = body;
 
-    if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+    if (!email?.trim() || !password) {
+      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    // Check if user exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "User already exists" },
-        { status: 400 }
-      );
+    if (password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
     }
 
-    // Hash password
+    // Normalize email
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (existing) {
+      // Return same message as "not found" to prevent email enumeration
+      return NextResponse.json({ error: 'Registration failed. Please try again.' }, { status: 400 });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create user
     const user = await prisma.user.create({
       data: {
-        email,
-        name,
+        email: normalizedEmail,
+        name: name?.trim() || null,
         password: hashedPassword,
-        phone,
-        role: "USER",
+        phone: phone?.trim() || null,
+        role: 'USER',
       },
+      select: { id: true, email: true, name: true },
     });
 
-    return NextResponse.json(
-      {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-      },
-      { status: 201 }
-    );
-  } catch (error) {
-    console.error("Registration error:", error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    return ok({ user }, 201);
+  } catch (e) {
+    return handleApiError(e, 'POST /api/auth/signup');
   }
 }

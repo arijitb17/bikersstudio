@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from './auth';
 import { prisma } from './prisma';
 import { revalidatePath } from 'next/cache';
+import { Prisma,PaymentMethod } from '@/app/generated/prisma/client';
 // -----------------
 // BRANDS & BIKES
 // -----------------
@@ -29,11 +30,6 @@ export async function getBrandsForShopByBikes() {
   });
 }
 
-// Fixed functions in lib/actions.ts
-
-// Temporary debug version - add console logs to actions.ts
-
-// ✅ Fix getBrandWithBikes
 export async function getBrandWithBikes(slug: string) {
   return await prisma.brand.findFirst({ // Changed from findUnique
     where: { slug, isActive: true },
@@ -45,6 +41,20 @@ export async function getBrandWithBikes(slug: string) {
     }
   });
 }
+
+type BikeWithProducts = Prisma.BikeGetPayload<{
+  include: {
+    brand: true;
+    products: {
+      include: {
+        category: true;
+        bike: { include: { brand: true } };
+      };
+    };
+  };
+}>;
+
+type ProductWithRelations = BikeWithProducts['products'][number];
 
 export async function getBikeWithProducts(slug: string) {
   const bike = await prisma.bike.findUnique({
@@ -66,29 +76,21 @@ export async function getBikeWithProducts(slug: string) {
 
   return {
     ...bike,
-    products: bike.products.map(p => ({
+    products: bike.products.map((p: ProductWithRelations) => ({
       id: p.id,
       name: p.name,
       slug: p.slug,
       thumbnail: p.thumbnail,
       images: p.images,
       stock: p.stock,
-
-      // convert Prisma Decimal -> number
       price: Number(p.price),
       salePrice: p.salePrice ? Number(p.salePrice) : null,
       weight: p.weight ? Number(p.weight) : null,
-
-      // serializable fields
       color: p.color,
       size: p.size,
       material: p.material,
       description: p.description,
-
-      // nested simplified
-      category: {
-        name: p.category.name
-      },
+      category: { name: p.category.name },
       bike: p.bike ? {
         name: p.bike.name,
         brand: { name: p.bike.brand.name }
@@ -118,45 +120,39 @@ export async function getAllCategories() {
 
 export async function getCategoryWithProducts(slug: string) {
   const category = await prisma.category.findFirst({
-    where: { slug, isActive: true },
-    include: {
-      products: {
-        where: { isActive: true },
-        include: {
-          category: true,
-          bike: {
-            include: { brand: true }
-          }
-        },
-        orderBy: { name: 'asc' }
+  where: { slug, isActive: true },
+  include: {
+    products: {
+      where: { isActive: true },
+      include: {
+        category: true,
+        bike: { include: { brand: true } }
       },
-      children: {
-        where: { isActive: true },
-        include: {
-          products: {
-            where: { isActive: true },
-            include: {
-              category: true,
-              bike: {
-                include: { brand: true }
-              }
-            }
+      orderBy: { name: 'asc' }
+    },
+    children: {
+      where: { isActive: true },
+      include: {
+        products: {
+          where: { isActive: true },
+          include: {
+            category: true,
+            bike: { include: { brand: true } }
           }
         }
-      },
-      bike: {
-        include: { brand: true }
       }
-    }
-  });
+    },
+    bike: { include: { brand: true } }
+  }
+});
 
   if (!category) return null;
-
+type CategoryWithProducts = NonNullable<typeof category>;
   // Combine products from parent and all children
-  const allProducts = [
-    ...category.products,
-    ...category.children.flatMap(child => child.products)
-  ];
+const allProducts = [
+  ...category.products,
+  ...category.children.flatMap((child: CategoryWithProducts['children'][number]) => child.products)
+];
 
   return {
     id: category.id,
@@ -344,25 +340,35 @@ export async function clearCart(userId: string) {
 // -----------------
 // ORDERS
 // -----------------
-
+interface CartItem {
+  productId: string;
+  quantity: number;
+  product: {
+    price: number;
+    salePrice: number | null;
+  };
+}
 export async function createOrder(data: {
   userId: string;
   addressId: string;
-  cartItems: any[];
-  paymentMethod: string;
+  cartItems: CartItem[];   
+  paymentMethod: PaymentMethod;
   subtotal: number;
   tax: number;
   shippingCost: number;
   total: number;
 }) {
-  const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+  const orderNumber = `ORD-${Date.now()}-${Math.random()
+  .toString(36)
+  .slice(2, 11)
+  .toUpperCase()}`;
   
   const order = await prisma.order.create({
     data: {
       orderNumber,
       userId: data.userId,
       addressId: data.addressId,
-      paymentMethod: data.paymentMethod as any,
+      paymentMethod: data.paymentMethod ,
       subtotal: data.subtotal,
       tax: data.tax,
       shippingCost: data.shippingCost,

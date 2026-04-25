@@ -1,9 +1,17 @@
 // app/api/testimonials/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
+
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
-
+interface Testimonial {
+  id: string;
+  name: string;
+  review: string;
+  rating: number;
+  location: string;
+  image: string;
+}
 const TESTIMONIALS_FILE = join(process.cwd(), 'data', 'testimonials.json');
 
 async function readTestimonials() {
@@ -17,7 +25,7 @@ async function readTestimonials() {
   }
 }
 
-async function writeTestimonials(testimonials: any[]) {
+async function writeTestimonials(testimonials: Testimonial[]): Promise<void> {
   const data = { testimonials };
   await writeFile(TESTIMONIALS_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
@@ -27,7 +35,7 @@ export async function GET() {
   try {
     const testimonials = await readTestimonials();
     return NextResponse.json(testimonials);
-  } catch (error) {
+  } catch (error:unknown) {
     console.error('GET testimonials error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch testimonials' },
@@ -48,10 +56,10 @@ export async function POST(request: NextRequest) {
     const testimonials = await readTestimonials();
     
     // Generate new ID
-    const maxId = testimonials.reduce((max: number, t: any) => {
-      const id = parseInt(t.id);
-      return id > max ? id : max;
-    }, 0);
+   const maxId = testimonials.reduce((max: number, t: Testimonial) => {
+  const id = parseInt(t.id);
+  return id > max ? id : max;
+}, 0);
     
     const newTestimonial = {
       id: String(maxId + 1),
@@ -67,7 +75,7 @@ export async function POST(request: NextRequest) {
     
     console.log('Created testimonial:', newTestimonial);
     return NextResponse.json(newTestimonial, { status: 201 });
-  } catch (error) {
+  } catch (error:unknown) {
     console.error('POST testimonials error:', error);
     return NextResponse.json(
       { error: 'Failed to create testimonial' },

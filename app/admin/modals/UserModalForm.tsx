@@ -2,17 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { X, Mail, User, Phone, Shield, Lock } from 'lucide-react';
+import type { AdminItem, UserFormData } from '../types';
 
 interface UserModalFormProps {
   type: 'create' | 'edit';
-  item: any | null;
+  item: AdminItem | null;
   onClose: () => void;
-  onSave: (endpoint: string, data: any, method: 'POST' | 'PUT') => void;
+  onSave: (endpoint: string, data: AdminItem, method: 'POST' | 'PUT') => Promise<void>;
   loading: boolean;
 }
 
 export function UserModalForm({ type, item, onClose, onSave, loading }: UserModalFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UserFormData>({
     id: '',
     email: '',
     name: '',
@@ -24,11 +25,11 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
   useEffect(() => {
     if (type === 'edit' && item) {
       setFormData({
-        id: item.id || '',
-        email: item.email || '',
-        name: item.name || '',
-        phone: item.phone || '',
-        role: item.role || 'USER',
+        id: (item.id as string) || '',
+        email: (item.email as string) || '',
+        name: (item.name as string) || '',
+        phone: (item.phone as string) || '',
+        role: (item.role as 'USER' | 'ADMIN') || 'USER',
         password: '', // Never pre-fill password
       });
     } else {
@@ -45,7 +46,7 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.email) {
       alert('Email is required');
       return;
@@ -56,26 +57,26 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
       return;
     }
 
-    const endpoint = '/users';
-    const method = type === 'edit' ? 'PUT' : 'POST';
-    
+    const endpoint = `/users/${formData.id}`;
+    const method = 'PUT' as const;
+
     onSave(endpoint, formData, method);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 text-gray-500">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h3 className="text-xl font-bold text-gray-900">
-            {type === 'create' ? 'Add New User' : 'Edit User'}
-          </h3>
+  Edit User
+</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600"
@@ -98,7 +99,7 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500"
               placeholder="user@example.com"
               disabled={loading}
             />
@@ -115,7 +116,7 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500"
               placeholder="John Doe"
               disabled={loading}
             />
@@ -132,7 +133,7 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500"
               placeholder="+91 98765 43210"
               disabled={loading}
             />
@@ -149,7 +150,7 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
               value={formData.role}
               onChange={handleChange}
               required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500"
               disabled={loading}
             >
               <option value="USER">User</option>
@@ -169,7 +170,7 @@ export function UserModalForm({ type, item, onClose, onSave, loading }: UserModa
               value={formData.password}
               onChange={handleChange}
               required={type === 'create'}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500"
               placeholder={type === 'edit' ? 'Leave blank to keep current password' : 'Enter password'}
               disabled={loading}
               minLength={6}

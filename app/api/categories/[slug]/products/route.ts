@@ -16,9 +16,6 @@ export async function GET(
     const category = await prisma.category.findUnique({
       where: { slug },
     });
-
-    console.log('Category found:', category);
-
     if (!category) {
       return NextResponse.json(
         { error: 'Category not found' },
@@ -60,9 +57,6 @@ export async function GET(
         createdAt: 'desc',
       },
     });
-
-    console.log('Products found:', products.length);
-
     return NextResponse.json(products);
   } catch (error) {
     console.error('Error fetching products:', error);

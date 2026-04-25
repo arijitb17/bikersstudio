@@ -7,18 +7,18 @@ import { X, Upload, FileSpreadsheet, AlertCircle, CheckCircle, XCircle, Download
 interface BulkImportModalProps {
   type: string;
   onClose: () => void;
-  onImport: (type: string, file: File) => Promise<any>;
+  onImport: (type: string, file: File) => Promise<ImportResult>; 
   loading: boolean;
 }
 
-interface ImportResult {
+// BulkImportModal.tsx
+export interface ImportResult {  // add 'export'
   success: boolean;
   totalRows: number;
   successRows: number;
   failedRows: number;
   errors?: Array<{ row: number; name: string; error: string }>;
 }
-
 interface UploadResult {
   originalName: string;
   fileName: string;
@@ -205,9 +205,9 @@ export const BulkImportModal: React.FC<BulkImportModalProps> = ({
 
       setImageUploadResult(data);
       setImageFiles([]);
-    } catch (error: any) {
-      alert('Upload failed: ' + error.message);
-    } finally {
+    } catch (error: unknown) {
+  alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+} finally {
       setImageUploading(false);
     }
   };

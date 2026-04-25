@@ -1,13 +1,14 @@
 // app/api/user/addresses/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as Session | null;
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -37,12 +38,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       addresses: user.addresses,
     });
-  } catch (error: any) {
-    console.error('Error fetching addresses:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch addresses', details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to fetch addresses', details: message }, { status: 500 });
   }
 }
 
@@ -50,7 +48,7 @@ export async function POST(request: NextRequest) {
   console.log('=== POST /api/user/addresses called ===');
   
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as Session | null;
     console.log('Session:', session ? 'Authenticated' : 'Not authenticated');
 
     if (!session?.user?.email) {
@@ -144,12 +142,8 @@ export async function POST(request: NextRequest) {
       success: true,
       address,
     });
-  } catch (error: any) {
-    console.error('Error creating address:', error);
-    console.error('Stack trace:', error.stack);
-    return NextResponse.json(
-      { error: 'Failed to create address', details: error.message },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: 'Failed to create address', details: message }, { status: 500 });
   }
 }

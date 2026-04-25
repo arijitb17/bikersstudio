@@ -2,7 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { existsSync } from 'fs';
+interface Video {
+  id: string;
+  title: string;
+  videoUrl: string;
+  views: number;
+  duration: string;
+}
 
+interface VideoStore {
+  videos: Video[];
+}
 const dataDir = join(process.cwd(), 'data');
 const videosPath = join(dataDir, 'videos.json');
 
@@ -21,11 +31,11 @@ async function readVideos() {
   const content = await readFile(videosPath, 'utf-8');
   return JSON.parse(content);
 }
-
-async function writeVideos(data: any) {
+async function writeVideos(data: VideoStore): Promise<void> {
   await ensureDataDir();
   await writeFile(videosPath, JSON.stringify(data, null, 2));
 }
+
 
 // GET - Read all videos
 export async function GET() {
@@ -71,7 +81,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const data = await readVideos();
     
-    const index = data.videos.findIndex((v: any) => v.id === body.id);
+    const index = data.videos.findIndex((v: Video) => v.id === body.id);
     if (index === -1) {
       return NextResponse.json(
         { error: 'Video not found' },
@@ -112,7 +122,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const data = await readVideos();
-    data.videos = data.videos.filter((v: any) => v.id !== id);
+    data.videos = data.videos.filter((v: Video) => v.id !== id);
     await writeVideos(data);
 
     return NextResponse.json({ success: true });

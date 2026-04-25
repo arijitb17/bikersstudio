@@ -1,7 +1,8 @@
 // app/api/admin/templates/[type]/route.ts
 import { NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
-
+type TemplateRow = Record<string, string | number | boolean>;
+type Instructions = Record<string, string>;
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ type: string }> }
@@ -9,8 +10,8 @@ export async function GET(
   try {
     const { type } = await params;
 
-    let sampleData: any[] = [];
-    let instructions: any = {};
+    let sampleData: TemplateRow[] = [];
+    let instructions: Instructions = {};
 
     switch (type) {
       case 'products':

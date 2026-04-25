@@ -1,3 +1,7 @@
+﻿
+
+export const dynamic = 'force-dynamic'
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { getBrandsForShopByBikes } from '@/lib/actions';
@@ -78,3 +82,5 @@ export default async function AllBrandsPage() {
     </div>
   );
 }
+
+

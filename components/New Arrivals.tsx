@@ -1,8 +1,10 @@
+export const dynamic = 'force-dynamic'
 import Image from 'next/image';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import AddToCartButton from './AddToCartButton';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface Product {
   id: string;
   name: string;

@@ -53,7 +53,7 @@ export default function FogLights() {
       
       const fogLightProducts = productsData
         .slice(0, 4)
-        .map((p: any) => ({
+        .map((p: Product) => ({
           id: p.id,
           name: p.name,
           slug: p.slug,

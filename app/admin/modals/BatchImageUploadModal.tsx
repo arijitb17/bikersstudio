@@ -92,9 +92,9 @@ export const BatchImageUploadModal: React.FC<BatchImageUploadModalProps> = ({ on
 
       setResult(data);
       setFiles([]); // Clear files after successful upload
-    } catch (error: any) {
-      alert('Upload failed: ' + error.message);
-    } finally {
+   } catch (error: unknown) {
+  alert('Upload failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
+} finally {
       setLoading(false);
     }
   };

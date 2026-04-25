@@ -114,9 +114,9 @@ export default function AddressForm({ onSuccess, initialData, onCancel }: Addres
       }
 
       onSuccess(data.address);
-    } catch (err: any) {
-      setError(err.message || 'Failed to save address');
-    } finally {
+    } catch (err: unknown) {
+  setError(err instanceof Error ? err.message : 'Failed to save address');
+}finally {
       setIsSubmitting(false);
     }
   };

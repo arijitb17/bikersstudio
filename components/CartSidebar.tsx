@@ -3,18 +3,23 @@
 import { useCart } from './CartContext';
 import { X, Minus, Plus, ShoppingBag, Trash2, Tag, AlertCircle } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
+
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-
+interface Coupon {
+  code: string;
+  discountType: 'PERCENTAGE' | 'FIXED';
+  discountValue: number;
+  maxDiscount?: number;
+}
 export default function CartSidebar() {
   const { items, itemCount, total, isOpen, closeCart, updateQuantity, removeFromCart } = useCart();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   
   const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [couponError, setCouponError] = useState('');
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [discount, setDiscount] = useState(0);
@@ -345,7 +350,7 @@ const handleApplyCoupon = async () => {
                   <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-blue-800">
-                      You'll be redirected to sign in before checkout
+                      You&apos;ll be redirected to sign in before checkout
                     </p>
                   </div>
                 )}

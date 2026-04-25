@@ -18,6 +18,7 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">How We Use Your Information</h2>
+        {/* eslint-disable-next-line react/no-unescaped-entities */}
               <p>We use the information we collect to process your orders, communicate with you about your purchases, improve our services, and send you promotional materials if you've opted in to receive them.</p>
             </div>
 

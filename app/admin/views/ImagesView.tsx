@@ -1,7 +1,7 @@
 // app/admin/views/ImagesView.tsx
 import { useState, useEffect } from 'react';
 import { Image as ImageIcon, Download, Trash2, Copy, Check, X } from 'lucide-react';
-
+import Image from 'next/image';
 interface ImageFile {
   name: string;
   path: string;
@@ -31,8 +31,8 @@ export function ImagesView({ refreshTrigger }: ImagesViewProps) {
       const data = await response.json();
       console.log('Loaded images:', data.images);
       setImages(data.images || []);
-    } catch (error) {
-      console.error('Failed to load images:', error);
+    } catch (err) {
+      console.error('Failed to load images:', err);
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export function ImagesView({ refreshTrigger }: ImagesViewProps) {
     try {
       await fetch(`/api/admin/images/${imageName}`, { method: 'DELETE' });
       loadImages();
-    } catch (error) {
+    } catch {
       alert('Failed to delete image');
     }
   };
@@ -140,22 +140,23 @@ export function ImagesView({ refreshTrigger }: ImagesViewProps) {
               key={image.name}
               className="bg-white rounded-lg border overflow-hidden hover:shadow-lg transition-shadow group"
             >
+              {/* ↓ parent must be relative + sized for fill to work */}
               <div
                 className="relative aspect-square bg-gray-100 cursor-pointer overflow-hidden"
                 onClick={() => setSelectedImage(image)}
               >
-                <img
+                <Image
                   src={image.path}
                   alt={image.name}
-                  className="w-full h-full object-contain"
+                  fill
+                  sizes="(max-width: 768px) 50vw, (max-width: 1200px) 25vw, 16vw"
+                  className="object-contain opacity-0 transition-opacity duration-300"
                   loading="lazy"
                   onLoad={(e) => {
-                    console.log('Successfully loaded:', image.path);
                     e.currentTarget.classList.remove('opacity-0');
                     e.currentTarget.classList.add('opacity-100');
                   }}
                   onError={(e) => {
-                    console.error('Failed to load thumbnail:', image.path);
                     const target = e.currentTarget as HTMLImageElement;
                     target.style.display = 'none';
                     const parent = target.parentElement;
@@ -171,9 +172,8 @@ export function ImagesView({ refreshTrigger }: ImagesViewProps) {
                       parent.appendChild(errorDiv);
                     }
                   }}
-                  style={{ transition: 'opacity 0.3s' }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center z-10">
                   <div className="text-white text-center">
                     <ImageIcon className="mx-auto mb-1" size={32} />
                     <p className="text-xs px-2 truncate max-w-full">{image.name}</p>
@@ -236,17 +236,19 @@ export function ImagesView({ refreshTrigger }: ImagesViewProps) {
               </button>
             </div>
             <div className="p-4">
-              <div className="bg-gray-100 rounded flex items-center justify-center min-h-[400px]">
-                <img
+              {/* ↓ preview modal: fixed size container with fill */}
+              <div className="relative w-full min-h-[400px] bg-gray-100 rounded overflow-hidden">
+                <Image
                   src={selectedImage.path}
                   alt={selectedImage.name}
-                  className="max-w-full h-auto rounded"
+                  fill
+                  sizes="(max-width: 896px) 100vw, 896px"
+                  className="object-contain"
                   onError={(e) => {
-                    console.error('Failed to load preview image:', selectedImage.path);
                     e.currentTarget.style.display = 'none';
                     const parent = e.currentTarget.parentElement;
                     if (parent) {
-                      parent.innerHTML = '<div class="text-center p-8"><p class="text-gray-500">Failed to load image</p><p class="text-sm text-gray-400 mt-2">Path: ' + selectedImage.path + '</p></div>';
+                      parent.innerHTML = '<div class="flex items-center justify-center h-full p-8 text-center"><div><p class="text-gray-500">Failed to load image</p><p class="text-sm text-gray-400 mt-2">Path: ' + selectedImage.path + '</p></div></div>';
                     }
                   }}
                 />

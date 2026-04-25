@@ -1,4 +1,5 @@
 // app/brands/[brand]/page.tsx
+export const dynamic = 'force-dynamic'
 import { getBrandWithBikes } from '@/lib/actions';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -40,7 +41,7 @@ export default async function BrandBikesPage({
               </svg>
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-2">No Bikes Available</h3>
-            <p className="text-gray-600 mb-8">We're working on adding {brand.name} bikes. Check back soon!</p>
+            <p className="text-gray-600 mb-8">We&apos;re working on adding {brand.name} bikes. Check back soon!</p>
             <Link
               href="/"
               className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"

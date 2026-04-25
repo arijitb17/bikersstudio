@@ -1,14 +1,15 @@
 // app/api/user/profile/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
+import type { Session } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 // GET - Fetch user profile
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as Session | null;
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -49,7 +50,7 @@ export async function GET() {
 // PUT - Update user profile
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as Session | null;
 
     if (!session?.user?.email) {
       return NextResponse.json(

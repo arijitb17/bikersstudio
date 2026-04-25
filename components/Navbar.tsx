@@ -18,7 +18,17 @@ interface MenuStructure {
   maintenanceCare: Record<string, { name: string; slug: string }[]>;
   tiresWheels: Record<string, { name: string; slug: string }[]>;
 }
+interface SearchResult {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  thumbnail: string;
+}
 export default function Navbar() {
+  const [searchQuery, setSearchQuery] = useState("");
+const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+const [showResults, setShowResults] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -47,7 +57,24 @@ export default function Navbar() {
     };
     fetchData();
   }, []);
+useEffect(() => {
+  const delayDebounce = setTimeout(async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
 
+    try {
+      const res = await fetch(`/api/search?q=${searchQuery}`);
+      const data = await res.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error("Search failed:", err);
+    }
+  }, 300);
+
+  return () => clearTimeout(delayDebounce);
+}, [searchQuery]);
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -104,16 +131,46 @@ export default function Navbar() {
             <div className="hidden md:flex flex-1 max-w-3xl mx-12">
               <div className="relative w-full">
                 <input
-                  type="text"
-                  placeholder="Search ..."
-                  className="w-full px-6 py-3 pr-12 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 text-gray-700 placeholder:text-gray-500"
-                />
+  type="text"
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  onFocus={() => setShowResults(true)}
+  placeholder="Search products..."
+  className="w-full px-6 py-3 pr-12 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 text-gray-700 placeholder:text-gray-500"
+/>
                 <button className="absolute right-4 top-1/2 -translate-y-1/2">
                   <Search className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
             </div>
-
+{showResults && searchResults.length > 0 && (
+  <div className="absolute top-full mt-2 w-full bg-white shadow-xl rounded-xl border border-gray-200 max-h-80 overflow-y-auto z-50">
+    {searchResults.map((item) => (
+      <Link
+        key={item.id}
+        href={`/products/${item.slug}`}
+        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition"
+        onClick={() => setShowResults(false)}
+      >
+        <Image
+          src={item.thumbnail}
+          alt={item.name}
+          width={40}
+          height={40}
+          className="rounded"
+        />
+        <div>
+          <p className="text-sm font-medium text-gray-900">
+            {item.name}
+          </p>
+          <p className="text-xs text-gray-500">
+            ₹{item.price}
+          </p>
+        </div>
+      </Link>
+    ))}
+  </div>
+)}
             <div className="flex items-center gap-6 min-w-[120px] justify-end">
               <button
                 onClick={openCart}

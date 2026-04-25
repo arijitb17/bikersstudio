@@ -1,4 +1,5 @@
 // components/RecommendedVideos.tsx
+export const dynamic = 'force-dynamic'
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import VideoCard from './VideoCard';
