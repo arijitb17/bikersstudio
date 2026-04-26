@@ -1,7 +1,7 @@
 // admin/views/index.tsx
 
 "use client"
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DataTable } from '../components/DataTable';
 import { api } from '../api';
 import {
@@ -13,6 +13,7 @@ import {
   Banner,
   Coupon
 } from '../types';
+import { useSearchParams } from 'next/navigation';
 
 interface ViewProps<T> {
   onEdit?: (item: T) => void;
@@ -31,25 +32,37 @@ function unwrapArray<T>(response: { data?: T[] } | T[]): T[] {
 
 // ─── Products View ────────────────────────────────────────────────────────────
 export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, refreshTrigger }) => {
+  const searchParams = useSearchParams();
+  const page     = parseInt(searchParams.get('page') || '1', 10);
+  const search   = searchParams.get('search') || '';
+  const pageSize = 10;
+
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [total,    setTotal]    = useState(0);
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState('');
 
-  useEffect(() => { loadProducts(); }, [refreshTrigger]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const response = await api.fetchData<{ data?: Product[] } | Product[]>('/products');
-      setProducts(unwrapArray(response));
+      const params = new URLSearchParams({
+        page:  String(page),
+        limit: String(pageSize),
+        ...(search ? { search } : {}),
+      });
+      const response = await api.fetchData<{ data: Product[]; total: number }>(`/products?${params}`);
+      setProducts(response.data ?? []);
+      setTotal(response.total ?? 0);
     } catch (err: unknown) {
       console.error('Failed to load products:', err);
       setError(err instanceof Error ? err.message : 'Failed to load products');
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadProducts(); }, [loadProducts]);
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading products…</div>;
   if (error)   return <div className="text-center py-12 text-red-500">{error}</div>;
@@ -57,6 +70,9 @@ export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, r
   return (
     <DataTable
       data={products}
+      total={total}
+      page={page}
+      pageSize={pageSize}
       columns={[
         { key: 'name',       label: 'Product Name' },
         { key: 'sku',        label: 'SKU' },
@@ -81,9 +97,7 @@ export const CategoriesView: React.FC<ViewProps<Category>> = ({ onEdit, onDelete
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => { loadCategories(); }, [refreshTrigger]);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -95,15 +109,15 @@ export const CategoriesView: React.FC<ViewProps<Category>> = ({ onEdit, onDelete
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadCategories(); }, [loadCategories]);
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading categories…</div>;
   if (error)   return (
     <div className="text-center py-12">
       <p className="text-red-500 mb-3">{error}</p>
-      <button onClick={loadCategories} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-        Retry
-      </button>
+      <button onClick={loadCategories} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Retry</button>
     </div>
   );
 
@@ -133,9 +147,7 @@ export const BrandsView: React.FC<ViewProps<Brand>> = ({ onEdit, onDelete, refre
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => { loadBrands(); }, [refreshTrigger]);
-
-  const loadBrands = async () => {
+  const loadBrands = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -147,7 +159,9 @@ export const BrandsView: React.FC<ViewProps<Brand>> = ({ onEdit, onDelete, refre
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadBrands(); }, [loadBrands]);
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading brands…</div>;
   if (error)   return (
@@ -182,9 +196,7 @@ export const BikesView: React.FC<ViewProps<Bike>> = ({ onEdit, onDelete, refresh
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => { loadBikes(); }, [refreshTrigger]);
-
-  const loadBikes = async () => {
+  const loadBikes = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -196,7 +208,9 @@ export const BikesView: React.FC<ViewProps<Bike>> = ({ onEdit, onDelete, refresh
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadBikes(); }, [loadBikes]);
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading bikes…</div>;
   if (error)   return (
@@ -227,16 +241,12 @@ export const BikesView: React.FC<ViewProps<Bike>> = ({ onEdit, onDelete, refresh
 };
 
 // ─── Menu Items View ──────────────────────────────────────────────────────────
-// MenuEntity = DB record ({ id, name, type, position, isActive })
-// MenuItem   = sidebar nav config ({ id: TabType, label, icon }) — DO NOT use here
 export const MenuItemsView: React.FC<ViewProps<MenuEntity>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const [menuItems, setMenuItems] = useState<MenuEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => { loadMenuItems(); }, [refreshTrigger]);
-
-  const loadMenuItems = async () => {
+  const loadMenuItems = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -248,7 +258,9 @@ export const MenuItemsView: React.FC<ViewProps<MenuEntity>> = ({ onEdit, onDelet
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadMenuItems(); }, [loadMenuItems]);
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading menu items…</div>;
   if (error)   return (
@@ -278,7 +290,6 @@ export const MenuItemsView: React.FC<ViewProps<MenuEntity>> = ({ onEdit, onDelet
 };
 
 // ─── Orders View ──────────────────────────────────────────────────────────────
-// Delegated to the full-featured OrdersView component
 export { OrdersView } from './OrdersView';
 
 // ─── Banners View ─────────────────────────────────────────────────────────────
@@ -287,9 +298,7 @@ export const BannersView: React.FC<ViewProps<Banner>> = ({ onEdit, onDelete, ref
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => { loadBanners(); }, [refreshTrigger]);
-
-  const loadBanners = async () => {
+  const loadBanners = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -301,7 +310,9 @@ export const BannersView: React.FC<ViewProps<Banner>> = ({ onEdit, onDelete, ref
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadBanners(); }, [loadBanners]);
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading banners…</div>;
   if (error)   return (
@@ -335,9 +346,7 @@ export const CouponsView: React.FC<ViewProps<Coupon>> = ({ onEdit, onDelete, ref
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => { loadCoupons(); }, [refreshTrigger]);
-
-  const loadCoupons = async () => {
+  const loadCoupons = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -349,7 +358,9 @@ export const CouponsView: React.FC<ViewProps<Coupon>> = ({ onEdit, onDelete, ref
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { loadCoupons(); }, [loadCoupons]);
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading coupons…</div>;
   if (error)   return (
