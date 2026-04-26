@@ -15,14 +15,14 @@ export default function AboutUs() {
           <div className="mb-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
               {/* Image */}
-              <div className="relative overflow-hidden rounded-2xl shadow-xl">
-                <Image
-                  src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80"
-                  alt="Motorcycle showroom"
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <div className="relative overflow-hidden rounded-2xl shadow-xl h-72 lg:h-96">
+  <Image
+    src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80"
+    alt="Motorcycle showroom"
+    fill
+    className="object-cover"
+  />
+</div>
 
               {/* Text Content */}
               <div>
@@ -46,14 +46,14 @@ export default function AboutUs() {
               </div>
 
               {/* Image */}
-              <div className="relative overflow-hidden rounded-2xl shadow-xl lg:order-2 order-1">
-                <Image
-                  src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&q=80"
-                  alt="Motorcycle display"
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <div className="relative overflow-hidden rounded-2xl shadow-xl h-72 lg:h-96 lg:order-2 order-1">
+  <Image
+    src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&q=80"
+    alt="Motorcycle display"
+    fill
+    className="object-cover"
+  />
+</div>
             </div>
           </div>
         </div>
