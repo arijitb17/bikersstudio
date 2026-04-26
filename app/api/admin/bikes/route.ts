@@ -38,8 +38,10 @@ if (isNaN(year)) {
     isActive: body.isActive ?? true,
     position: body.position ?? 0,
     brand: {
-      connect: { id: body.brandId }  // use connect instead of brandId scalar
-    }
+  connect: body.brandId
+    ? { id: body.brandId }
+    : { slug: body.brandSlug }
+}
   },
   include: {
     brand: { select: { name: true } }
