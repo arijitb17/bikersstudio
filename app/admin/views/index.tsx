@@ -51,9 +51,9 @@ export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, r
         limit: String(pageSize),
         ...(search ? { search } : {}),
       });
-      const response = await api.fetchData<{ data: Product[]; total: number }>(`/products?${params}`);
-      setProducts(response.data ?? []);
-      setTotal(response.total ?? 0);
+      const response = await api.fetchData<{ data: Product[]; pagination: { total: number } }>(`/products?${params}`);
+setProducts(response.data ?? []);
+setTotal(response.pagination?.total ?? 0);
     } catch (err: unknown) {
       console.error('Failed to load products:', err);
       setError(err instanceof Error ? err.message : 'Failed to load products');
