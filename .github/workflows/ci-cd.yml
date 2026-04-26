@@ -1,57 +1,25 @@
-# .github/workflows/ci-cd.yml
-#
-# CI/CD Pipeline for the Next.js e-commerce app
-#
-# Triggers:
-#   - push to main    → builds, tests, and deploys to PRODUCTION
-#   - push to develop → builds, tests, and deploys to STAGING
-#   - pull_request    → CI checks only (no deploy) — handled by pr-check.yml
-#
-# Required GitHub Secrets:
-#   DOCKER_USERNAME             Docker Hub username
-#   DOCKER_PASSWORD             Docker Hub token
-#   DEPLOY_HOST                 SSH host of the target server
-#   DEPLOY_USER                 SSH user on the target server
-#   DEPLOY_SSH_KEY              Private SSH key (PEM format)
-#   DATABASE_URL                Production Postgres connection string
-#   DATABASE_URL_STAGING        Staging Postgres connection string
-#   NEXTAUTH_SECRET             Random secret for NextAuth
-#   NEXTAUTH_URL                Production base URL (e.g. https://yourdomain.com)
-#   NEXTAUTH_URL_STAGING        Staging base URL
-#   GOOGLE_CLIENT_ID            Google OAuth client ID
-#   GOOGLE_CLIENT_SECRET        Google OAuth secret
-#   RAZORPAY_KEY_ID             Razorpay key id
-#   RAZORPAY_KEY_SECRET         Razorpay secret key
-#   NEXT_PUBLIC_RAZORPAY_KEY_ID Razorpay public key (exposed to browser)
-#   REDIS_URL                   Redis connection string (production)
-#   REDIS_URL_STAGING           Redis connection string (staging)
-
 name: CI / CD
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    branches: [main]
   pull_request:
-    branches:
-      - main
-      - develop
+    branches: [main]
 
 env:
-  REGISTRY: docker.io
-  IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/motostore-app
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/arijitb17/bikersstudio
 
 jobs:
-  # ───────────────────────────────────────────────────────────────────────────
-  # Job 1: Lint & Type-check
-  # ───────────────────────────────────────────────────────────────────────────
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 1: Lint & Type Check
+  # ─────────────────────────────────────────────────────────────────────────
   lint:
     name: Lint & Type Check
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -64,6 +32,8 @@ jobs:
 
       - name: Generate Prisma client
         run: npx prisma generate
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
       - name: Run ESLint
         run: npm run lint
@@ -71,45 +41,42 @@ jobs:
       - name: Run TypeScript type check
         run: npx tsc --noEmit
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # Job 2: Build & Push Docker image
-  # ───────────────────────────────────────────────────────────────────────────
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 2: Build & Push Docker image to GHCR
+  # ─────────────────────────────────────────────────────────────────────────
   build:
     name: Build & Push Image
     runs-on: ubuntu-latest
     needs: lint
-    # Only build on pushes (not PRs — PRs use pr-check.yml)
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-    outputs:
-      image_tag: ${{ steps.meta.outputs.version }}
-      image_digest: ${{ steps.push.outputs.digest }}
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Docker Hub
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags & labels)
+      - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
-            type=raw,value=staging,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=raw,value=latest
             type=sha,prefix=sha-,format=short
 
       - name: Build and push Docker image
-        id: push
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -118,129 +85,292 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            NEXT_TELEMETRY_DISABLED=1
-            NODE_ENV=production
 
-      - name: Image digest
-        run: echo "Image pushed with digest ${{ steps.push.outputs.digest }}"
-
-  # ───────────────────────────────────────────────────────────────────────────
-  # Job 3a: Deploy to STAGING (develop branch)
-  # ───────────────────────────────────────────────────────────────────────────
-  deploy-staging:
-    name: Deploy → Staging
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/develop'
-    environment:
-      name: staging
-      url: ${{ secrets.NEXTAUTH_URL_STAGING }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to staging server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          # IMAGE_NAME is exported first so docker-compose can resolve it.
-          # Heredoc uses quoted EOF so GitHub Actions expressions expand on the
-          # runner before SSH, but the inner shell vars are literal on the server.
-          script: |
-            set -e
-            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
-            cd ~/motostore-staging
-
-            docker pull ${IMAGE_NAME}:staging
-
-            cat > .env <<'ENVEOF'
-            DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}
-            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL_STAGING }}
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
-            RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
-            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
-            REDIS_URL=${{ secrets.REDIS_URL_STAGING }}
-            ENVEOF
-
-            # Run DB migrations before swapping containers
-            docker run --rm \
-              --env-file .env \
-              --network host \
-              ${IMAGE_NAME}:staging \
-              npx prisma migrate deploy
-
-            docker compose -f docker-compose.staging.yml pull
-            docker compose -f docker-compose.staging.yml up -d --remove-orphans
-            docker image prune -f
-
-  # ───────────────────────────────────────────────────────────────────────────
-  # Job 3b: Deploy to PRODUCTION (main branch)
-  # ───────────────────────────────────────────────────────────────────────────
-  deploy-production:
+  # ─────────────────────────────────────────────────────────────────────────
+  # JOB 3: Deploy to Production EC2
+  # ─────────────────────────────────────────────────────────────────────────
+  deploy:
     name: Deploy → Production
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: production
-      url: ${{ secrets.NEXTAUTH_URL }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Deploy to production server via SSH
+      # ── Open SSH for this runner ─────────────────────────────────────────
+      - name: Open SSH for runner IP
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.AWS_SG_ID }} \
+            --protocol tcp --port 22 \
+            --cidr ${RUNNER_IP}/32
+          echo "RUNNER_IP=${RUNNER_IP}" >> $GITHUB_ENV
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-south-1
+
+      # ── Deploy via SSH ───────────────────────────────────────────────────
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          RAZORPAY_KEY_ID: ${{ secrets.RAZORPAY_KEY_ID }}
+          RAZORPAY_KEY_SECRET: ${{ secrets.RAZORPAY_KEY_SECRET }}
+          NEXT_PUBLIC_RAZORPAY_KEY_ID: ${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          envs: GHCR_TOKEN,GITHUB_ACTOR,IMAGE_NAME,DATABASE_URL,POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD,NEXTAUTH_URL,NEXTAUTH_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,RAZORPAY_KEY_ID,RAZORPAY_KEY_SECRET,NEXT_PUBLIC_RAZORPAY_KEY_ID,REDIS_HOST,REDIS_PORT
           script: |
             set -e
-            export IMAGE_NAME="${{ env.IMAGE_NAME }}"
-            cd ~/motostore-production
 
+            # ── Create directories on first deploy ──────────────────────
+            mkdir -p ~/bikersstudio/nginx
+
+            # ── Write .env file ─────────────────────────────────────────
+            cat > ~/bikersstudio/.env << EOF
+            DATABASE_URL=${DATABASE_URL}
+            POSTGRES_DB=${POSTGRES_DB}
+            POSTGRES_USER=${POSTGRES_USER}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            NEXTAUTH_URL=${NEXTAUTH_URL}
+            NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+            GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+            GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+            RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+            RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+            NEXT_PUBLIC_RAZORPAY_KEY_ID=${NEXT_PUBLIC_RAZORPAY_KEY_ID}
+            REDIS_HOST=${REDIS_HOST}
+            REDIS_PORT=${REDIS_PORT}
+            EOF
+
+            cd ~/bikersstudio
+
+            # ── Login to GHCR ────────────────────────────────────────────
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+            # ── Pull latest image ────────────────────────────────────────
             docker pull ${IMAGE_NAME}:latest
 
-            cat > .env <<'ENVEOF'
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
-            NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}
-            NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            RAZORPAY_KEY_ID=${{ secrets.RAZORPAY_KEY_ID }}
-            RAZORPAY_KEY_SECRET=${{ secrets.RAZORPAY_KEY_SECRET }}
-            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
-            REDIS_URL=${{ secrets.REDIS_URL }}
-            ENVEOF
+            # ── Write docker-compose.prod.yml inline ─────────────────────
+            cat > docker-compose.prod.yml << 'COMPOSEEOF'
+            services:
+              postgres:
+                image: postgres:16-alpine
+                restart: unless-stopped
+                environment:
+                  POSTGRES_DB: ${POSTGRES_DB:-bikersstudio}
+                  POSTGRES_USER: ${POSTGRES_USER:-postgres}
+                  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+                command: >
+                  postgres
+                  -c shared_buffers=128MB
+                  -c effective_cache_size=256MB
+                  -c max_connections=50
+                  -c work_mem=4MB
+                volumes:
+                  - postgres_data:/var/lib/postgresql/data
+                healthcheck:
+                  test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
+                  interval: 10s
+                  timeout: 5s
+                  retries: 5
+                networks:
+                  - internal
+                deploy:
+                  resources:
+                    limits:
+                      memory: 256M
 
-            # Run DB migrations before swapping containers (zero-downtime)
-            docker run --rm \
-              --env-file .env \
-              --network host \
-              ${IMAGE_NAME}:latest \
-              npx prisma migrate deploy
+              redis:
+                image: redis:7-alpine
+                restart: unless-stopped
+                command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+                volumes:
+                  - redis_data:/data
+                healthcheck:
+                  test: ['CMD', 'redis-cli', 'ping']
+                  interval: 10s
+                  timeout: 5s
+                  retries: 5
+                networks:
+                  - internal
+                deploy:
+                  resources:
+                    limits:
+                      memory: 150M
 
-            docker compose -f docker-compose.prod.yml pull
+              migrate:
+                image: ghcr.io/arijitb17/bikersstudio:latest
+                command: npx prisma migrate deploy
+                env_file: .env
+                depends_on:
+                  postgres:
+                    condition: service_healthy
+                networks:
+                  - internal
+                restart: 'no'
+
+              app:
+                image: ghcr.io/arijitb17/bikersstudio:latest
+                restart: unless-stopped
+                env_file: .env
+                user: root
+                volumes:
+                  - uploads_data:/app/public/uploads
+                  - app_data:/app/data
+                  - next_cache:/app/.next/cache
+                depends_on:
+                  postgres:
+                    condition: service_healthy
+                  redis:
+                    condition: service_healthy
+                  migrate:
+                    condition: service_completed_successfully
+                networks:
+                  - internal
+                deploy:
+                  resources:
+                    limits:
+                      memory: 700M
+                    reservations:
+                      memory: 256M
+
+              nginx:
+                image: nginx:1.25-alpine
+                restart: unless-stopped
+                ports:
+                  - '80:80'
+                  - '443:443'
+                volumes:
+                  - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+                  - /etc/letsencrypt:/etc/letsencrypt:ro
+                  - uploads_data:/var/www/uploads:ro
+                depends_on:
+                  - app
+                networks:
+                  - internal
+                deploy:
+                  resources:
+                    limits:
+                      memory: 50M
+
+            volumes:
+              postgres_data:
+              redis_data:
+              uploads_data:
+              app_data:
+              next_cache:
+
+            networks:
+              internal:
+                driver: bridge
+            COMPOSEEOF
+
+            # ── Write nginx config inline (always up to date) ────────────
+            cat > nginx/nginx.conf << 'NGINXEOF'
+            worker_processes auto;
+            events { worker_connections 1024; }
+            http {
+              include mime.types;
+              default_type application/octet-stream;
+              gzip on;
+              gzip_vary on;
+              gzip_proxied any;
+              gzip_comp_level 6;
+              gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;
+              limit_req_zone $binary_remote_addr zone=api:10m rate=30r/s;
+              limit_req_zone $binary_remote_addr zone=uploads:10m rate=5r/s;
+              upstream nextjs_app { server app:3000; keepalive 32; }
+              server {
+                listen 80;
+                server_name bikerstudio.facidance.online;
+                return 301 https://$host$request_uri;
+              }
+              server {
+                listen 443 ssl http2;
+                server_name bikerstudio.facidance.online;
+                ssl_certificate /etc/letsencrypt/live/bikerstudio.facidance.online/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/bikerstudio.facidance.online/privkey.pem;
+                ssl_protocols TLSv1.2 TLSv1.3;
+                ssl_ciphers HIGH:!aNULL:!MD5;
+                ssl_session_cache shared:SSL:10m;
+                client_max_body_size 20M;
+                location /uploads/ {
+                  alias /var/www/uploads/;
+                  expires 30d;
+                  add_header Cache-Control "public, immutable";
+                }
+                location /_next/static/ {
+                  proxy_pass http://nextjs_app;
+                  expires 1y;
+                  add_header Cache-Control "public, immutable";
+                }
+                location /api/ {
+                  limit_req zone=api burst=50 nodelay;
+                  proxy_pass http://nextjs_app;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                }
+                location / {
+                  proxy_pass http://nextjs_app;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_cache_bypass $http_upgrade;
+                }
+              }
+            }
+            NGINXEOF
+
+            # ── Start/update containers (volumes are never deleted) ──────
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # ── Reload nginx if already running ──────────────────────────
+            docker compose -f docker-compose.prod.yml exec -T nginx nginx -s reload || true
+
+            # ── Prune old images (never prunes volumes) ──────────────────
             docker image prune -f
 
-      - name: Mark deployment success on GitHub
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.repos.createCommitStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              sha: context.sha,
-              state: 'success',
-              description: 'Deployed to production',
-              context: 'deployment/production'
-            })
+            echo "✅ Deployment complete"
+
+      # ── Close SSH port ───────────────────────────────────────────────────
+      - name: Close SSH port
+        if: always()
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.AWS_SG_ID }} \
+            --protocol tcp --port 22 \
+            --cidr ${RUNNER_IP}/32
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ap-south-1
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "❌ Deployment failed for commit ${{ github.sha }}"
