@@ -26,48 +26,6 @@ interface SearchResult {
   thumbnail: string;
 }
 
-// Declared outside Navbar to avoid "component created during render" error
-function MegaMenuGrid({
-  data,
-  cols = 4,
-  onClose,
-}: {
-  data: Record<string, { name: string; slug: string }[]>;
-  cols?: number;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="fixed left-0 right-0 top-[152px] w-full bg-white border-t border-gray-200 shadow-xl z-50 animate-slideDown mega-menu"
-      style={{ maxHeight: "60vh", overflowY: "auto" }}
-    >
-      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
-        <div className={`grid grid-cols-${cols} gap-8`}>
-          {Object.entries(data).map(([category, items]) => (
-            <div key={category} className="space-y-3">
-              <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide border-b border-gray-200 pb-2">
-                {category}
-              </h3>
-              <div className="space-y-2">
-                {items.map((item) => (
-                  <Link
-                    key={item.slug}
-                    href={`/categories/${item.slug}`}
-                    className="block text-sm text-gray-600 hover:text-red-600 hover:pl-2 transition-all"
-                    onClick={onClose}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -159,21 +117,57 @@ export default function Navbar() {
   const maintenanceCare = menuStructure?.maintenanceCare || {};
   const tiresWheels = menuStructure?.tiresWheels || {};
 
-
+  // Reusable mega menu content renderer
+  const MegaMenuGrid = ({
+    data,
+    cols = 4,
+  }: {
+    data: Record<string, { name: string; slug: string }[]>;
+    cols?: number;
+  }) => (
+    <div
+      className="fixed left-0 right-0 top-[134px] w-full bg-white border-t border-gray-200 shadow-xl z-50 animate-slideDown mega-menu"
+      style={{ maxHeight: "60vh", overflowY: "auto" }}
+    >
+      <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
+        <div className={`grid grid-cols-${cols} gap-8`}>
+          {Object.entries(data).map(([category, items]) => (
+            <div key={category} className="space-y-3">
+              <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide border-b border-gray-200 pb-2">
+                {category}
+              </h3>
+              <div className="space-y-2">
+                {items.map((item) => (
+                  <Link
+                    key={item.slug}
+                    href={`/categories/${item.slug}`}
+                    className="block text-sm text-gray-600 hover:text-red-600 hover:pl-2 transition-all"
+                    onClick={closeAllMenus}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
       {/* Top bar */}
       <div className="border-b border-gray-200">
         <div className="w-full px-6 lg:px-12">
-          <div className="flex items-center justify-between h-24">
-            <Link href="/" className="flex-shrink-0">
+          <div className="flex items-center justify-between h-20">
+            <Link href="/" className="flex-shrink-0 min-w-[120px]">
               <Image
                 src="/logo.png"
                 alt="Logo"
-                width={180}
-                height={90}
-                className="w-[180px] h-auto object-contain"
+                width={120}
+                height={40}
+                className="object-contain"
                 priority
               />
             </Link>
@@ -352,7 +346,7 @@ export default function Navbar() {
               {openDropdown === "brands" && (
                 // ✅ max-height + overflow-y: auto so long brand lists scroll instead of pushing page height
                 <div
-                  className="fixed left-0 right-0 top-[152px] w-full bg-white border-t border-gray-200 shadow-xl z-50 animate-slideDown mega-menu"
+                  className="fixed left-0 right-0 top-[134px] w-full bg-white border-t border-gray-200 shadow-xl z-50 animate-slideDown mega-menu"
                   style={{ maxHeight: "60vh", overflowY: "auto" }}
                 >
                   <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
@@ -396,7 +390,7 @@ export default function Navbar() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === "accessories" ? "rotate-180" : ""}`} />
               </button>
               {openDropdown === "accessories" && (
-                <MegaMenuGrid data={motorcycleAccessories} cols={4} onClose={closeAllMenus} />
+                <MegaMenuGrid data={motorcycleAccessories} cols={4} />
               )}
             </div>
 
@@ -410,7 +404,7 @@ export default function Navbar() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === "riding-gears" ? "rotate-180" : ""}`} />
               </button>
               {openDropdown === "riding-gears" && (
-                <MegaMenuGrid data={ridingGears} cols={3} onClose={closeAllMenus} />
+                <MegaMenuGrid data={ridingGears} cols={3} />
               )}
             </div>
 
@@ -424,7 +418,7 @@ export default function Navbar() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === "helmets" ? "rotate-180" : ""}`} />
               </button>
               {openDropdown === "helmets" && (
-                <MegaMenuGrid data={helmetsAccessories} cols={3} onClose={closeAllMenus} />
+                <MegaMenuGrid data={helmetsAccessories} cols={3} />
               )}
             </div>
 
@@ -438,7 +432,7 @@ export default function Navbar() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === "maintenance" ? "rotate-180" : ""}`} />
               </button>
               {openDropdown === "maintenance" && (
-                <MegaMenuGrid data={maintenanceCare} cols={3} onClose={closeAllMenus} />
+                <MegaMenuGrid data={maintenanceCare} cols={3} />
               )}
             </div>
 
@@ -452,7 +446,7 @@ export default function Navbar() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === "tires" ? "rotate-180" : ""}`} />
               </button>
               {openDropdown === "tires" && (
-                <MegaMenuGrid data={tiresWheels} cols={3} onClose={closeAllMenus} />
+                <MegaMenuGrid data={tiresWheels} cols={3} />
               )}
             </div>
           </div>
