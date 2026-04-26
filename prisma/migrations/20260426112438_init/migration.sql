@@ -2,6 +2,9 @@
 CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
 
 -- CreateEnum
+CREATE TYPE "MenuType" AS ENUM ('BRAND_MENU', 'CATEGORY_MENU', 'CUSTOM_MENU');
+
+-- CreateEnum
 CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED');
 
 -- CreateEnum
@@ -10,20 +13,61 @@ CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'COMPLETED', 'FAILED', 'REFUNDED
 -- CreateEnum
 CREATE TYPE "PaymentMethod" AS ENUM ('CARD', 'UPI', 'NET_BANKING', 'COD', 'WALLET');
 
+-- CreateEnum
+CREATE TYPE "ImportStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+
+-- CreateEnum
+CREATE TYPE "ImportType" AS ENUM ('BRANDS', 'BIKES', 'CATEGORIES', 'PRODUCTS', 'MENU_ITEMS');
+
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "name" TEXT,
-    "password" TEXT NOT NULL,
+    "password" TEXT,
     "phone" TEXT,
     "role" "UserRole" NOT NULL DEFAULT 'USER',
     "image" TEXT,
-    "emailVerified" BOOLEAN NOT NULL DEFAULT false,
+    "emailVerified" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Account" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "provider" TEXT NOT NULL,
+    "providerAccountId" TEXT NOT NULL,
+    "refresh_token" TEXT,
+    "access_token" TEXT,
+    "expires_at" INTEGER,
+    "token_type" TEXT,
+    "scope" TEXT,
+    "id_token" TEXT,
+    "session_state" TEXT,
+
+    CONSTRAINT "Account_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Session" (
+    "id" TEXT NOT NULL,
+    "sessionToken" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "VerificationToken" (
+    "identifier" TEXT NOT NULL,
+    "token" TEXT NOT NULL,
+    "expires" TIMESTAMP(3) NOT NULL
 );
 
 -- CreateTable
@@ -45,6 +89,26 @@ CREATE TABLE "Address" (
 );
 
 -- CreateTable
+CREATE TABLE "MenuItem" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "slug" TEXT NOT NULL,
+    "type" "MenuType" NOT NULL,
+    "description" TEXT,
+    "icon" TEXT,
+    "image" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "parentId" TEXT,
+    "brandId" TEXT,
+    "categoryId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "MenuItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Brand" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -54,6 +118,7 @@ CREATE TABLE "Brand" (
     "textColor" TEXT NOT NULL DEFAULT 'text-gray-800',
     "description" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "position" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -70,6 +135,7 @@ CREATE TABLE "Bike" (
     "description" TEXT,
     "image" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "position" INTEGER NOT NULL DEFAULT 0,
     "brandId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -84,7 +150,11 @@ CREATE TABLE "Category" (
     "slug" TEXT NOT NULL,
     "description" TEXT,
     "image" TEXT,
+    "icon" TEXT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "position" INTEGER NOT NULL DEFAULT 0,
+    "showInMenu" BOOLEAN NOT NULL DEFAULT true,
+    "menuColumns" INTEGER NOT NULL DEFAULT 1,
     "bikeId" TEXT,
     "parentId" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -132,16 +202,6 @@ CREATE TABLE "CartItem" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "CartItem_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "WishlistItem" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "productId" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "WishlistItem_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -247,6 +307,25 @@ CREATE TABLE "Banner" (
     CONSTRAINT "Banner_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "BulkImport" (
+    "id" TEXT NOT NULL,
+    "type" "ImportType" NOT NULL,
+    "status" "ImportStatus" NOT NULL DEFAULT 'PENDING',
+    "fileName" TEXT NOT NULL,
+    "fileUrl" TEXT NOT NULL,
+    "totalRows" INTEGER NOT NULL,
+    "successRows" INTEGER NOT NULL DEFAULT 0,
+    "failedRows" INTEGER NOT NULL DEFAULT 0,
+    "errors" TEXT,
+    "createdBy" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "completedAt" TIMESTAMP(3),
+
+    CONSTRAINT "BulkImport_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
@@ -254,7 +333,43 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE INDEX "User_email_idx" ON "User"("email");
 
 -- CreateIndex
+CREATE INDEX "Account_userId_idx" ON "Account"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Account_provider_providerAccountId_key" ON "Account"("provider", "providerAccountId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Session_sessionToken_key" ON "Session"("sessionToken");
+
+-- CreateIndex
+CREATE INDEX "Session_userId_idx" ON "Session"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerificationToken_token_key" ON "VerificationToken"("token");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationToken"("identifier", "token");
+
+-- CreateIndex
 CREATE INDEX "Address_userId_idx" ON "Address"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MenuItem_slug_key" ON "MenuItem"("slug");
+
+-- CreateIndex
+CREATE INDEX "MenuItem_slug_idx" ON "MenuItem"("slug");
+
+-- CreateIndex
+CREATE INDEX "MenuItem_type_idx" ON "MenuItem"("type");
+
+-- CreateIndex
+CREATE INDEX "MenuItem_parentId_idx" ON "MenuItem"("parentId");
+
+-- CreateIndex
+CREATE INDEX "MenuItem_position_idx" ON "MenuItem"("position");
+
+-- CreateIndex
+CREATE INDEX "MenuItem_isActive_idx" ON "MenuItem"("isActive");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Brand_name_key" ON "Brand"("name");
@@ -266,6 +381,9 @@ CREATE UNIQUE INDEX "Brand_slug_key" ON "Brand"("slug");
 CREATE INDEX "Brand_slug_idx" ON "Brand"("slug");
 
 -- CreateIndex
+CREATE INDEX "Brand_position_idx" ON "Brand"("position");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Bike_slug_key" ON "Bike"("slug");
 
 -- CreateIndex
@@ -273,6 +391,9 @@ CREATE INDEX "Bike_slug_idx" ON "Bike"("slug");
 
 -- CreateIndex
 CREATE INDEX "Bike_brandId_idx" ON "Bike"("brandId");
+
+-- CreateIndex
+CREATE INDEX "Bike_position_idx" ON "Bike"("position");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
@@ -288,6 +409,12 @@ CREATE INDEX "Category_bikeId_idx" ON "Category"("bikeId");
 
 -- CreateIndex
 CREATE INDEX "Category_parentId_idx" ON "Category"("parentId");
+
+-- CreateIndex
+CREATE INDEX "Category_position_idx" ON "Category"("position");
+
+-- CreateIndex
+CREATE INDEX "Category_showInMenu_idx" ON "Category"("showInMenu");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Product_slug_key" ON "Product"("slug");
@@ -315,15 +442,6 @@ CREATE INDEX "CartItem_productId_idx" ON "CartItem"("productId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "CartItem_userId_productId_key" ON "CartItem"("userId", "productId");
-
--- CreateIndex
-CREATE INDEX "WishlistItem_userId_idx" ON "WishlistItem"("userId");
-
--- CreateIndex
-CREATE INDEX "WishlistItem_productId_idx" ON "WishlistItem"("productId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "WishlistItem_userId_productId_key" ON "WishlistItem"("userId", "productId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Order_orderNumber_key" ON "Order"("orderNumber");
@@ -379,8 +497,32 @@ CREATE INDEX "Banner_position_idx" ON "Banner"("position");
 -- CreateIndex
 CREATE INDEX "Banner_isActive_idx" ON "Banner"("isActive");
 
+-- CreateIndex
+CREATE INDEX "BulkImport_status_idx" ON "BulkImport"("status");
+
+-- CreateIndex
+CREATE INDEX "BulkImport_type_idx" ON "BulkImport"("type");
+
+-- CreateIndex
+CREATE INDEX "BulkImport_createdAt_idx" ON "BulkImport"("createdAt");
+
+-- AddForeignKey
+ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
 -- AddForeignKey
 ALTER TABLE "Address" ADD CONSTRAINT "Address_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MenuItem" ADD CONSTRAINT "MenuItem_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "MenuItem"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MenuItem" ADD CONSTRAINT "MenuItem_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "Brand"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MenuItem" ADD CONSTRAINT "MenuItem_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Bike" ADD CONSTRAINT "Bike_brandId_fkey" FOREIGN KEY ("brandId") REFERENCES "Brand"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -402,12 +544,6 @@ ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_userId_fkey" FOREIGN KEY ("userI
 
 -- AddForeignKey
 ALTER TABLE "CartItem" ADD CONSTRAINT "CartItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "WishlistItem" ADD CONSTRAINT "WishlistItem_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
