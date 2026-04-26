@@ -48,8 +48,7 @@ services:
           memory: 150M
 
   migrate:
-    image: ghcr.io/arijitb17/bikersstudio:latest
-    command: npx prisma migrate deploy
+    image: ghcr.io/arijitb17/bikersstudio:migrator
     env_file: .env
     depends_on:
       postgres:

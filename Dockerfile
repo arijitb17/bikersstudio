@@ -1,7 +1,7 @@
 # =============================================================================
 # Stage 1: Dependencies
 # =============================================================================
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 
@@ -17,7 +17,7 @@ RUN npm ci --include=dev
 # =============================================================================
 # Stage 2: Builder
 # =============================================================================
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 RUN apk add --no-cache libc6-compat
 
@@ -51,7 +51,7 @@ RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
 # =============================================================================
 # Stage 3: Runner (minimal production image)
 # =============================================================================
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 RUN apk add --no-cache libc6-compat tini
 
@@ -83,3 +83,19 @@ ENV HOSTNAME="0.0.0.0"
 
 ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["node", "server.js"]
+
+# =============================================================================
+# Stage 4: Migrator (has full node_modules + prisma CLI)
+# =============================================================================
+FROM node:22-alpine AS migrator
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/app/generated ./app/generated
+
+CMD ["node_modules/.bin/prisma", "migrate", "deploy"]

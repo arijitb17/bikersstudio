@@ -24,14 +24,14 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: node_modules/.bin/prisma generate
         env:
           DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
 
@@ -42,10 +42,10 @@ jobs:
         run: npx tsc --noEmit
 
   # ─────────────────────────────────────────────────────────────────────────
-  # JOB 2: Build & Push Docker image to GHCR
+  # JOB 2: Build & Push Docker images to GHCR
   # ─────────────────────────────────────────────────────────────────────────
   build:
-    name: Build & Push Image
+    name: Build & Push Images
     runs-on: ubuntu-latest
     needs: lint
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -76,13 +76,26 @@ jobs:
             type=raw,value=latest
             type=sha,prefix=sha-,format=short
 
-      - name: Build and push Docker image
+      # Build the runner (app) image
+      - name: Build and push app image
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: runner
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Build the migrator image (separate stage, shares layer cache)
+      - name: Build and push migrator image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: migrator
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:migrator
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -166,8 +179,9 @@ jobs:
             # ── Login to GHCR ────────────────────────────────────────────
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
-            # ── Pull latest image ────────────────────────────────────────
+            # ── Pull latest images ───────────────────────────────────────
             docker pull ${IMAGE_NAME}:latest
+            docker pull ${IMAGE_NAME}:migrator
 
             # ── Write docker-compose.prod.yml inline ─────────────────────
             cat > docker-compose.prod.yml << 'COMPOSEEOF'
@@ -218,8 +232,8 @@ jobs:
                       memory: 150M
 
               migrate:
-                image: ghcr.io/arijitb17/bikersstudio:latest
-                command: npx prisma migrate deploy
+                image: ghcr.io/arijitb17/bikersstudio:migrator
+                command: node_modules/.bin/prisma migrate deploy
                 env_file: .env
                 depends_on:
                   postgres:
