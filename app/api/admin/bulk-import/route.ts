@@ -19,7 +19,9 @@ interface ExcelRow {
   stock?: unknown;
   sku?: unknown;
   categoryId?: unknown;
+  categorySlug?: unknown;
   bikeId?: unknown;
+  bikeSlug?: unknown;
   images?: unknown;
   thumbnail?: unknown;
   isActive?: unknown;
@@ -33,14 +35,20 @@ interface ExcelRow {
   size?: unknown;
   description?: unknown;
   parentId?: unknown;
+  parentSlug?: unknown;
   logo?: unknown;
   position?: unknown;
   showInMenu?: unknown;
   model?: unknown;
   year?: unknown;
   brandId?: unknown;
+  brandSlug?: unknown;
   image?: unknown;
   type?: unknown;
+  icon?: unknown;
+  bgColor?: unknown;
+  textColor?: unknown;
+  menuColumns?: unknown;
 }
 
 type MenuItemType = 'BRAND_MENU' | 'CATEGORY_MENU' | 'CUSTOM_MENU';
@@ -170,7 +178,6 @@ export async function POST(request: Request) {
               const name = validateRequired(row.name, 'Name');
               const price = parseNumber(row.price, 'Price', true)!;
               const stock = parseInteger(row.stock, 'Stock', true)!;
-              const categoryId = validateRequired(row.categoryId, 'Category ID');
 
               const sku = validateRequired(row.sku, 'SKU');
               if (existingSkus.has(sku)) throw new Error(`SKU '${sku}' already exists`);
@@ -179,23 +186,35 @@ export async function POST(request: Request) {
               const slug = resolveSlug(row.slug, name, existingSlugs);
 
               // Resolve category by id or slug
+              const rawCategoryId = getString(row.categoryId);
+              const rawCategorySlug = getString(row.categorySlug);
+              if (!rawCategoryId && !rawCategorySlug) {
+                throw new Error('Category ID or Category Slug is required');
+              }
               const category = await prisma.category.findFirst({
                 where: {
-                  OR: [{ id: categoryId }, { slug: categoryId }],
+                  OR: [
+                    ...(rawCategoryId ? [{ id: rawCategoryId }, { slug: rawCategoryId }] : []),
+                    ...(rawCategorySlug ? [{ slug: rawCategorySlug }] : []),
+                  ],
                 },
               });
-              if (!category) throw new Error(`Category '${categoryId}' not found`);
+              if (!category) throw new Error(`Category '${rawCategoryId || rawCategorySlug}' not found`);
 
               // Resolve bike by id or slug (optional)
-              const rawBikeId = getString(row.bikeId) || null;
+              const rawBikeId = getString(row.bikeId);
+              const rawBikeSlug = getString(row.bikeSlug);
               let resolvedBikeId: string | null = null;
-              if (rawBikeId) {
+              if (rawBikeId || rawBikeSlug) {
                 const bike = await prisma.bike.findFirst({
                   where: {
-                    OR: [{ id: rawBikeId }, { slug: rawBikeId }],
+                    OR: [
+                      ...(rawBikeId ? [{ id: rawBikeId }, { slug: rawBikeId }] : []),
+                      ...(rawBikeSlug ? [{ slug: rawBikeSlug }] : []),
+                    ],
                   },
                 });
-                if (!bike) throw new Error(`Bike '${rawBikeId}' not found`);
+                if (!bike) throw new Error(`Bike '${rawBikeId || rawBikeSlug}' not found`);
                 resolvedBikeId = bike.id;
               }
 
@@ -262,17 +281,40 @@ export async function POST(request: Request) {
               const name = validateRequired(row.name, 'Name');
               const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
+              const menuColumns = parseInteger(row.menuColumns, 'Menu Columns', false) || 1;
 
-              const rawParentId = getString(row.parentId) || null;
+              // Resolve parent category by id or slug (optional)
+              const rawParentId = getString(row.parentId);
+              const rawParentSlug = getString(row.parentSlug);
               let resolvedParentId: string | null = null;
-              if (rawParentId) {
+              if (rawParentId || rawParentSlug) {
                 const parent = await prisma.category.findFirst({
                   where: {
-                    OR: [{ id: rawParentId }, { slug: rawParentId }],
+                    OR: [
+                      ...(rawParentId ? [{ id: rawParentId }, { slug: rawParentId }] : []),
+                      ...(rawParentSlug ? [{ slug: rawParentSlug }] : []),
+                    ],
                   },
                 });
-                if (!parent) throw new Error(`Parent Category '${rawParentId}' not found`);
+                if (!parent) throw new Error(`Parent Category '${rawParentId || rawParentSlug}' not found`);
                 resolvedParentId = parent.id;
+              }
+
+              // Resolve bike by id or slug (optional)
+              const rawBikeId = getString(row.bikeId);
+              const rawBikeSlug = getString(row.bikeSlug);
+              let resolvedBikeId: string | null = null;
+              if (rawBikeId || rawBikeSlug) {
+                const bike = await prisma.bike.findFirst({
+                  where: {
+                    OR: [
+                      ...(rawBikeId ? [{ id: rawBikeId }, { slug: rawBikeId }] : []),
+                      ...(rawBikeSlug ? [{ slug: rawBikeSlug }] : []),
+                    ],
+                  },
+                });
+                if (!bike) throw new Error(`Bike '${rawBikeId || rawBikeSlug}' not found`);
+                resolvedBikeId = bike.id;
               }
 
               await prisma.category.create({
@@ -280,10 +322,14 @@ export async function POST(request: Request) {
                   name,
                   slug,
                   description: getString(row.description) || null,
+                  image: getString(row.image) || null,
+                  icon: getString(row.icon) || null,
                   position,
+                  menuColumns,
                   showInMenu: parseBoolean(row.showInMenu ?? true),
                   isActive: parseBoolean(row.isActive ?? true),
                   parentId: resolvedParentId,
+                  bikeId: resolvedBikeId,
                 },
               });
 
@@ -319,6 +365,8 @@ export async function POST(request: Request) {
                   name,
                   slug,
                   logo,
+                  bgColor: getString(row.bgColor) || 'bg-white',
+                  textColor: getString(row.textColor) || 'text-gray-800',
                   description: getString(row.description) || null,
                   position,
                   isActive: parseBoolean(row.isActive ?? true),
@@ -350,19 +398,28 @@ export async function POST(request: Request) {
               const name = validateRequired(row.name, 'Name');
               const model = validateRequired(row.model, 'Model');
               const year = parseInteger(row.year, 'Year', true)!;
-              const rawBrandId = validateRequired(row.brandId, 'Brand ID');
-              const image = validateRequired(row.image, 'Image');
 
               // Resolve brand by id or slug
+              const rawBrandId = getString(row.brandId);
+              const rawBrandSlug = getString(row.brandSlug);
+              if (!rawBrandId && !rawBrandSlug) {
+                throw new Error('Brand ID or Brand Slug is required');
+              }
               const brand = await prisma.brand.findFirst({
                 where: {
-                  OR: [{ id: rawBrandId }, { slug: rawBrandId }],
+                  OR: [
+                    ...(rawBrandId ? [{ id: rawBrandId }, { slug: rawBrandId }] : []),
+                    ...(rawBrandSlug ? [{ slug: rawBrandSlug }] : []),
+                  ],
                 },
               });
-              if (!brand) throw new Error(`Brand '${rawBrandId}' not found`);
+              if (!brand) throw new Error(`Brand '${rawBrandId || rawBrandSlug}' not found`);
 
               const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
+
+              // image is optional — defaults to empty string if not provided
+              const image = getString(row.image) || '';
 
               await prisma.bike.create({
                 data: {
@@ -411,39 +468,54 @@ export async function POST(request: Request) {
               const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
 
-              const rawParentId = getString(row.parentId) || null;
+              // Resolve parent menu item by id or slug (optional)
+              const rawParentId = getString(row.parentId);
+              const rawParentSlug = getString(row.parentSlug);
               let resolvedParentId: string | null = null;
-              if (rawParentId) {
+              if (rawParentId || rawParentSlug) {
                 const parent = await prisma.menuItem.findFirst({
                   where: {
-                    OR: [{ id: rawParentId }, { slug: rawParentId }],
+                    OR: [
+                      ...(rawParentId ? [{ id: rawParentId }, { slug: rawParentId }] : []),
+                      ...(rawParentSlug ? [{ slug: rawParentSlug }] : []),
+                    ],
                   },
                 });
-                if (!parent) throw new Error(`Parent Menu '${rawParentId}' not found`);
+                if (!parent) throw new Error(`Parent Menu '${rawParentId || rawParentSlug}' not found`);
                 resolvedParentId = parent.id;
               }
 
-              const rawBrandId = getString(row.brandId) || null;
+              // Resolve brand by id or slug (optional)
+              const rawBrandId = getString(row.brandId);
+              const rawBrandSlug = getString(row.brandSlug);
               let resolvedBrandId: string | null = null;
-              if (rawBrandId) {
+              if (rawBrandId || rawBrandSlug) {
                 const brand = await prisma.brand.findFirst({
                   where: {
-                    OR: [{ id: rawBrandId }, { slug: rawBrandId }],
+                    OR: [
+                      ...(rawBrandId ? [{ id: rawBrandId }, { slug: rawBrandId }] : []),
+                      ...(rawBrandSlug ? [{ slug: rawBrandSlug }] : []),
+                    ],
                   },
                 });
-                if (!brand) throw new Error(`Brand '${rawBrandId}' not found`);
+                if (!brand) throw new Error(`Brand '${rawBrandId || rawBrandSlug}' not found`);
                 resolvedBrandId = brand.id;
               }
 
-              const rawCategoryId = getString(row.categoryId) || null;
+              // Resolve category by id or slug (optional)
+              const rawCategoryId = getString(row.categoryId);
+              const rawCategorySlug = getString(row.categorySlug);
               let resolvedCategoryId: string | null = null;
-              if (rawCategoryId) {
+              if (rawCategoryId || rawCategorySlug) {
                 const category = await prisma.category.findFirst({
                   where: {
-                    OR: [{ id: rawCategoryId }, { slug: rawCategoryId }],
+                    OR: [
+                      ...(rawCategoryId ? [{ id: rawCategoryId }, { slug: rawCategoryId }] : []),
+                      ...(rawCategorySlug ? [{ slug: rawCategorySlug }] : []),
+                    ],
                   },
                 });
-                if (!category) throw new Error(`Category '${rawCategoryId}' not found`);
+                if (!category) throw new Error(`Category '${rawCategoryId || rawCategorySlug}' not found`);
                 resolvedCategoryId = category.id;
               }
 
@@ -453,6 +525,8 @@ export async function POST(request: Request) {
                   slug,
                   type: menuType as MenuItemType,
                   description: getString(row.description) || null,
+                  icon: getString(row.icon) || null,
+                  image: getString(row.image) || null,
                   position,
                   isActive: parseBoolean(row.isActive ?? true),
                   parentId: resolvedParentId,
