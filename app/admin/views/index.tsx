@@ -51,7 +51,7 @@ export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, r
         limit: String(pageSize),
         ...(search ? { search } : {}),
       });
-      const response = await api.fetchData<{ data: Product[]; total: number }>(`/admin/products?${params}`);
+      const response = await api.fetchData<{ data: Product[]; total: number }>(`api/admin/products?${params}`);
       setProducts(response.data ?? []);
       setTotal(response.total ?? 0);
     } catch (err: unknown) {
