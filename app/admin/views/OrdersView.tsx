@@ -784,7 +784,7 @@ export const OrdersView: React.FC<{ refreshTrigger: number }> = ({
             placeholder="Search order #, customer, city…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-700 text-gray-700"
           />
         </div>
 

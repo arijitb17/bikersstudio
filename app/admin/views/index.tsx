@@ -31,6 +31,8 @@ function unwrapArray<T>(response: { data?: T[] } | T[]): T[] {
 }
 
 // ─── Products View ────────────────────────────────────────────────────────────
+// No search state needed here — DataTable handles it internally with
+// character-based triggering (fires at ≥3 chars or on clear).
 export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, refreshTrigger }) => {
   const searchParams = useSearchParams();
   const page     = parseInt(searchParams.get('page') || '1', 10);
@@ -52,8 +54,8 @@ export const ProductsView: React.FC<ViewProps<Product>> = ({ onEdit, onDelete, r
         ...(search ? { search } : {}),
       });
       const response = await api.fetchData<{ data: Product[]; pagination: { total: number } }>(`/products?${params}`);
-setProducts(response.data ?? []);
-setTotal(response.pagination?.total ?? 0);
+      setProducts(response.data ?? []);
+      setTotal(response.pagination?.total ?? 0);
     } catch (err: unknown) {
       console.error('Failed to load products:', err);
       setError(err instanceof Error ? err.message : 'Failed to load products');

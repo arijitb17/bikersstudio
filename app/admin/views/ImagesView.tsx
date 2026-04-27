@@ -117,13 +117,13 @@ export function ImagesView({ refreshTrigger }: ImagesViewProps) {
       </div>
 
       {/* Search */}
-      <div className="mb-6">
+      <div className="mb-6 ">
         <input
           type="text"
           placeholder="Search images..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border  rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-600 text-gray-600"
         />
       </div>
 
