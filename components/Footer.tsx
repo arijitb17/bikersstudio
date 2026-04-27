@@ -100,7 +100,7 @@ export default function Footer() {
 
           {/* Copyright */}
           <div className="text-sm text-gray-700 pt-4 border-t border-gray-300">
-            <p>© 2026 Bike Store. All rights reserved.</p>
+            <p>© 2026 Bikers Studio. All rights reserved.</p>
           </div>
         </div>
       </div>

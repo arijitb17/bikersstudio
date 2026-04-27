@@ -280,7 +280,7 @@ const handleApplyCoupon = async () => {
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                         placeholder="Enter coupon code"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 uppercase"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 uppercase text-gray-600 placeholder-gray-600"
                         disabled={isApplyingCoupon}
                       />
                       <button

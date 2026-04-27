@@ -1,6 +1,4 @@
-﻿
-
-export const dynamic = 'force-dynamic'
+﻿export const dynamic = 'force-dynamic'
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -21,7 +19,7 @@ export default async function AllBrandsPage() {
     <div className="min-h-screen bg-white">
       <div className="py-20">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          
+
           <h1 className="text-5xl md:text-6xl font-bold text-center text-gray-900 mb-4">
             All Brands
           </h1>
@@ -36,24 +34,26 @@ export default async function AllBrandsPage() {
                 href={`/brands/${brand.slug}`}
                 className="group"
               >
-                <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex flex-col items-center justify-center p-8 aspect-square border border-gray-100 hover:border-red-200 relative overflow-hidden">
-                  
+                <div className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 flex flex-col items-center justify-between p-6 h-44 border border-gray-100 hover:border-red-200 relative overflow-hidden">
+
                   {/* Red gradient overlay on hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-red-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
-                  <div className="w-full h-32 flex items-center justify-center mb-6 relative z-10">
+
+                  {/* Logo area — fixed height, centered */}
+                  <div className="flex-1 w-full flex items-center justify-center relative z-10">
                     {brand.logo && (
                       <Image
                         src={brand.logo}
                         alt={brand.name}
-                        width={140}
-                        height={140}
-                        className="object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-110"
+                        width={100}
+                        height={80}
+                        className="object-contain max-h-20 w-auto grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-110"
                       />
                     )}
                   </div>
 
-                  <p className="text-sm font-semibold text-center text-gray-700 group-hover:text-red-700 tracking-wider transition-colors duration-300 relative z-10">
+                  {/* Brand name — always at the bottom */}
+                  <p className="text-xs font-semibold text-center text-gray-700 group-hover:text-red-700 tracking-wider transition-colors duration-300 relative z-10 mt-3 leading-tight">
                     {brand.name.toUpperCase()}
                   </p>
 
@@ -66,7 +66,7 @@ export default async function AllBrandsPage() {
 
           {/* Back to Home Button */}
           <div className="mt-16 text-center">
-            <Link 
+            <Link
               href="/"
               className="inline-flex items-center gap-2 px-8 py-3 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors duration-300 shadow-md hover:shadow-lg"
             >
@@ -82,5 +82,3 @@ export default async function AllBrandsPage() {
     </div>
   );
 }
-
-

@@ -166,7 +166,11 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   const addImage = (url: string) => {
-    setImages([...images, url]);
+    setImages(prev => [...prev, url]);
+  };
+
+  const addMultipleImages = (urls: string[]) => {
+    setImages(prev => [...prev, ...urls]);
   };
 
   const removeImage = (index: number) => {
@@ -232,6 +236,7 @@ export const Modal: React.FC<ModalProps> = ({
               setFormData={setFormData}
               images={images}
               addImage={addImage}
+              addMultipleImages={addMultipleImages}
               removeImage={removeImage}
               categories={categories}
               bikes={bikes}
@@ -346,6 +351,7 @@ interface ProductFormProps {
   setFormData: (data: Record<string, unknown>) => void;
   images: string[];
   addImage: (url: string) => void;
+  addMultipleImages: (urls: string[]) => void;
   removeImage: (index: number) => void;
   categories: Category[];
   bikes: Bike[];
@@ -357,7 +363,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   formData,
   setFormData,
   images,
-  addImage,
+  addMultipleImages,
   removeImage,
   categories,
   bikes,
@@ -463,40 +469,93 @@ const ProductForm: React.FC<ProductFormProps> = ({
       </select>
     </div>
 
+    {/* ------------------------------------------------------------------ */}
+    {/* Product Images — supports selecting multiple files at once          */}
+    {/* ------------------------------------------------------------------ */}
     <div>
-      <label className="block text-sm font-medium mb-2 text-black">Product Images</label>
-      <div className="space-y-2">
-        <div className="flex flex-wrap gap-2">
-          {images.map((img, idx) => (
-            <div key={idx} className="relative w-24 h-24 border rounded">
-              <Image
-                src={img}
-                alt=""
-                width={96}
-                height={96}
-                className="w-full h-full object-cover rounded"
-              />
-              <button
-                type="button"
-                onClick={() => removeImage(idx)}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ))}
-        </div>
-        <label className="inline-block px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200">
-          <ImageIcon size={16} className="inline mr-2" />
-          <span className="text-black">{uploadingImage ? 'Uploading...' : 'Upload Image'}</span>
+      <label className="block text-sm font-medium mb-2 text-black">
+        Product Images
+        {images.length > 0 && (
+          <span className="ml-2 text-xs text-gray-500 font-normal">
+            {images.length} image{images.length > 1 ? 's' : ''} — first is thumbnail
+          </span>
+        )}
+      </label>
+      <div className="space-y-3">
+
+        {/* Previews */}
+        {images.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {images.map((img, idx) => (
+              <div key={idx} className="relative w-24 h-24 border rounded group">
+                <Image
+                  src={img}
+                  alt=""
+                  width={96}
+                  height={96}
+                  className="w-full h-full object-cover rounded"
+                />
+                {idx === 0 && (
+                  <span className="absolute bottom-0 left-0 right-0 text-center text-white text-[10px] bg-blue-500 rounded-b py-0.5">
+                    Thumbnail
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeImage(idx)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Upload button */}
+        <label
+          className={`inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200 ${
+            uploadingImage ? 'opacity-60 pointer-events-none' : ''
+          }`}
+        >
+          <ImageIcon size={16} />
+          <span className="text-black">
+            {uploadingImage ? 'Uploading...' : 'Upload Images'}
+          </span>
           <input
             type="file"
             accept="image/*"
+            multiple
             className="hidden"
-            onChange={(e) => onImageUpload(e, addImage)}
             disabled={uploadingImage}
+            onChange={(e) => {
+              const files = Array.from(e.target.files ?? []);
+              if (!files.length) return;
+
+              const urls: string[] = [];
+              let completed = 0;
+
+              files.forEach((file) => {
+                const syntheticEvent = {
+                  target: { files: [file] }
+                } as unknown as React.ChangeEvent<HTMLInputElement>;
+
+                onImageUpload(syntheticEvent, (url) => {
+                  urls.push(url);
+                  completed++;
+                  if (completed === files.length) {
+                    addMultipleImages(urls);
+                  }
+                });
+              });
+
+              e.target.value = '';
+            }}
           />
         </label>
+        <p className="text-xs text-gray-500">
+          Select multiple images at once. The first image will be used as the thumbnail.
+        </p>
       </div>
     </div>
 
