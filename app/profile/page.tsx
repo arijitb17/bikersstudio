@@ -107,7 +107,7 @@ export default function ProfilePage() {
       const data = await response.json();
       
       if (response.ok) {
-        setOrderCount(data.orders.length);
+        setOrderCount((data.orders ?? data.data ?? []).length);
       }
     } catch (error) {
       console.error('Error loading order count:', error);
@@ -209,7 +209,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-20">
+    <div className="min-h-screen bg-gray-50 py-20 mt-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
 
@@ -218,7 +218,7 @@ export default function ProfilePage() {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Personal Information</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
@@ -314,7 +314,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-red-600" />
-                  <h2 className="text-xl font-semibold">Saved Addresses</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Saved Addresses</h2>
                 </div>
                 <button
                   onClick={() => setShowAddressForm(!showAddressForm)}
@@ -401,7 +401,7 @@ export default function ProfilePage() {
           {/* Quick Stats */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-              <h2 className="text-xl font-semibold mb-4">Account Overview</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Account Overview</h2>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between py-3 border-b">

@@ -83,7 +83,7 @@ export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, l
             type="text"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600 text-gray-600"
             placeholder="Customer name"
             required
           />
@@ -97,7 +97,7 @@ export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, l
             type="text"
             value={formData.location}
             onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-600 text-gray-600"
             placeholder="City, Country"
           />
         </div>
@@ -110,7 +110,7 @@ export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, l
         <textarea
           value={formData.review}
           onChange={(e) => setFormData({ ...formData, review: e.target.value })}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px] placeholder-gray-600 text-gray-600"
           placeholder="Customer's review..."
           required
         />
@@ -162,7 +162,7 @@ export function TestimonialForm({ item, onSave, onImageUpload, uploadingImage, l
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, image: '' })}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 text-red-600"
               >
                 <X size={14} />
               </button>
