@@ -15,7 +15,7 @@ export default async function ShopByBikes() {
   const hasMore = brands.length > 6;
 
   return (
-    <section className="py-20 my-16 bg-white">
+    <section className="pt-10 bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         
         <h2 className="text-5xl md:text-6xl font-bold text-center text-gray-900 mb-4">
