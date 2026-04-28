@@ -1,4 +1,5 @@
 // app/api/brands/route.ts
+
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { applyRateLimit, API_LIMITER } from '@/lib/rateLimiter';
@@ -14,25 +15,47 @@ export async function GET(req: NextRequest) {
       prisma.brand.findMany({
         where: {
           isActive: true,
-          // ✅ Only include brands that have at least one active bike
-          bikes: {
-            some: {
-              isActive: true,
+          OR: [
+            {
+              bikes: {
+                some: {
+                  isActive: true,
+                },
+              },
             },
-          },
+            {
+              products: {
+                some: {
+                  isActive: true,
+                },
+              },
+            },
+          ],
         },
         orderBy: { name: 'asc' },
         select: {
           name: true,
           slug: true,
+
           bikes: {
             where: { isActive: true },
             orderBy: { name: 'asc' },
-            select: { name: true, slug: true },
+            select: {
+              name: true,
+              slug: true,
+            },
+          },
+
+          products: {
+            where: { isActive: true },
+            select: {
+              id: true,
+            },
           },
         },
       })
     );
+
     return ok(data);
   } catch (e) {
     return handleApiError(e, 'GET /api/brands');
