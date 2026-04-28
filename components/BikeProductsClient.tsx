@@ -3,7 +3,19 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { SlidersHorizontal, X, ChevronDown, ChevronUp, Search, Filter, Tag, Package, Grid3x3, List } from 'lucide-react';
+import {
+  SlidersHorizontal,
+  X,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Filter,
+  Tag,
+  Package,
+  Grid3x3,
+  List,
+  Bike,
+} from 'lucide-react';
 
 interface Product {
   id: string;
@@ -15,6 +27,7 @@ interface Product {
   stock: number;
   category: { name: string };
   bike: { name: string; brand: { name: string } } | null;
+  brand: { name: string } | null;
 }
 
 interface BikeProductsClientProps {
@@ -47,7 +60,234 @@ interface ProductCardProps {
   onProductClick: (slug: string) => void;
 }
 
-export default function BikeProductsClient({ bike, products }: BikeProductsClientProps) {
+interface FilterSidebarProps {
+  filterOptions: {
+    categories: string[];
+    brands: string[];
+    priceRange: [number, number];
+  };
+  selectedBrands: string[];
+  selectedCategories: string[];
+  inStockOnly: boolean;
+  onSaleOnly: boolean;
+  lowStockOnly: boolean;
+  priceRange: [number, number];
+  expandedSections: {
+    brand: boolean;
+    category: boolean;
+    price: boolean;
+    availability: boolean;
+  };
+  setSelectedBrands: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedCategories: React.Dispatch<React.SetStateAction<string[]>>;
+  setInStockOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  setOnSaleOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  setLowStockOnly: React.Dispatch<React.SetStateAction<boolean>>;
+  setPriceRange: React.Dispatch<React.SetStateAction<[number, number]>>;
+  setExpandedSections: React.Dispatch<
+    React.SetStateAction<{
+      brand: boolean;
+      category: boolean;
+      price: boolean;
+      availability: boolean;
+    }>
+  >;
+}
+
+// ─── FilterSidebar (defined at module level to avoid "component created during render" error) ───
+
+function FilterSidebar({
+  filterOptions,
+  selectedBrands,
+  selectedCategories,
+  inStockOnly,
+  onSaleOnly,
+  lowStockOnly,
+  priceRange,
+  expandedSections,
+  setSelectedBrands,
+  setSelectedCategories,
+  setInStockOnly,
+  setOnSaleOnly,
+  setLowStockOnly,
+  setPriceRange,
+  setExpandedSections,
+}: FilterSidebarProps) {
+  return (
+    <>
+      {/* Brand Filter — only show if there are multiple brands */}
+      {filterOptions.brands.length > 0 && (
+        <FilterSection
+          title="Brand"
+          icon={<Tag className="w-4 h-4" />}
+          isExpanded={expandedSections.brand}
+          onToggle={() =>
+            setExpandedSections((p) => ({ ...p, brand: !p.brand }))
+          }
+          count={selectedBrands.length}
+        >
+          <div className="space-y-2">
+            {filterOptions.brands.map((brand) => (
+              <label
+                key={brand}
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedBrands.includes(brand)}
+                  onChange={(e) =>
+                    setSelectedBrands((p) =>
+                      e.target.checked
+                        ? [...p, brand]
+                        : p.filter((b) => b !== brand),
+                    )
+                  }
+                  className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                />
+                <span className="text-sm text-gray-900">{brand}</span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
+
+      {/* Category Filter */}
+      <FilterSection
+        title="Category"
+        icon={<Package className="w-4 h-4" />}
+        isExpanded={expandedSections.category}
+        onToggle={() =>
+          setExpandedSections((p) => ({ ...p, category: !p.category }))
+        }
+        count={selectedCategories.length}
+      >
+        <div className="space-y-2">
+          {filterOptions.categories.map((category) => (
+            <label
+              key={category}
+              className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+            >
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(category)}
+                onChange={(e) =>
+                  setSelectedCategories((p) =>
+                    e.target.checked
+                      ? [...p, category]
+                      : p.filter((c) => c !== category),
+                  )
+                }
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm text-gray-900">{category}</span>
+            </label>
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Price Range Filter */}
+      <FilterSection
+        title="Price Range"
+        icon={<span className="font-bold text-sm">₹</span>}
+        isExpanded={expandedSections.price}
+        onToggle={() =>
+          setExpandedSections((p) => ({ ...p, price: !p.price }))
+        }
+      >
+        <div className="space-y-4">
+          <input
+            type="range"
+            min={filterOptions.priceRange[0]}
+            max={filterOptions.priceRange[1]}
+            step="500"
+            value={priceRange[1]}
+            onChange={(e) =>
+              setPriceRange([priceRange[0], parseInt(e.target.value)])
+            }
+            className="w-full accent-red-600"
+          />
+          <div className="flex gap-3">
+            <input
+              type="number"
+              value={priceRange[0]}
+              onChange={(e) =>
+                setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
+              placeholder="Min"
+            />
+            <span className="text-gray-500 self-center">-</span>
+            <input
+              type="number"
+              value={priceRange[1]}
+              onChange={(e) =>
+                setPriceRange([
+                  priceRange[0],
+                  parseInt(e.target.value) || 100000,
+                ])
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
+              placeholder="Max"
+            />
+          </div>
+        </div>
+      </FilterSection>
+
+      {/* Availability Filter */}
+      <FilterSection
+        title="Availability"
+        icon={<Bike className="w-4 h-4" />}
+        isExpanded={expandedSections.availability}
+        onToggle={() =>
+          setExpandedSections((p) => ({
+            ...p,
+            availability: !p.availability,
+          }))
+        }
+        count={
+          (inStockOnly ? 1 : 0) + (onSaleOnly ? 1 : 0) + (lowStockOnly ? 1 : 0)
+        }
+      >
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+            <input
+              type="checkbox"
+              checked={inStockOnly}
+              onChange={(e) => setInStockOnly(e.target.checked)}
+              className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+            />
+            <span className="text-sm text-gray-900">In Stock Only</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+            <input
+              type="checkbox"
+              checked={onSaleOnly}
+              onChange={(e) => setOnSaleOnly(e.target.checked)}
+              className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+            />
+            <span className="text-sm text-gray-900">On Sale</span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+            <input
+              type="checkbox"
+              checked={lowStockOnly}
+              onChange={(e) => setLowStockOnly(e.target.checked)}
+              className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+            />
+            <span className="text-sm text-gray-900">Limited Stock</span>
+          </label>
+        </div>
+      </FilterSection>
+    </>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export default function BikeProductsClient({
+  bike,
+  products,
+}: BikeProductsClientProps) {
   const router = useRouter();
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid-3' | 'grid-4' | 'list'>('grid-4');
@@ -55,10 +295,12 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
+    brand: true,
     category: true,
     price: true,
     availability: true,
@@ -66,10 +308,16 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
 
   const filterOptions = useMemo(() => {
     const categories = new Set<string>();
-    let minPrice = Infinity, maxPrice = 0;
+    const brands = new Set<string>();
+    let minPrice = Infinity,
+      maxPrice = 0;
 
-    products.forEach(p => {
+    products.forEach((p) => {
       categories.add(p.category.name);
+
+      const brandName = p.brand?.name ?? p.bike?.brand.name;
+      if (brandName) brands.add(brandName);
+
       const price = p.salePrice ?? p.price;
       minPrice = Math.min(minPrice, price);
       maxPrice = Math.max(maxPrice, price);
@@ -77,7 +325,11 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
 
     return {
       categories: Array.from(categories).sort(),
-      priceRange: [Math.floor(minPrice), Math.ceil(maxPrice)] as [number, number]
+      brands: Array.from(brands).sort(),
+      priceRange: [Math.floor(minPrice), Math.ceil(maxPrice)] as [
+        number,
+        number,
+      ],
     };
   }, [products]);
 
@@ -86,50 +338,98 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(query) ||
-        p.category.name.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (p) =>
+          p.name.toLowerCase().includes(query) ||
+          p.category.name.toLowerCase().includes(query),
       );
     }
 
-    filtered = filtered.filter(p => {
+    filtered = filtered.filter((p) => {
       const price = p.salePrice ?? p.price;
       return price >= priceRange[0] && price <= priceRange[1];
     });
 
     if (selectedCategories.length > 0) {
-      filtered = filtered.filter(p => selectedCategories.includes(p.category.name));
+      filtered = filtered.filter((p) =>
+        selectedCategories.includes(p.category.name),
+      );
     }
 
-    if (inStockOnly) filtered = filtered.filter(p => p.stock > 0);
-    if (onSaleOnly) filtered = filtered.filter(p => p.salePrice !== null && p.salePrice < p.price);
-    if (lowStockOnly) filtered = filtered.filter(p => p.stock > 0 && p.stock < 10);
+    if (selectedBrands.length > 0) {
+      filtered = filtered.filter((p) => {
+        const brandName = p.brand?.name ?? p.bike?.brand.name;
+        return brandName ? selectedBrands.includes(brandName) : false;
+      });
+    }
+
+    if (inStockOnly) filtered = filtered.filter((p) => p.stock > 0);
+    if (onSaleOnly)
+      filtered = filtered.filter(
+        (p) => p.salePrice !== null && p.salePrice < p.price,
+      );
+    if (lowStockOnly)
+      filtered = filtered.filter((p) => p.stock > 0 && p.stock < 10);
 
     switch (sortBy) {
-      case 'price-low': filtered.sort((a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price)); break;
-      case 'price-high': filtered.sort((a, b) => (b.salePrice ?? b.price) - (a.salePrice ?? a.price)); break;
-      case 'name-az': filtered.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case 'name-za': filtered.sort((a, b) => b.name.localeCompare(a.name)); break;
+      case 'price-low':
+        filtered.sort(
+          (a, b) => (a.salePrice ?? a.price) - (b.salePrice ?? b.price),
+        );
+        break;
+      case 'price-high':
+        filtered.sort(
+          (a, b) => (b.salePrice ?? b.price) - (a.salePrice ?? a.price),
+        );
+        break;
+      case 'name-az':
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case 'name-za':
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
+        break;
       case 'discount':
         filtered.sort((a, b) => {
-          const discountA = a.salePrice ? ((a.price - a.salePrice) / a.price) * 100 : 0;
-          const discountB = b.salePrice ? ((b.price - b.salePrice) / b.price) * 100 : 0;
+          const discountA = a.salePrice
+            ? ((a.price - a.salePrice) / a.price) * 100
+            : 0;
+          const discountB = b.salePrice
+            ? ((b.price - b.salePrice) / b.price) * 100
+            : 0;
           return discountB - discountA;
         });
         break;
     }
 
     return filtered;
-  }, [products, searchQuery, priceRange, selectedCategories, inStockOnly, onSaleOnly, lowStockOnly, sortBy]);
+  }, [
+    products,
+    searchQuery,
+    priceRange,
+    selectedCategories,
+    selectedBrands,
+    inStockOnly,
+    onSaleOnly,
+    lowStockOnly,
+    sortBy,
+  ]);
 
-  const activeFiltersCount = selectedCategories.length +
-    (inStockOnly ? 1 : 0) + (onSaleOnly ? 1 : 0) + (lowStockOnly ? 1 : 0) +
-    (priceRange[0] > filterOptions.priceRange[0] || priceRange[1] < filterOptions.priceRange[1] ? 1 : 0) +
+  const activeFiltersCount =
+    selectedCategories.length +
+    selectedBrands.length +
+    (inStockOnly ? 1 : 0) +
+    (onSaleOnly ? 1 : 0) +
+    (lowStockOnly ? 1 : 0) +
+    (priceRange[0] > filterOptions.priceRange[0] ||
+    priceRange[1] < filterOptions.priceRange[1]
+      ? 1
+      : 0) +
     (searchQuery.trim() ? 1 : 0);
 
   const clearAllFilters = () => {
     setPriceRange(filterOptions.priceRange);
     setSelectedCategories([]);
+    setSelectedBrands([]);
     setInStockOnly(false);
     setOnSaleOnly(false);
     setLowStockOnly(false);
@@ -138,12 +438,27 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
 
   const removeFilter = (type: string, value?: string) => {
     switch (type) {
-      case 'category': setSelectedCategories(prev => prev.filter(c => c !== value)); break;
-      case 'inStock': setInStockOnly(false); break;
-      case 'onSale': setOnSaleOnly(false); break;
-      case 'lowStock': setLowStockOnly(false); break;
-      case 'price': setPriceRange(filterOptions.priceRange); break;
-      case 'search': setSearchQuery(''); break;
+      case 'category':
+        setSelectedCategories((prev) => prev.filter((c) => c !== value));
+        break;
+      case 'brand':
+        setSelectedBrands((prev) => prev.filter((b) => b !== value));
+        break;
+      case 'inStock':
+        setInStockOnly(false);
+        break;
+      case 'onSale':
+        setOnSaleOnly(false);
+        break;
+      case 'lowStock':
+        setLowStockOnly(false);
+        break;
+      case 'price':
+        setPriceRange(filterOptions.priceRange);
+        break;
+      case 'search':
+        setSearchQuery('');
+        break;
     }
   };
 
@@ -151,13 +466,35 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
     router.push(`/products/${productSlug}`);
   };
 
+  // Shared props passed to both desktop and mobile FilterSidebar instances
+  const filterSidebarProps: FilterSidebarProps = {
+    filterOptions,
+    selectedBrands,
+    selectedCategories,
+    inStockOnly,
+    onSaleOnly,
+    lowStockOnly,
+    priceRange,
+    expandedSections,
+    setSelectedBrands,
+    setSelectedCategories,
+    setInStockOnly,
+    setOnSaleOnly,
+    setLowStockOnly,
+    setPriceRange,
+    setExpandedSections,
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      {/* Hero Banner */}
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-24">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm mb-4 text-white/90">
-            <span>Home</span><ChevronDown className="w-4 h-4 -rotate-90" />
-            <span>{bike.brandName}</span><ChevronDown className="w-4 h-4 -rotate-90" />
+            <span>Home</span>
+            <ChevronDown className="w-4 h-4 -rotate-90" />
+            <span>{bike.brandName}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90" />
             <span className="font-medium text-white">{bike.name}</span>
           </div>
           <div className="flex items-start justify-between gap-6">
@@ -165,14 +502,19 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
               <p className="text-white/90 font-bold text-sm uppercase tracking-wide mb-2">
                 {bike.brandName}
               </p>
-              <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white">{bike.name}</h1>
-              {bike.description && <p className="text-lg text-white/95">{bike.description}</p>}
+              <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white">
+                {bike.name}
+              </h1>
+              {bike.description && (
+                <p className="text-lg text-white/95">{bike.description}</p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Toolbar */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
           <div className="relative mb-4">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -184,7 +526,10 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
               className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
                 <X className="w-5 h-5" />
               </button>
             )}
@@ -196,13 +541,19 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 lg:hidden"
               >
-                <Filter className="w-4 h-4" />Filters
+                <Filter className="w-4 h-4" />
+                Filters
                 {activeFiltersCount > 0 && (
-                  <span className="bg-white text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">{activeFiltersCount}</span>
+                  <span className="bg-white text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                    {activeFiltersCount}
+                  </span>
                 )}
               </button>
               <div className="text-sm text-gray-700">
-                <span className="font-bold text-lg text-gray-900">{filteredProducts.length}</span> of {products.length} products
+                <span className="font-bold text-lg text-gray-900">
+                  {filteredProducts.length}
+                </span>{' '}
+                of {products.length} products
               </div>
             </div>
 
@@ -221,16 +572,32 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
               </select>
 
               <div className="hidden sm:flex gap-1 border border-gray-300 rounded-lg p-1">
-                <button onClick={() => setViewMode('grid-3')} className={`p-2 rounded ${viewMode === 'grid-3' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                <button
+                  onClick={() => setViewMode('grid-3')}
+                  className={`p-2 rounded ${viewMode === 'grid-3' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
                   <Grid3x3 className="w-4 h-4" />
                 </button>
-                <button onClick={() => setViewMode('grid-4')} className={`p-2 rounded ${viewMode === 'grid-4' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="3" width="7" height="7" strokeWidth="2"/><rect x="14" y="3" width="7" height="7" strokeWidth="2"/>
-                    <rect x="3" y="14" width="7" height="7" strokeWidth="2"/><rect x="14" y="14" width="7" height="7" strokeWidth="2"/>
+                <button
+                  onClick={() => setViewMode('grid-4')}
+                  className={`p-2 rounded ${viewMode === 'grid-4' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                  >
+                    <rect x="3" y="3" width="7" height="7" strokeWidth="2" />
+                    <rect x="14" y="3" width="7" height="7" strokeWidth="2" />
+                    <rect x="3" y="14" width="7" height="7" strokeWidth="2" />
+                    <rect x="14" y="14" width="7" height="7" strokeWidth="2" />
                   </svg>
                 </button>
-                <button onClick={() => setViewMode('list')} className={`p-2 rounded ${viewMode === 'list' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                >
                   <List className="w-4 h-4" />
                 </button>
               </div>
@@ -238,131 +605,153 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
           </div>
         </div>
 
+        {/* Active Filters Bar */}
         {activeFiltersCount > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
-              <button onClick={clearAllFilters} className="text-sm text-red-600 hover:text-red-700 font-medium">Clear All</button>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Active Filters
+              </h3>
+              <button
+                onClick={clearAllFilters}
+                className="text-sm text-red-600 hover:text-red-700 font-medium"
+              >
+                Clear All
+              </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {searchQuery && <FilterTag label={`Search: "${searchQuery}"`} onRemove={() => removeFilter('search')} />}
-              {selectedCategories.map(cat => (
-                <FilterTag key={cat} label={cat} icon={<Package className="w-3 h-3" />} onRemove={() => removeFilter('category', cat)} />
+              {searchQuery && (
+                <FilterTag
+                  label={`Search: "${searchQuery}"`}
+                  onRemove={() => removeFilter('search')}
+                />
+              )}
+              {selectedBrands.map((brand) => (
+                <FilterTag
+                  key={brand}
+                  label={brand}
+                  icon={<Tag className="w-3 h-3" />}
+                  onRemove={() => removeFilter('brand', brand)}
+                />
               ))}
-              {inStockOnly && <FilterTag label="In Stock" onRemove={() => removeFilter('inStock')} />}
-              {onSaleOnly && <FilterTag label="On Sale" onRemove={() => removeFilter('onSale')} />}
-              {lowStockOnly && <FilterTag label="Low Stock" onRemove={() => removeFilter('lowStock')} />}
-              {(priceRange[0] > filterOptions.priceRange[0] || priceRange[1] < filterOptions.priceRange[1]) && (
-                <FilterTag label={`₹${priceRange[0].toLocaleString()} - ₹${priceRange[1].toLocaleString()}`} onRemove={() => removeFilter('price')} />
+              {selectedCategories.map((cat) => (
+                <FilterTag
+                  key={cat}
+                  label={cat}
+                  icon={<Package className="w-3 h-3" />}
+                  onRemove={() => removeFilter('category', cat)}
+                />
+              ))}
+              {inStockOnly && (
+                <FilterTag
+                  label="In Stock"
+                  onRemove={() => removeFilter('inStock')}
+                />
+              )}
+              {onSaleOnly && (
+                <FilterTag
+                  label="On Sale"
+                  onRemove={() => removeFilter('onSale')}
+                />
+              )}
+              {lowStockOnly && (
+                <FilterTag
+                  label="Low Stock"
+                  onRemove={() => removeFilter('lowStock')}
+                />
+              )}
+              {(priceRange[0] > filterOptions.priceRange[0] ||
+                priceRange[1] < filterOptions.priceRange[1]) && (
+                <FilterTag
+                  label={`₹${priceRange[0].toLocaleString()} - ₹${priceRange[1].toLocaleString()}`}
+                  onRemove={() => removeFilter('price')}
+                />
               )}
             </div>
           </div>
         )}
 
         <div className="flex gap-8">
+          {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-24">
               <div className="p-4 border-b border-gray-200">
                 <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <SlidersHorizontal className="w-5 h-5" />Filters
+                  <SlidersHorizontal className="w-5 h-5" />
+                  Filters
                 </h2>
               </div>
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
-                <FilterSection
-                  title="Category"
-                  icon={<Tag className="w-4 h-4" />}
-                  isExpanded={expandedSections.category}
-                  onToggle={() => setExpandedSections(p => ({...p, category: !p.category}))}
-                  count={selectedCategories.length}
-                >
-                  <div className="space-y-2">
-                    {filterOptions.categories.map(category => (
-                      <label key={category} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                          type="checkbox"
-                          checked={selectedCategories.includes(category)}
-                          onChange={(e) => setSelectedCategories(p => e.target.checked ? [...p, category] : p.filter(c => c !== category))}
-                          className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
-                        />
-                        <span className="text-sm text-gray-900">{category}</span>
-                      </label>
-                    ))}
-                  </div>
-                </FilterSection>
-
-                <FilterSection
-                  title="Price Range"
-                  icon={<span className="font-bold">₹</span>}
-                  isExpanded={expandedSections.price}
-                  onToggle={() => setExpandedSections(p => ({...p, price: !p.price}))}
-                >
-                  <div className="space-y-4">
-                    <input
-                      type="range"
-                      min={filterOptions.priceRange[0]}
-                      max={filterOptions.priceRange[1]}
-                      step="500"
-                      value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                      className="w-full accent-red-600"
-                    />
-                    <div className="flex gap-3">
-                      <input
-                        type="number"
-                        value={priceRange[0]}
-                        onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
-                        placeholder="Min"
-                      />
-                      <span className="text-gray-500">-</span>
-                      <input
-                        type="number"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 100000])}
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
-                        placeholder="Max"
-                      />
-                    </div>
-                  </div>
-                </FilterSection>
-
-                <FilterSection
-                  title="Availability"
-                  icon={<Package className="w-4 h-4" />}
-                  isExpanded={expandedSections.availability}
-                  onToggle={() => setExpandedSections(p => ({...p, availability: !p.availability}))}
-                  count={(inStockOnly ? 1 : 0) + (onSaleOnly ? 1 : 0) + (lowStockOnly ? 1 : 0)}
-                >
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
-                      <span className="text-sm text-gray-900">In Stock Only</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" checked={onSaleOnly} onChange={(e) => setOnSaleOnly(e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
-                      <span className="text-sm text-gray-900">On Sale</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" checked={lowStockOnly} onChange={(e) => setLowStockOnly(e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
-                      <span className="text-sm text-gray-900">Limited Stock</span>
-                    </label>
-                  </div>
-                </FilterSection>
+                <FilterSidebar {...filterSidebarProps} />
               </div>
             </div>
           </aside>
 
+          {/* Mobile Filters Drawer */}
+          {showMobileFilters && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <div
+                className="absolute inset-0 bg-black/50"
+                onClick={() => setShowMobileFilters(false)}
+              />
+              <div className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-xl flex flex-col">
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <SlidersHorizontal className="w-5 h-5" />
+                    Filters
+                    {activeFiltersCount > 0 && (
+                      <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                        {activeFiltersCount}
+                      </span>
+                    )}
+                  </h2>
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <FilterSidebar {...filterSidebarProps} />
+                </div>
+                <div className="p-4 border-t border-gray-200 flex gap-3">
+                  <button
+                    onClick={clearAllFilters}
+                    className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm"
+                  >
+                    Clear All
+                  </button>
+                  <button
+                    onClick={() => setShowMobileFilters(false)}
+                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm"
+                  >
+                    Show {filteredProducts.length} Results
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Product Grid */}
           <main className="flex-1">
             {filteredProducts.length > 0 ? (
-              <div className={
-                viewMode === 'grid-3'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : viewMode === 'grid-4'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                  : 'space-y-4'
-              }>
-                {filteredProducts.map(p => (
-                  <ProductCard key={p.id} product={p} viewMode={viewMode} onProductClick={handleProductClick} />
+              <div
+                className={
+                  viewMode === 'grid-3'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                    : viewMode === 'grid-4'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                      : 'space-y-4'
+                }
+              >
+                {filteredProducts.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    viewMode={viewMode}
+                    onProductClick={handleProductClick}
+                  />
                 ))}
               </div>
             ) : (
@@ -370,10 +759,17 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package className="w-12 h-12 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Products Found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your filters</p>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No Products Found
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your filters
+                </p>
                 {activeFiltersCount > 0 && (
-                  <button onClick={clearAllFilters} className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  >
                     Clear Filters
                   </button>
                 )}
@@ -386,18 +782,36 @@ export default function BikeProductsClient({ bike, products }: BikeProductsClien
   );
 }
 
-function FilterSection({ title, icon, isExpanded, onToggle, count, children }: FilterSectionProps) {
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function FilterSection({
+  title,
+  icon,
+  isExpanded,
+  onToggle,
+  count,
+  children,
+}: FilterSectionProps) {
   return (
     <div className="border-b border-gray-200 last:border-b-0">
-      <button onClick={onToggle} className="w-full flex items-center justify-between p-4 hover:bg-gray-50">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+      >
         <div className="flex items-center gap-2">
           <span className="text-gray-600">{icon}</span>
           <span className="font-semibold text-gray-900">{title}</span>
           {count != null && count > 0 && (
-            <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">{count}</span>
+            <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+              {count}
+            </span>
           )}
         </div>
-        {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        {isExpanded ? (
+          <ChevronUp className="w-5 h-5 text-gray-400" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-gray-400" />
+        )}
       </button>
       {isExpanded && <div className="px-4 pb-4">{children}</div>}
     </div>
@@ -407,8 +821,12 @@ function FilterSection({ title, icon, isExpanded, onToggle, count, children }: F
 function FilterTag({ label, icon, onRemove }: FilterTagProps) {
   return (
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-sm rounded-full">
-      {icon}{label}
-      <button onClick={onRemove} className="hover:bg-red-700 rounded-full p-0.5">
+      {icon}
+      {label}
+      <button
+        onClick={onRemove}
+        className="hover:bg-red-700 rounded-full p-0.5"
+      >
         <X className="w-3.5 h-3.5" />
       </button>
     </span>
@@ -417,8 +835,13 @@ function FilterTag({ label, icon, onRemove }: FilterTagProps) {
 
 function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
   const finalPrice = product.salePrice ?? product.price;
-  const hasDiscount = product.salePrice !== null && product.salePrice < product.price;
-  const discountPercent = hasDiscount ? Math.round(((product.price - finalPrice) / product.price) * 100) : 0;
+  const hasDiscount =
+    product.salePrice !== null && product.salePrice < product.price;
+  const discountPercent = hasDiscount
+    ? Math.round(((product.price - finalPrice) / product.price) * 100)
+    : 0;
+
+  const brandName = product.brand?.name ?? product.bike?.brand.name ?? null;
 
   if (viewMode === 'list') {
     return (
@@ -443,7 +866,15 @@ function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
           <div className="flex-1 flex flex-col justify-between">
             <div>
               <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                <span className="font-medium text-gray-700">{product.category.name}</span>
+                <span className="font-medium text-gray-700">
+                  {product.category.name}
+                </span>
+                {brandName && (
+                  <>
+                    <span>·</span>
+                    <span className="font-medium text-red-500">{brandName}</span>
+                  </>
+                )}
               </div>
               <h3 className="font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
                 {product.name}
@@ -451,15 +882,25 @@ function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-gray-900">₹{finalPrice.toLocaleString('en-IN')}</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  ₹{finalPrice.toLocaleString('en-IN')}
+                </span>
                 {hasDiscount && (
-                  <span className="text-sm text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
+                  <span className="text-sm text-gray-400 line-through">
+                    ₹{product.price.toLocaleString('en-IN')}
+                  </span>
                 )}
               </div>
-              {product.stock > 0
-                ? <span className="text-sm text-green-600 font-medium flex items-center gap-1"><div className="w-2 h-2 bg-green-600 rounded-full" />In Stock</span>
-                : <span className="text-sm text-red-600 font-medium">Out of Stock</span>
-              }
+              {product.stock > 0 ? (
+                <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+                  <div className="w-2 h-2 bg-green-600 rounded-full" />
+                  In Stock
+                </span>
+              ) : (
+                <span className="text-sm text-red-600 font-medium">
+                  Out of Stock
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -497,15 +938,29 @@ function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
       </div>
       <div className="p-4 flex-1 flex flex-col">
         <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
-          <span className="font-medium text-gray-700">{product.category.name}</span>
+          <span className="font-medium text-gray-700">
+            {product.category.name}
+          </span>
+          {brandName && (
+            <>
+              <span>·</span>
+              <span className="font-medium text-red-500 truncate">
+                {brandName}
+              </span>
+            </>
+          )}
         </div>
         <h3 className="text-base font-bold text-gray-900 mb-3 line-clamp-2 flex-1 group-hover:text-red-600 transition-colors">
           {product.name}
         </h3>
         <div className="flex items-center gap-2 mt-auto">
-          <span className="text-xl font-bold text-gray-900">₹{finalPrice.toLocaleString('en-IN')}</span>
+          <span className="text-xl font-bold text-gray-900">
+            ₹{finalPrice.toLocaleString('en-IN')}
+          </span>
           {hasDiscount && (
-            <span className="text-sm text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
+            <span className="text-sm text-gray-400 line-through">
+              ₹{product.price.toLocaleString('en-IN')}
+            </span>
           )}
         </div>
       </div>

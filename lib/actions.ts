@@ -56,7 +56,12 @@ type BikeWithProducts = Prisma.BikeGetPayload<{
     products: {
       include: {
         category: true;
-        bike: { include: { brand: true } };
+        brand: true; // add this
+        bike: {
+          include: {
+            brand: true;
+          };
+        };
       };
     };
   };
@@ -73,7 +78,12 @@ export async function getBikeWithProducts(slug: string) {
         where: { isActive: true },
         include: {
           category: true,
-          bike: { include: { brand: true } },
+          brand: true, // add this
+          bike: {
+            include: {
+              brand: true,
+            },
+          },
         },
         orderBy: { name: 'asc' },
       },
@@ -98,11 +108,23 @@ export async function getBikeWithProducts(slug: string) {
       size: p.size,
       material: p.material,
       description: p.description,
-      category: { name: p.category.name },
+
+      category: {
+        name: p.category.name,
+      },
+
+      brand: p.brand // add this
+        ? {
+            name: p.brand.name,
+          }
+        : null,
+
       bike: p.bike
         ? {
             name: p.bike.name,
-            brand: { name: p.bike.brand.name },
+            brand: {
+              name: p.bike.brand.name,
+            },
           }
         : null,
     })),
