@@ -1,11 +1,11 @@
-
 'use server';
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth';
 import { prisma } from './prisma';
 import { revalidatePath } from 'next/cache';
-import { Prisma,PaymentMethod } from '@/app/generated/prisma/client';
+import { Prisma, PaymentMethod } from '@/app/generated/prisma/client';
+
 // -----------------
 // BRANDS & BIKES
 // -----------------
@@ -13,12 +13,20 @@ import { Prisma,PaymentMethod } from '@/app/generated/prisma/client';
 export async function getAllBrands() {
   return await prisma.brand.findMany({
     where: { isActive: true },
-    orderBy: { name: 'asc' }
+    orderBy: { name: 'asc' },
   });
 }
+
 export async function getBrandsForShopByBikes() {
   return await prisma.brand.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      bikes: {
+        some: {
+          isActive: true,
+        },
+      },
+    },
     orderBy: { name: 'asc' },
     select: {
       name: true,
@@ -26,19 +34,19 @@ export async function getBrandsForShopByBikes() {
       logo: true,
       bgColor: true,
       textColor: true,
-    }
+    },
   });
 }
 
 export async function getBrandWithBikes(slug: string) {
-  return await prisma.brand.findFirst({ // Changed from findUnique
+  return await prisma.brand.findFirst({
     where: { slug, isActive: true },
     include: {
       bikes: {
         where: { isActive: true },
-        orderBy: { name: 'asc' }
-      }
-    }
+        orderBy: { name: 'asc' },
+      },
+    },
   });
 }
 
@@ -65,11 +73,11 @@ export async function getBikeWithProducts(slug: string) {
         where: { isActive: true },
         include: {
           category: true,
-          bike: { include: { brand: true } }
+          bike: { include: { brand: true } },
         },
-        orderBy: { name: "asc" }
-      }
-    }
+        orderBy: { name: 'asc' },
+      },
+    },
   });
 
   if (!bike) return null;
@@ -91,14 +99,15 @@ export async function getBikeWithProducts(slug: string) {
       material: p.material,
       description: p.description,
       category: { name: p.category.name },
-      bike: p.bike ? {
-        name: p.bike.name,
-        brand: { name: p.bike.brand.name }
-      } : null
-    }))
+      bike: p.bike
+        ? {
+            name: p.bike.name,
+            brand: { name: p.bike.brand.name },
+          }
+        : null,
+    })),
   };
 }
-
 
 // -----------------
 // CATEGORIES
@@ -109,50 +118,51 @@ export async function getAllCategories() {
     where: { isActive: true, parentId: null },
     include: {
       children: {
-        where: { isActive: true }
-      }
+        where: { isActive: true },
+      },
     },
-    orderBy: { name: 'asc' }
+    orderBy: { name: 'asc' },
   });
 }
 
-// lib/actions.ts
-
 export async function getCategoryWithProducts(slug: string) {
   const category = await prisma.category.findFirst({
-  where: { slug, isActive: true },
-  include: {
-    products: {
-      where: { isActive: true },
-      include: {
-        category: true,
-        bike: { include: { brand: true } }
+    where: { slug, isActive: true },
+    include: {
+      products: {
+        where: { isActive: true },
+        include: {
+          category: true,
+          bike: { include: { brand: true } },
+        },
+        orderBy: { name: 'asc' },
       },
-      orderBy: { name: 'asc' }
+      children: {
+        where: { isActive: true },
+        include: {
+          products: {
+            where: { isActive: true },
+            include: {
+              category: true,
+              bike: { include: { brand: true } },
+            },
+          },
+        },
+      },
+      bike: { include: { brand: true } },
     },
-    children: {
-      where: { isActive: true },
-      include: {
-        products: {
-          where: { isActive: true },
-          include: {
-            category: true,
-            bike: { include: { brand: true } }
-          }
-        }
-      }
-    },
-    bike: { include: { brand: true } }
-  }
-});
+  });
 
   if (!category) return null;
-type CategoryWithProducts = NonNullable<typeof category>;
-  // Combine products from parent and all children
-const allProducts = [
-  ...category.products,
-  ...category.children.flatMap((child: CategoryWithProducts['children'][number]) => child.products)
-];
+
+  type CategoryWithProducts = NonNullable<typeof category>;
+
+  const allProducts = [
+    ...category.products,
+    ...category.children.flatMap(
+      (child: CategoryWithProducts['children'][number]) => child.products
+    ),
+  ];
 
   return {
     id: category.id,
@@ -167,27 +177,55 @@ const allProducts = [
       name: p.name,
       thumbnail: p.thumbnail,
       stock: p.stock,
-      // Convert Decimal to number
       price: Number(p.price),
       salePrice: p.salePrice ? Number(p.salePrice) : null,
-      // Only include needed fields
-      category: { 
-        name: p.category.name 
+      category: {
+        name: p.category.name,
       },
-      bike: p.bike ? { 
-        name: p.bike.name, 
-        brand: { 
-          name: p.bike.brand.name 
-        } 
-      } : null,
+      bike: p.bike
+        ? {
+            name: p.bike.name,
+            brand: {
+              name: p.bike.brand.name,
+            },
+          }
+        : null,
     })),
   };
 }
+
 // -----------------
 // PRODUCTS (UNIVERSAL)
 // -----------------
 
-export async function getProductBySlug(slug: string) {
+export type ProductBySlug = Prisma.ProductGetPayload<{
+  include: {
+    category: {
+      select: { id: true; name: true; slug: true };
+    };
+    brand: {
+      select: { id: true; name: true; slug: true; logo: true };
+    };
+    bike: {
+      include: {
+        brand: {
+          select: { id: true; name: true; slug: true; logo: true };
+        };
+      };
+    };
+    reviews: {
+      where: { isApproved: true };        // ← add this
+      orderBy: { createdAt: 'desc' };     // ← add this
+      include: {
+        user: {
+          select: { name: true; email: true };
+        };
+      };
+    };
+  };
+}> | null;
+
+export async function getProductBySlug(slug: string): Promise<ProductBySlug> {
   try {
     const product = await prisma.product.findFirst({
       where: {
@@ -202,6 +240,18 @@ export async function getProductBySlug(slug: string) {
             slug: true,
           },
         },
+
+        // ✅ Direct brand relation (for helmet/standalone products with brandId but no bikeId)
+        brand: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            logo: true,
+          },
+        },
+
+        // ✅ Bike relation with its own brand (for bike-specific parts/accessories)
         bike: {
           include: {
             brand: {
@@ -214,6 +264,7 @@ export async function getProductBySlug(slug: string) {
             },
           },
         },
+
         reviews: {
           where: {
             isApproved: true,
@@ -240,6 +291,10 @@ export async function getProductBySlug(slug: string) {
   }
 }
 
+// ✅ FIX: Added `brand` to the include so the inferred return type includes
+//    brand?.name — without this, TypeScript collapses brand to `never` and
+//    any downstream access like related.brand?.name errors with
+//    "Property 'name' does not exist on type 'never'".
 export async function getRelatedProducts(
   productId: string,
   categoryId: string,
@@ -253,6 +308,14 @@ export async function getRelatedProducts(
     },
     include: {
       category: true,
+      brand: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          logo: true,
+        },
+      },
       bike: {
         include: { brand: true },
       },
@@ -272,16 +335,16 @@ export async function getFeaturedProducts(limit = 8) {
   return await prisma.product.findMany({
     where: {
       isActive: true,
-      isFeatured: true
+      isFeatured: true,
     },
     include: {
       category: true,
       bike: {
-        include: { brand: true }
-      }
+        include: { brand: true },
+      },
     },
     take: limit,
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
   });
 }
 
@@ -296,50 +359,59 @@ export async function getCart(userId: string) {
       product: {
         include: {
           category: true,
-          bike: { include: { brand: true } }
-        }
-      }
-    }
+          bike: { include: { brand: true } },
+        },
+      },
+    },
   });
 }
 
-export async function addToCart(userId: string, productId: string, quantity = 1) {
+export async function addToCart(
+  userId: string,
+  productId: string,
+  quantity = 1
+) {
   return await prisma.cartItem.upsert({
     where: {
-      userId_productId: { userId, productId }
+      userId_productId: { userId, productId },
     },
     create: { userId, productId, quantity },
-    update: { quantity: { increment: quantity } }
+    update: { quantity: { increment: quantity } },
   });
 }
 
-export async function updateCartQuantity(userId: string, productId: string, quantity: number) {
+export async function updateCartQuantity(
+  userId: string,
+  productId: string,
+  quantity: number
+) {
   if (quantity <= 0) {
     return await prisma.cartItem.delete({
-      where: { userId_productId: { userId, productId } }
+      where: { userId_productId: { userId, productId } },
     });
   }
   return await prisma.cartItem.update({
     where: { userId_productId: { userId, productId } },
-    data: { quantity }
+    data: { quantity },
   });
 }
 
 export async function removeFromCart(userId: string, productId: string) {
   return await prisma.cartItem.delete({
-    where: { userId_productId: { userId, productId } }
+    where: { userId_productId: { userId, productId } },
   });
 }
 
 export async function clearCart(userId: string) {
   return await prisma.cartItem.deleteMany({
-    where: { userId }
+    where: { userId },
   });
 }
 
 // -----------------
 // ORDERS
 // -----------------
+
 interface CartItem {
   productId: string;
   quantity: number;
@@ -348,10 +420,11 @@ interface CartItem {
     salePrice: number | null;
   };
 }
+
 export async function createOrder(data: {
   userId: string;
   addressId: string;
-  cartItems: CartItem[];   
+  cartItems: CartItem[];
   paymentMethod: PaymentMethod;
   subtotal: number;
   tax: number;
@@ -359,40 +432,40 @@ export async function createOrder(data: {
   total: number;
 }) {
   const orderNumber = `ORD-${Date.now()}-${Math.random()
-  .toString(36)
-  .slice(2, 11)
-  .toUpperCase()}`;
-  
+    .toString(36)
+    .slice(2, 11)
+    .toUpperCase()}`;
+
   const order = await prisma.order.create({
     data: {
       orderNumber,
       userId: data.userId,
       addressId: data.addressId,
-      paymentMethod: data.paymentMethod ,
+      paymentMethod: data.paymentMethod,
       subtotal: data.subtotal,
       tax: data.tax,
       shippingCost: data.shippingCost,
       total: data.total,
       items: {
-        create: data.cartItems.map(item => ({
+        create: data.cartItems.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
           price: item.product.salePrice || item.product.price,
-          subtotal: (item.product.salePrice || item.product.price) * item.quantity
-        }))
-      }
+          subtotal:
+            (item.product.salePrice || item.product.price) * item.quantity,
+        })),
+      },
     },
     include: {
       items: {
-        include: { product: true }
+        include: { product: true },
       },
-      address: true
-    }
+      address: true,
+    },
   });
-  
-  // Clear cart after order
+
   await clearCart(data.userId);
-  
+
   return order;
 }
 
@@ -401,11 +474,11 @@ export async function getUserOrders(userId: string) {
     where: { userId },
     include: {
       items: {
-        include: { product: true }
+        include: { product: true },
       },
-      address: true
+      address: true,
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
   });
 }
 
@@ -418,15 +491,16 @@ export async function getOrderById(orderId: string, userId: string) {
           product: {
             include: {
               category: true,
-              bike: { include: { brand: true } }
-            }
-          }
-        }
+              bike: { include: { brand: true } },
+            },
+          },
+        },
       },
-      address: true
-    }
+      address: true,
+    },
   });
 }
+
 interface SubmitReviewResult {
   success: boolean;
   error?: string;
@@ -613,4 +687,4 @@ export async function deleteReview(
     console.error('Delete review error:', error);
     return { success: false, error: 'Failed to delete review' };
   }
-}
+} 

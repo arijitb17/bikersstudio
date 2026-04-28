@@ -12,7 +12,15 @@ export async function GET(req: NextRequest) {
   try {
     const data = await withCache(CacheKey.brandsPublic(), TTL.MEDIUM, () =>
       prisma.brand.findMany({
-        where: { isActive: true },
+        where: {
+          isActive: true,
+          // ✅ Only include brands that have at least one active bike
+          bikes: {
+            some: {
+              isActive: true,
+            },
+          },
+        },
         orderBy: { name: 'asc' },
         select: {
           name: true,

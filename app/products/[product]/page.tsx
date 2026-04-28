@@ -1,5 +1,5 @@
 // app/products/[product]/page.tsx
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-dynamic';
 import { getProductBySlug, getRelatedProducts } from '@/lib/actions';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -24,7 +24,7 @@ export default async function ProductPage({ params }: PageProps) {
 
   const relatedProducts = await getRelatedProducts(
     product.id,
-    product.categoryId,
+    product.category.id,
     4
   );
 
@@ -34,9 +34,15 @@ export default async function ProductPage({ params }: PageProps) {
     ? Math.round(((price - salePrice) / price) * 100)
     : 0;
 
-  const avgRating = product.reviews.length > 0
-    ? product.reviews.reduce((acc, r) => acc + r.rating, 0) / product.reviews.length
-    : 0;
+  const avgRating =
+    product.reviews.length > 0
+      ? product.reviews.reduce((acc, r) => acc + r.rating, 0) /
+        product.reviews.length
+      : 0;
+
+  // ✅ FIX: Both `brand` and `bike` are now typed via ProductBySlug (Prisma.ProductGetPayload),
+  //    so TypeScript resolves .name correctly on both instead of collapsing to `never`.
+  const brandName = product.brand?.name ?? product.bike?.brand.name;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -44,12 +50,15 @@ export default async function ProductPage({ params }: PageProps) {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-4 pt-28">
           <nav className="flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-red-600 transition-colors font-medium">
+            <Link
+              href="/"
+              className="hover:text-red-600 transition-colors font-medium"
+            >
               Home
             </Link>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <Link 
-              href={`/categories/${product.category.slug}`} 
+            <Link
+              href={`/categories/${product.category.slug}`}
               className="hover:text-red-600 transition-colors font-medium"
             >
               {product.category.name}
@@ -57,8 +66,8 @@ export default async function ProductPage({ params }: PageProps) {
             {product.bike && (
               <>
                 <ChevronRight className="w-4 h-4 text-gray-400" />
-                <Link 
-                  href={`/bikes/${product.bike.slug}`} 
+                <Link
+                  href={`/bikes/${product.bike.slug}`}
                   className="hover:text-red-600 transition-colors font-medium"
                 >
                   {product.bike.name}
@@ -66,7 +75,9 @@ export default async function ProductPage({ params }: PageProps) {
               </>
             )}
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-900 font-semibold truncate">{product.name}</span>
+            <span className="text-gray-900 font-semibold truncate">
+              {product.name}
+            </span>
           </nav>
         </div>
       </div>
@@ -74,9 +85,9 @@ export default async function ProductPage({ params }: PageProps) {
       {/* Main Product Section */}
       <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-8">
         <div className="grid lg:grid-cols-2 gap-8 xl:gap-12 mb-12">
-          {/* Image Gallery - Enhanced for stock photos */}
+          {/* Image Gallery */}
           <div className="lg:sticky lg:top-24 h-fit">
-            <ProductImageGallery 
+            <ProductImageGallery
               images={product.images}
               thumbnail={product.thumbnail}
               productName={product.name}
@@ -87,10 +98,11 @@ export default async function ProductPage({ params }: PageProps) {
           {/* Product Details */}
           <div className="space-y-6">
             {/* Brand Badge */}
-            {product.bike && (
+            {(product.brand ?? product.bike) && (
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-orange-50 text-red-600 px-3 py-1.5 rounded-full font-bold text-sm border border-red-200">
                 <Package className="w-4 h-4" />
-                {product.bike.brand.name} {product.bike.name}
+                {brandName}
+                {product.bike?.name ? ` ${product.bike.name}` : ''}
               </div>
             )}
 
@@ -120,7 +132,8 @@ export default async function ProductPage({ params }: PageProps) {
                   </span>
                 </div>
                 <span className="text-sm text-gray-600">
-                  {product.reviews.length} {product.reviews.length === 1 ? 'review' : 'reviews'}
+                  {product.reviews.length}{' '}
+                  {product.reviews.length === 1 ? 'review' : 'reviews'}
                 </span>
               </div>
             </div>
@@ -155,7 +168,9 @@ export default async function ProductPage({ params }: PageProps) {
                 <div className="flex items-center gap-3 text-green-700">
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
                   <span className="font-bold text-sm">In Stock</span>
-                  <span className="text-sm text-green-600">({product.stock} units available)</span>
+                  <span className="text-sm text-green-600">
+                    ({product.stock} units available)
+                  </span>
                 </div>
               ) : (
                 <div className="flex items-center gap-3 text-red-600">
@@ -172,7 +187,9 @@ export default async function ProductPage({ params }: PageProps) {
                   <Truck className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm mb-0.5">Free Delivery</p>
+                  <p className="font-bold text-gray-900 text-sm mb-0.5">
+                    Free Delivery
+                  </p>
                   <p className="text-xs text-gray-600">Orders above Rs. 500</p>
                 </div>
               </div>
@@ -181,7 +198,9 @@ export default async function ProductPage({ params }: PageProps) {
                   <Shield className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm mb-0.5">Warranty</p>
+                  <p className="font-bold text-gray-900 text-sm mb-0.5">
+                    Warranty
+                  </p>
                   <p className="text-xs text-gray-600">1 Year Coverage</p>
                 </div>
               </div>
@@ -190,7 +209,9 @@ export default async function ProductPage({ params }: PageProps) {
                   <RefreshCw className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm mb-0.5">Easy Returns</p>
+                  <p className="font-bold text-gray-900 text-sm mb-0.5">
+                    Easy Returns
+                  </p>
                   <p className="text-xs text-gray-600">7 Days Policy</p>
                 </div>
               </div>
@@ -199,7 +220,9 @@ export default async function ProductPage({ params }: PageProps) {
                   <Package className="w-4 h-4 text-red-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-900 text-sm mb-0.5">Secure Pack</p>
+                  <p className="font-bold text-gray-900 text-sm mb-0.5">
+                    Secure Pack
+                  </p>
                   <p className="text-xs text-gray-600">Safe Delivery</p>
                 </div>
               </div>
@@ -215,11 +238,15 @@ export default async function ProductPage({ params }: PageProps) {
                     price: price,
                     salePrice: salePrice,
                     thumbnail: product.thumbnail,
-                    brandName: product.bike?.brand.name || 'General',
+                    // ✅ FIX: Nullish coalescing chains correctly now that types are resolved
+                    brandName:
+                      product.brand?.name ??
+                      product.bike?.brand.name ??
+                      'General',
                   }}
                 />
               </div>
-              <ShareButton 
+              <ShareButton
                 productName={product.name}
                 productUrl={`/products/${product.slug}`}
               />
@@ -228,7 +255,10 @@ export default async function ProductPage({ params }: PageProps) {
             {/* SKU */}
             <div className="pt-4 border-t border-gray-200">
               <p className="text-sm text-gray-500">
-                SKU: <span className="font-semibold text-gray-700">{product.sku}</span>
+                SKU:{' '}
+                <span className="font-semibold text-gray-700">
+                  {product.sku}
+                </span>
               </p>
             </div>
           </div>
@@ -255,32 +285,52 @@ export default async function ProductPage({ params }: PageProps) {
               <div className="space-y-3">
                 {product.weight && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-sm text-gray-600 font-medium">Weight</span>
-                    <span className="text-sm font-bold text-gray-900">{Number(product.weight)} kg</span>
+                    <span className="text-sm text-gray-600 font-medium">
+                      Weight
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {Number(product.weight)} kg
+                    </span>
                   </div>
                 )}
                 {product.color && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-sm text-gray-600 font-medium">Color</span>
-                    <span className="text-sm font-bold text-gray-900">{product.color}</span>
+                    <span className="text-sm text-gray-600 font-medium">
+                      Color
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {product.color}
+                    </span>
                   </div>
                 )}
                 {product.size && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-sm text-gray-600 font-medium">Size</span>
-                    <span className="text-sm font-bold text-gray-900">{product.size}</span>
+                    <span className="text-sm text-gray-600 font-medium">
+                      Size
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {product.size}
+                    </span>
                   </div>
                 )}
                 {product.material && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-sm text-gray-600 font-medium">Material</span>
-                    <span className="text-sm font-bold text-gray-900">{product.material}</span>
+                    <span className="text-sm text-gray-600 font-medium">
+                      Material
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {product.material}
+                    </span>
                   </div>
                 )}
                 {product.dimensions && (
                   <div className="flex justify-between items-center py-2 border-b border-gray-200">
-                    <span className="text-sm text-gray-600 font-medium">Dimensions</span>
-                    <span className="text-sm font-bold text-gray-900">{product.dimensions}</span>
+                    <span className="text-sm text-gray-600 font-medium">
+                      Dimensions
+                    </span>
+                    <span className="text-sm font-bold text-gray-900">
+                      {product.dimensions}
+                    </span>
                   </div>
                 )}
               </div>
@@ -290,7 +340,7 @@ export default async function ProductPage({ params }: PageProps) {
 
         {/* Reviews Section */}
         <div className="mb-10">
-          <ReviewsSection 
+          <ReviewsSection
             productId={product.id}
             reviews={product.reviews}
             averageRating={avgRating}
@@ -305,7 +355,7 @@ export default async function ProductPage({ params }: PageProps) {
                 <span className="w-1.5 h-7 bg-gradient-to-b from-red-600 to-red-400 rounded-full"></span>
                 You May Also Like
               </h2>
-              <Link 
+              <Link
                 href={`/categories/${product.category.slug}`}
                 className="text-red-600 hover:text-red-700 font-bold text-sm flex items-center gap-2 group"
               >
@@ -318,8 +368,15 @@ export default async function ProductPage({ params }: PageProps) {
                 const relatedSalePrice = related.salePrice;
                 const relatedPrice = related.price;
                 const relatedDiscount = relatedSalePrice
-                  ? Math.round(((relatedPrice - relatedSalePrice) / relatedPrice) * 100)
+                  ? Math.round(
+                      ((relatedPrice - relatedSalePrice) / relatedPrice) * 100
+                    )
                   : 0;
+
+                // ✅ FIX: Now safe because getRelatedProducts includes `brand` in its query,
+                //    so the inferred type has brand: { name, ... } | null instead of never.
+                const relatedBrandName =
+                  related.brand?.name ?? related.bike?.brand.name ?? null;
 
                 return (
                   <Link
@@ -341,6 +398,11 @@ export default async function ProductPage({ params }: PageProps) {
                       />
                     </div>
                     <div className="p-4">
+                      {relatedBrandName && (
+                        <p className="text-xs font-semibold text-red-500 mb-1 uppercase tracking-wide">
+                          {relatedBrandName}
+                        </p>
+                      )}
                       <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-red-600 transition-colors">
                         {related.name}
                       </h3>
