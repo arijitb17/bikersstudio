@@ -315,14 +315,14 @@ jobs:
               upstream nextjs_app { server app:3000; keepalive 32; }
               server {
                 listen 80;
-                server_name bikerstudio.facidance.online;
+                server_name bikerstudioindia.store www.bikerstudioindia.store;
                 return 301 https://$host$request_uri;
               }
               server {
                 listen 443 ssl http2;
-                server_name bikerstudio.facidance.online;
-                ssl_certificate /etc/letsencrypt/live/bikerstudio.facidance.online/fullchain.pem;
-                ssl_certificate_key /etc/letsencrypt/live/bikerstudio.facidance.online/privkey.pem;
+                server_name bikerstudioindia.store www.bikerstudioindia.store;
+                ssl_certificate /etc/letsencrypt/live/bikerstudioindia.store/fullchain.pem;
+                ssl_certificate_key /etc/letsencrypt/live/bikerstudioindia.store/privkey.pem;
                 ssl_protocols TLSv1.2 TLSv1.3;
                 ssl_ciphers HIGH:!aNULL:!MD5;
                 ssl_session_cache shared:SSL:10m;
