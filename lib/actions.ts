@@ -130,23 +130,25 @@ export async function getCategoryWithProducts(slug: string) {
     where: { slug, isActive: true },
     include: {
       products: {
-        where: { isActive: true },
-        include: {
-          category: true,
-          bike: { include: { brand: true } },
-        },
-        orderBy: { name: 'asc' },
-      },
+  where: { isActive: true },
+  include: {
+    category: true,
+    brand: true,
+    bike: { include: { brand: true } },
+  },
+  orderBy: { name: 'asc' },
+},
       children: {
         where: { isActive: true },
         include: {
           products: {
-            where: { isActive: true },
-            include: {
-              category: true,
-              bike: { include: { brand: true } },
-            },
-          },
+  where: { isActive: true },
+  include: {
+    category: true,
+    brand: true,
+    bike: { include: { brand: true } },
+  },
+},
         },
       },
       bike: { include: { brand: true } },
@@ -172,25 +174,33 @@ export async function getCategoryWithProducts(slug: string) {
     image: category.image,
     isActive: category.isActive,
     products: allProducts.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      thumbnail: p.thumbnail,
-      stock: p.stock,
-      price: Number(p.price),
-      salePrice: p.salePrice ? Number(p.salePrice) : null,
-      category: {
-        name: p.category.name,
-      },
-      bike: p.bike
-        ? {
-            name: p.bike.name,
-            brand: {
-              name: p.bike.brand.name,
-            },
-          }
-        : null,
-    })),
+  id: p.id,
+  slug: p.slug,
+  name: p.name,
+  thumbnail: p.thumbnail,
+  stock: p.stock,
+  price: Number(p.price),
+  salePrice: p.salePrice ? Number(p.salePrice) : null,
+
+  brand: p.brand
+    ? {
+        name: p.brand.name,
+      }
+    : null,
+
+  category: {
+    name: p.category.name,
+  },
+
+  bike: p.bike
+    ? {
+        name: p.bike.name,
+        brand: {
+          name: p.bike.brand.name,
+        },
+      }
+    : null,
+})),
   };
 }
 
