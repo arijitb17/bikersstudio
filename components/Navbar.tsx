@@ -84,7 +84,7 @@ export default function Navbar() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const brandsRes = await fetch("/api/brands");
+        const brandsRes = await fetch("/api/bike-brands");
         if (brandsRes.ok) {
           const brandsData = await brandsRes.json();
           setBrands(brandsData);
