@@ -14,9 +14,9 @@ interface Product {
   thumbnail: string;
   stock: number;
   category: { name: string };
+  brand?: { name: string } | null;
   bike?: { name: string; brand: { name: string } } | null;
 }
-
 interface Category {
   name: string;
   description?: string;
@@ -58,7 +58,8 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
     let minPrice = Infinity, maxPrice = 0;
 
     category.products.forEach((p) => {
-      if (p.bike?.brand.name) brands.add(p.bike.brand.name);
+      const brandName = p.brand?.name ?? p.bike?.brand.name;
+      if (brandName) brands.add(brandName);
       if (p.bike?.name) bikes.add(`${p.bike.brand.name} ${p.bike.name}`);
       const price = p.salePrice || p.price;
       minPrice = Math.min(minPrice, price);
@@ -81,7 +82,7 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
         p.name.toLowerCase().includes(query) ||
         p.category.name.toLowerCase().includes(query) ||
         p.bike?.name.toLowerCase().includes(query) ||
-        p.bike?.brand.name.toLowerCase().includes(query)
+        (p.brand?.name ?? p.bike?.brand.name)?.toLowerCase().includes(query)
       );
     }
 
@@ -91,8 +92,11 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
     });
 
     if (selectedBrands.length > 0) {
-      filtered = filtered.filter((p) => p.bike?.brand.name && selectedBrands.includes(p.bike.brand.name));
-    }
+  filtered = filtered.filter((p) => {
+    const brandName = p.brand?.name ?? p.bike?.brand.name;
+    return brandName ? selectedBrands.includes(brandName) : false;
+  });
+}
 
     if (selectedBikes.length > 0) {
       filtered = filtered.filter((p) => p.bike && selectedBikes.includes(`${p.bike.brand.name} ${p.bike.name}`));
