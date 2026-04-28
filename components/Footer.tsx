@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Facebook, Instagram, Twitter, Phone, Mail } from 'lucide-react';
 
 export default function Footer() {
@@ -10,11 +11,11 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4 uppercase">Quick Links</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="/categories/crash-guards" className="hover:text-red-600 transition-colors">Crash Guards</a></li>
-              <li><a href="/categories/fog-lights" className="hover:text-red-600 transition-colors">Fog Lights</a></li>
-              <li><a href="/categories/top-racks" className="hover:text-red-600 transition-colors">Top Racks</a></li>
-              <li><a href="/categories/engine-guards" className="hover:text-red-600 transition-colors">Engine Guards</a></li>
-              <li><a href="/categories/mirrors" className="hover:text-red-600 transition-colors">Mirrors</a></li>
+              <li><Link href="/categories/crash-guards" className="hover:text-red-600 transition-colors">Crash Guards</Link></li>
+              <li><Link href="/categories/fog-lights" className="hover:text-red-600 transition-colors">Fog Lights</Link></li>
+              <li><Link href="/categories/top-racks" className="hover:text-red-600 transition-colors">Top Racks</Link></li>
+              <li><Link href="/categories/engine-guards" className="hover:text-red-600 transition-colors">Engine Guards</Link></li>
+              <li><Link href="/categories/mirrors" className="hover:text-red-600 transition-colors">Mirrors</Link></li>
             </ul>
           </div>
 
@@ -22,8 +23,8 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4 uppercase">Contact</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="/help" className="hover:text-red-600 transition-colors">Help & FAQ</a></li>
-              <li><a href="#" className="hover:text-red-600 transition-colors">Shipping</a></li>
+              <li><Link href="/help" className="hover:text-red-600 transition-colors">Help & FAQ</Link></li>
+              <li><Link href="/shipping" className="hover:text-red-600 transition-colors">Shipping</Link></li>
             </ul>
           </div>
 
@@ -31,8 +32,8 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4 uppercase">Policies</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="/privacy-policy" className="hover:text-red-600 transition-colors">Privacy Policy</a></li>
-              <li><a href="/return-policy" className="hover:text-red-600 transition-colors">Return Policy</a></li>
+              <li><Link href="/privacy-policy" className="hover:text-red-600 transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/return-policy" className="hover:text-red-600 transition-colors">Return Policy</Link></li>
             </ul>
           </div>
         </div>
@@ -46,11 +47,11 @@ export default function Footer() {
               <p>Monday to Sunday, 10am-5pm</p>
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                <a href="tel:919678248499" className="hover:text-red-600 transition-colors">+91 96782 48499</a>
+                <Link href="tel:919678248499" className="hover:text-red-600 transition-colors">+91 96782 48499</Link>
               </p>
               <p className="flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                <a href="mailto:bikerstudio.com@gmail.com" className="hover:text-red-600 transition-colors">bikerstudio.com@gmail.com</a>
+                <Link href="mailto:bikerstudio.com@gmail.com" className="hover:text-red-600 transition-colors">bikerstudio.com@gmail.com</Link>
               </p>
             </div>
           </div>
@@ -77,27 +78,27 @@ export default function Footer() {
         <div className="text-center">
           <h3 className="font-bold text-lg mb-4 uppercase">Follow Us</h3>
           <div className="flex justify-center gap-4 mb-6">
-            <a 
-              href="#" 
+            <Link
+              href="#"
               className="bg-red-500 rounded-full p-3 hover:bg-red-600 transition-all duration-200 hover:scale-110"
               aria-label="Facebook"
             >
               <Facebook className="w-5 h-5 text-white" />
-            </a>
-            <a 
-              href="#" 
+            </Link>
+            <Link
+              href="#"
               className="bg-red-500 rounded-full p-3 hover:bg-red-600 transition-all duration-200 hover:scale-110"
               aria-label="Instagram"
             >
               <Instagram className="w-5 h-5 text-white" />
-            </a>
-            <a 
-              href="#" 
+            </Link>
+            <Link
+              href="#"
               className="bg-red-500 rounded-full p-3 hover:bg-red-600 transition-all duration-200 hover:scale-110"
               aria-label="Twitter"
             >
               <Twitter className="w-5 h-5 text-white" />
-            </a>
+            </Link>
           </div>
 
           {/* Copyright */}
