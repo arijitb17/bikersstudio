@@ -21,15 +21,13 @@ import {
   CouponsView,
   ReviewsView,
   ImagesView,
-  UsersView
+  UsersView,
 } from './views';
 import { Modal } from './modals/Modal';
+import { Drawer } from './components/Drawer';         
 import { BulkImportModal, type ImportResult } from './modals/BulkImportModal';
 import { TabType, ModalType } from './types';
 
-// ---------------------------------------------------------------------------
-// Shared item shape used across all views
-// ---------------------------------------------------------------------------
 interface AdminItem {
   id?: string;
   [key: string]: unknown;
@@ -46,10 +44,6 @@ export default function AdminPanel() {
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-
-
-
-
   const openModal = (type: ModalType, item: AdminItem | null = null) => {
     setModalType(type);
     setSelectedItem(item);
@@ -59,7 +53,7 @@ export default function AdminPanel() {
   const closeModal = () => {
     setShowModal(false);
     setSelectedItem(null);
-    setModalType('edit'); 
+    setModalType('edit');
   };
 
   const handleImageUpload = async (
@@ -68,7 +62,6 @@ export default function AdminPanel() {
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadingImage(true);
     try {
       const url = await api.uploadImage(file);
@@ -80,18 +73,18 @@ export default function AdminPanel() {
     }
   };
 
-const handleBulkImport = async (type: string, file: File): Promise<ImportResult> => {
-  setLoading(true);
-  try {
-    const result = await api.bulkImport(type, file);
-    setRefreshTrigger(prev => prev + 1);
-    return result as ImportResult;
-  } catch (err) {
-    throw err;
-  } finally {
-    setLoading(false);
-  }
-};
+  const handleBulkImport = async (type: string, file: File): Promise<ImportResult> => {
+    setLoading(true);
+    try {
+      const result = await api.bulkImport(type, file);
+      setRefreshTrigger(prev => prev + 1);
+      return result as ImportResult;
+    } catch (err) {
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async (
     endpoint: string,
@@ -113,7 +106,6 @@ const handleBulkImport = async (type: string, file: File): Promise<ImportResult>
 
   const handleDelete = async (endpoint: string, id: string, itemName: string) => {
     if (!confirm(`Are you sure you want to delete "${itemName}"?`)) return;
-
     try {
       await api.deleteData(endpoint, id);
       alert('Deleted successfully!');
@@ -128,6 +120,12 @@ const handleBulkImport = async (type: string, file: File): Promise<ImportResult>
       await signOut({ callbackUrl: '/auth/signin' });
     }
   };
+
+  // Derive a human-readable title for the drawer header
+  const drawerTitle =
+    modalType === 'create'
+      ? `Add New ${MENU_ITEMS.find(m => m.id === activeTab)?.label ?? ''}`
+      : `Edit ${MENU_ITEMS.find(m => m.id === activeTab)?.label ?? ''}`;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -227,7 +225,7 @@ const handleBulkImport = async (type: string, file: File): Promise<ImportResult>
           />
         );
       default:
-        return <DashboardView/>;
+        return <DashboardView />;
     }
   };
 
@@ -235,7 +233,7 @@ const handleBulkImport = async (type: string, file: File): Promise<ImportResult>
     return (
       <div className="flex h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -361,18 +359,26 @@ const handleBulkImport = async (type: string, file: File): Promise<ImportResult>
         </main>
       </div>
 
-      {showModal && (
-        <Modal
-          type={modalType}
-          activeTab={activeTab}
-          item={selectedItem}
-          onClose={closeModal}
-          onSave={handleSave}
-          onImageUpload={handleImageUpload}
-          uploadingImage={uploadingImage}
-          loading={loading}
-        />
-      )}
+      {/* ── Drawer (replaces scroll-to-top modal) ──────────────────────────── */}
+      <Drawer
+        open={showModal}
+        onClose={closeModal}
+        title={drawerTitle}
+        width="680px"
+      >
+        {showModal && (
+          <Modal
+            type={modalType}
+            activeTab={activeTab}
+            item={selectedItem}
+            onClose={closeModal}
+            onSave={handleSave}
+            onImageUpload={handleImageUpload}
+            uploadingImage={uploadingImage}
+            loading={loading}
+          />
+        )}
+      </Drawer>
 
       {showBulkImport && (
         <BulkImportModal
