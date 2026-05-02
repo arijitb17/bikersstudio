@@ -6,7 +6,7 @@ export default function PrivacyPolicyPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-8">Privacy Policy</h1>
           <div className="prose max-w-none text-gray-700 space-y-6">
             <p className="text-lg">
-              At Bike Store, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information.
+              At BikerStudio, we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your personal information.
             </p>
 
             <div>
@@ -18,8 +18,7 @@ export default function PrivacyPolicyPage() {
 
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">How We Use Your Information</h2>
-        {/* eslint-disable-next-line react/no-unescaped-entities */}
-              <p>We use the information we collect to process your orders, communicate with you about your purchases, improve our services, and send you promotional materials if you've opted in to receive them.</p>
+              <p>We use the information we collect to process your orders, communicate with you about your purchases, improve our services, and send you promotional materials if you&apos;ve opted in to receive them.</p>
             </div>
 
             <div>
@@ -53,12 +52,12 @@ export default function PrivacyPolicyPage() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Contact Us</h2>
               <p>
-                If you have any questions about this Privacy Policy, please contact us at abc@gmail.com or call +91 00000 00000.
+                If you have any questions about this Privacy Policy, please contact us at bikerstudio.com@gmail.com or call +91 96782 48499.
               </p>
             </div>
 
             <p className="text-sm text-gray-500 mt-8">
-              Last Updated: January 2024
+              Last Updated: April 2026
             </p>
           </div>
         </div>

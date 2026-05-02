@@ -33,7 +33,7 @@ export default function TermsOfServicePage() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Returns & Refunds</h2>
               <p>
-                Items may be returned within 7 days of delivery, provided they are unused, in original packaging, and accompanied by proof of purchase. Refunds will be processed within 7–10 business days after we receive and inspect the returned item. We do not accept returns on items that have been installed or used.
+                Items may be returned within 30 days of delivery, provided they are unused, in original packaging, and accompanied by proof of purchase. Refunds will be processed within 5–7 business days after we receive and inspect the returned item. We do not accept returns on items that have been installed or used.
               </p>
             </div>
 
@@ -68,12 +68,12 @@ export default function TermsOfServicePage() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mt-8 mb-4">Contact Us</h2>
               <p>
-                If you have any questions about these Terms of Service, please contact us at abc@gmail.com or call +91 00000 00000.
+                If you have any questions about these Terms of Service, please contact us at bikerstudio.com@gmail.com or call +91 96782 48499.
               </p>
             </div>
 
             <p className="text-sm text-gray-500 mt-8">
-              Last Updated: January 2024
+              Last Updated: April 2026
             </p>
           </div>
         </div>
