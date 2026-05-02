@@ -141,11 +141,13 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           addressId: selectedAddress,
-          items: items.map(item => ({
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.salePrice || item.price,
-          })),
+          // Current — missing selectedSize
+items: items.map(item => ({
+  productId: item.productId,
+  quantity: item.quantity,
+  price: item.salePrice || item.price,
+  selectedSize: item.selectedSize ?? null, 
+})),
           subtotal,
           tax,
           shippingCost: shipping,

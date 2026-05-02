@@ -137,11 +137,10 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-24">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm mb-4 text-white/90">
-            <span>Home</span><ChevronDown className="w-4 h-4 -rotate-90" /><span>Shop</span>
-            <ChevronDown className="w-4 h-4 -rotate-90" />
-            <span className="font-medium text-white">{category.name}</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white">{category.name}</h1>
+  <Link href="/" className="hover:text-white transition-colors">Home</Link>
+  <ChevronDown className="w-4 h-4 -rotate-90" />
+  <span className="font-medium text-white">{category.name}</span>
+</div>
           {category.description && <p className="text-lg text-white/95">{category.description}</p>}
         </div>
       </div>

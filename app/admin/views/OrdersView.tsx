@@ -71,6 +71,7 @@ interface OrderItem {
   quantity: number;
   price: string | number;
   subtotal: string | number;
+  selectedSize?: string | null;  // ← add this
 }
 
 interface Order {
@@ -394,7 +395,7 @@ function OrderDetailPanel({
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-600"
                 >
                   {(Object.keys(STATUS_CONFIG) as OrderStatus[]).map((s) => (
                     <option key={s} value={s}>
@@ -490,13 +491,18 @@ function OrderDetailPanel({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 text-sm truncate">
-                      {item.product?.name || "Unknown Product"}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Qty: {item.quantity} × {formatCurrency(item.price)}
-                    </p>
-                  </div>
+  <p className="font-medium text-gray-900 text-sm truncate">
+    {item.product?.name || "Unknown Product"}
+  </p>
+  {item.selectedSize && (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 mt-0.5">
+      Size: {item.selectedSize}
+    </span>
+  )}
+  <p className="text-xs text-gray-400 mt-0.5">
+    Qty: {item.quantity} × {formatCurrency(item.price)}
+  </p>
+</div>
                   <p className="font-semibold text-gray-900 text-sm flex-shrink-0">
                     {formatCurrency(item.subtotal)}
                   </p>
@@ -799,7 +805,7 @@ export const OrdersView: React.FC<{ refreshTrigger: number }> = ({
               setStatusFilter(e.target.value as OrderStatus | "");
               setPage(1);
             }}
-            className="pl-8 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+            className="pl-8 pr-8 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white text-gray-600"
           >
             <option value="">All Statuses</option>
             {(Object.keys(STATUS_CONFIG) as OrderStatus[]).map((s) => (
@@ -976,7 +982,7 @@ export const OrdersView: React.FC<{ refreshTrigger: number }> = ({
                     <td className="px-5 py-4">
                       <button
                         onClick={() => setSelectedOrder(order)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium"
+                        className="opacity-50 group-hover:opacity-100 transition-opacity flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium"
                       >
                         <Eye size={12} />
                         View

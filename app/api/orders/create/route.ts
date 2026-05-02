@@ -12,6 +12,7 @@ interface OrderItem {
   productId: string;
   quantity: number;
   price: number;
+  selectedSize?: string | null;  // ← add this
 }
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
@@ -93,6 +94,7 @@ export async function POST(req: NextRequest) {
     quantity: item.quantity,
     price: item.price,
     subtotal: item.price * item.quantity,
+    selectedSize: item.selectedSize ?? null,  // ← add this
   })),
 },
         },

@@ -220,6 +220,8 @@ model Product {
   name        String
   slug        String   @unique
   description String
+  hasSize  Boolean  @default(false)
+  sizes    Json?    
   price       Decimal  @db.Decimal(10, 2)
   salePrice   Decimal? @db.Decimal(10, 2)
   stock       Int      @default(0)
@@ -365,7 +367,7 @@ model OrderItem {
   price     Decimal @db.Decimal(10, 2)
   subtotal  Decimal @db.Decimal(10, 2)
   createdAt DateTime @default(now())
-
+  selectedSize  String?
   @@index([orderId])
   @@index([productId])
 }

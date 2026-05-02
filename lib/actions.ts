@@ -447,6 +447,7 @@ export async function clearCart(userId: string) {
 interface CartItem {
   productId: string;
   quantity: number;
+  selectedSize?: string;        // ← add
   product: {
     price: number;
     salePrice: number | null;
@@ -479,14 +480,14 @@ export async function createOrder(data: {
       shippingCost: data.shippingCost,
       total: data.total,
       items: {
-        create: data.cartItems.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.product.salePrice || item.product.price,
-          subtotal:
-            (item.product.salePrice || item.product.price) * item.quantity,
-        })),
-      },
+  create: data.cartItems.map((item) => ({
+    productId: item.productId,
+    quantity: item.quantity,
+    price: item.product.salePrice || item.product.price,
+    subtotal: (item.product.salePrice || item.product.price) * item.quantity,
+    selectedSize: item.selectedSize ?? null,   // ← add
+  })),
+},
     },
     include: {
       items: {

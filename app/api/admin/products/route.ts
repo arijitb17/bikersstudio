@@ -114,6 +114,8 @@ export async function POST(_req: NextRequest) {
         stock: parseInt(body.stock),
         sku: body.sku,
         images: body.images || [],
+        hasSize: body.hasSize ?? false,
+        sizes:   body.hasSize && body.sizes?.length ? body.sizes : undefined,
         thumbnail: body.thumbnail || body.images?.[0] || '',
         categoryId: body.categoryId,
         bikeId: body.bikeId || null,

@@ -18,12 +18,14 @@ import {
   IndianRupee
 } from 'lucide-react';
 import Image from 'next/image';
+
 interface OrderItem {
   id: string;
   productId: string;
   quantity: number;
   price: number | { toNumber: () => number };
   subtotal: number | { toNumber: () => number };
+  selectedSize?: string | null;   
   product: {
     name: string;
     thumbnail: string;
@@ -80,7 +82,7 @@ export default function OrdersPage() {
   const { status } = useSession();
   const router = useRouter();
 
-  const [orders, setOrders] = useState<Order[]>([]);
+ const [orders, setOrders] = useState<Order[]>([]);  
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('ALL');
 
@@ -98,21 +100,23 @@ export default function OrdersPage() {
     }
   }, [status]);
 
-  const loadOrders = async () => {
-    try {
-      const response = await fetch('/api/user/orders');
-      const data = await response.json();
-      
-      if (response.ok) {
-        setOrders(data.orders);
-      }
-    } catch (error) {
-      console.error('Error loading orders:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const loadOrders = async () => {
+  try {
+    const response = await fetch('/api/user/orders');
+    const json = await response.json();
 
+    if (response.ok) {
+      // ok() passes data directly — no wrapper
+      // buildPaginatedResponse returns { data: [], pagination: {} }
+      const orders = json?.data ?? [];
+      setOrders(Array.isArray(orders) ? orders : []);
+    }
+  } catch (error) {
+    console.error('Error loading orders:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
   // Helper function to convert Decimal to number
  type DecimalLike = number | string | { toNumber: () => number };
 
@@ -252,16 +256,21 @@ const toNumber = (value: DecimalLike): number => {
                           </div>
 
                           <div className="flex-1">
-                            <Link
-                              href={`/products/${item.product.slug}`}
-                              className="font-semibold text-gray-900 hover:text-red-600"
-                            >
-                              {item.product.name}
-                            </Link>
-                            <p className="text-sm text-gray-600">
-                              Qty: {item.quantity} × Rs. {toNumber(item.price).toFixed(2)}
-                            </p>
-                          </div>
+  <Link
+    href={`/products/${item.product.slug}`}
+    className="font-semibold text-gray-900 hover:text-red-600"
+  >
+    {item.product.name}
+  </Link>
+  {item.selectedSize && (
+    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+      Size: {item.selectedSize}
+    </span>
+  )}
+  <p className="text-sm text-gray-600">
+    Qty: {item.quantity} × Rs. {toNumber(item.price).toFixed(2)}
+  </p>
+</div>
                           <div className="text-right">
                             <p className="font-bold text-gray-900">
                               Rs. {toNumber(item.subtotal).toFixed(2)}

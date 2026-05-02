@@ -23,7 +23,7 @@ import {
 import { VideoModalForm } from './VideoModalForm';
 import { UserModalForm } from './UserModalForm';
 import { TestimonialForm } from './TestimonialForm';
-
+import { SizeManager, type SizeEntry } from '../components/SizeManager';
 // ---------------------------------------------------------------------------
 // Shared types
 // ---------------------------------------------------------------------------
@@ -73,7 +73,13 @@ export const Modal: React.FC<ModalProps> = ({
   const [brands, setBrands] = useState<Brand[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [bikes, setBikes] = useState<Bike[]>([]);
-
+// In Modal — add two dedicated state values
+const [hasSize, setHasSize] = useState<boolean>(!!(item as Record<string, unknown>)?.hasSize);
+const [sizes, setSizes] = useState<SizeEntry[]>(
+  Array.isArray((item as Record<string, unknown>)?.sizes)
+    ? ((item as Record<string, unknown>).sizes as SizeEntry[])
+    : []
+);
   useEffect(() => {
     if (activeTab === 'products' || activeTab === 'bikes') {
       loadBrands();
@@ -148,13 +154,18 @@ export const Modal: React.FC<ModalProps> = ({
 
     if (activeTab === 'bikes') {
       dataToSend = prepareBikeData(formData as BikeFormData);
-    } else if (activeTab === 'products') {
-      const productData = formData as Record<string, unknown>;
-      dataToSend = { ...productData, images };
-      if (images.length > 0) {
-        dataToSend.thumbnail = images[0];
-      }
-    } else {
+} else if (activeTab === 'products') {
+  const productData = formData as Record<string, unknown>;
+  dataToSend = {
+    ...productData,
+    images,
+    hasSize,
+    sizes: hasSize ? sizes : null,
+  };
+  if (images.length > 0) {
+    dataToSend.thumbnail = images[0];
+  }
+}else {
       dataToSend = { ...(formData as Record<string, unknown>) };
     }
 
@@ -231,19 +242,23 @@ export const Modal: React.FC<ModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {activeTab === 'products' && (
-            <ProductForm
-              formData={formData as Record<string, unknown>}
-              setFormData={setFormData}
-              images={images}
-              addImage={addImage}
-              addMultipleImages={addMultipleImages}
-              removeImage={removeImage}
-              categories={categories}
-              bikes={bikes}
-              onImageUpload={onImageUpload}
-              uploadingImage={uploadingImage}
-            />
-          )}
+  <ProductForm
+    formData={formData as Record<string, unknown>}
+    setFormData={setFormData}
+    hasSize={hasSize}
+    setHasSize={setHasSize}
+    sizes={sizes}
+    setSizes={setSizes}
+    images={images}
+    addImage={addImage}
+    addMultipleImages={addMultipleImages}
+    removeImage={removeImage}
+    categories={categories}
+    bikes={bikes}
+    onImageUpload={onImageUpload}
+    uploadingImage={uploadingImage}
+  />
+)}
 
           {activeTab === 'categories' && (
             <CategoryForm
@@ -349,6 +364,10 @@ export const Modal: React.FC<ModalProps> = ({
 interface ProductFormProps {
   formData: Record<string, unknown>;
   setFormData: (data: Record<string, unknown>) => void;
+  hasSize: boolean;
+  setHasSize: (val: boolean) => void;
+  sizes: SizeEntry[];
+  setSizes: (sizes: SizeEntry[]) => void;
   images: string[];
   addImage: (url: string) => void;
   addMultipleImages: (urls: string[]) => void;
@@ -362,13 +381,17 @@ interface ProductFormProps {
 const ProductForm: React.FC<ProductFormProps> = ({
   formData,
   setFormData,
+  hasSize,
+  setHasSize,
+  sizes,
+  setSizes,
   images,
   addMultipleImages,
   removeImage,
   categories,
   bikes,
   onImageUpload,
-  uploadingImage
+  uploadingImage,
 }) => (
   <>
     <div>
@@ -455,7 +478,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       </select>
     </div>
 
-    <div>
+    <div>  {/* ← closes correctly */}
       <label className="block text-sm font-medium mb-2 text-black">Bike (Optional)</label>
       <select
         className="w-full px-4 py-2 border rounded-lg text-black"
@@ -467,11 +490,21 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <option key={bike.id} value={bike.id}>{bike.name}</option>
         ))}
       </select>
+    </div>  {/* ← this was missing — SizeManager was nested inside this div */}
+
+    <div>
+      <label className="block text-sm font-medium mb-2 text-black">Size Variants</label>
+      <SizeManager
+        hasSize={hasSize}
+        sizes={sizes}
+        onToggle={(val) => {
+          setHasSize(val);
+          if (!val) setSizes([]);
+        }}
+        onChange={setSizes}
+      />
     </div>
 
-    {/* ------------------------------------------------------------------ */}
-    {/* Product Images — supports selecting multiple files at once          */}
-    {/* ------------------------------------------------------------------ */}
     <div>
       <label className="block text-sm font-medium mb-2 text-black">
         Product Images
@@ -482,8 +515,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
         )}
       </label>
       <div className="space-y-3">
-
-        {/* Previews */}
         {images.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {images.map((img, idx) => (
@@ -511,8 +542,6 @@ const ProductForm: React.FC<ProductFormProps> = ({
             ))}
           </div>
         )}
-
-        {/* Upload button */}
         <label
           className={`inline-flex items-center gap-2 px-4 py-2 bg-gray-100 border rounded-lg cursor-pointer hover:bg-gray-200 ${
             uploadingImage ? 'opacity-60 pointer-events-none' : ''
@@ -531,24 +560,18 @@ const ProductForm: React.FC<ProductFormProps> = ({
             onChange={(e) => {
               const files = Array.from(e.target.files ?? []);
               if (!files.length) return;
-
               const urls: string[] = [];
               let completed = 0;
-
               files.forEach((file) => {
                 const syntheticEvent = {
-                  target: { files: [file] }
+                  target: { files: [file] },
                 } as unknown as React.ChangeEvent<HTMLInputElement>;
-
                 onImageUpload(syntheticEvent, (url) => {
                   urls.push(url);
                   completed++;
-                  if (completed === files.length) {
-                    addMultipleImages(urls);
-                  }
+                  if (completed === files.length) addMultipleImages(urls);
                 });
               });
-
               e.target.value = '';
             }}
           />

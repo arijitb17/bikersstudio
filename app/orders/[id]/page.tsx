@@ -23,13 +23,13 @@ interface OrderItem {
   quantity: number;
   price: number | { toNumber: () => number };
   subtotal: number | { toNumber: () => number };
+  selectedSize?: string | null;   // ← add this
   product: {
     name: string;
     thumbnail: string;
     slug: string;
   };
 }
-
 interface Order {
   id: string;
   orderNumber: string;
@@ -83,22 +83,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    const loadOrder = async () => {
-      try {
-        const response = await fetch(`/api/user/orders/${id}`);
-        const data = await response.json();
-        if (response.ok) {
-          setOrder(data.order);
-        } else {
-          router.push('/orders');
-        }
-      } catch (error) {
-        console.error('Error loading order:', error);
-        router.push('/orders');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+const loadOrder = async () => {
+  try {
+    const response = await fetch(`/api/user/orders/${id}`);
+    const json = await response.json();
+    if (response.ok) {
+      // if the [id] route uses ok(order) directly → json is the order
+      // if it uses ok({ order }) → json.order
+      setOrder(json?.order ?? json ?? null);
+    } else {
+      router.push('/orders');
+    }
+  } catch (error) {
+    console.error('Error loading order:', error);
+    router.push('/orders');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
     loadOrder();
   }, [status, id, router]);
@@ -132,7 +134,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const currentStepIndex = statusSteps.findIndex(step => step.key === order.status);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-40">
+    <div className="min-h-screen bg-gray-50 pt-40 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Success Message */}
         {showSuccess && (
@@ -148,13 +150,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <Link
-              href="/orders"
-              className="flex items-center gap-2 text-red-600 hover:text-red-700 mb-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Orders
-            </Link>
+            <button
+  onClick={() => router.push('/orders')}
+  className="flex items-center gap-2 text-red-600 hover:text-red-700 mb-2"
+>
+  <ArrowLeft className="w-4 h-4" />
+  Back to Orders
+</button>
             <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
             <p className="text-gray-600 mt-1">Order #{order.orderNumber}</p>
           </div>
@@ -162,7 +164,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6 text-gray-600">
             {/* Order Status Progress */}
             {order.status !== 'CANCELLED' && order.status !== 'REFUNDED' && (
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -221,7 +223,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <div className="space-y-4">
                 {order.items.map((item) => (
                   <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
-                    <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
+                    <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
                       <Image
     src={item.product.thumbnail}
     alt={item.product.name}
@@ -231,14 +233,19 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                     <div className="flex-1">
                       <Link
-                        href={`/products/${item.product.slug}`}
-                        className="font-semibold text-gray-900 hover:text-red-600"
-                      >
-                        {item.product.name}
-                      </Link>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Quantity: {item.quantity}
-                      </p>
+  href={`/products/${item.product.slug}`}
+  className="font-semibold text-gray-900 hover:text-red-600"
+>
+  {item.product.name}
+</Link>
+{item.selectedSize && (
+  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+    Size: {item.selectedSize}
+  </span>
+)}
+<p className="text-sm text-gray-600 mt-1">
+  Quantity: {item.quantity}
+</p>
                       <p className="text-sm text-gray-600">
                         Price: Rs. {toNumber(item.price).toFixed(2)}
                       </p>
@@ -274,23 +281,23 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Right Column - Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-              <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4 ">
+              <h2 className="text-xl font-semibold mb-4 text-gray-600">Order Summary</h2>
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-semibold">Rs. {toNumber(order.subtotal).toFixed(2)}</span>
+                  <span className="font-semibold text-gray-600">Rs. {toNumber(order.subtotal).toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tax (GST):</span>
-                  <span className="font-semibold">Rs. {toNumber(order.tax).toFixed(2)}</span>
+                  <span className="font-semibold text-gray-600">Rs. {toNumber(order.tax).toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping:</span>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-gray-600">
                     {toNumber(order.shippingCost) === 0 ? 'FREE' : `Rs. ${toNumber(order.shippingCost).toFixed(2)}`}
                   </span>
                 </div>
@@ -317,8 +324,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
               <div className="border-t pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Payment Method:</span>
-                  <span className="font-semibold">{order.paymentMethod}</span>
+                  <span className="text-gray-600 ">Payment Method:</span>
+                  <span className="font-semibold text-gray-600">{order.paymentMethod}</span>
                 </div>
 
                 <div className="flex justify-between text-sm">
@@ -332,7 +339,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Order Date:</span>
-                  <span className="font-semibold">
+                  <span className="font-semibold text-gray-600">
                     {new Date(order.createdAt).toLocaleDateString('en-IN')}
                   </span>
                 </div>

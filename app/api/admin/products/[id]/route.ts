@@ -56,6 +56,8 @@ export async function PUT(
         images: body.images || [],
         thumbnail: body.thumbnail,
         categoryId: body.categoryId,
+        hasSize: body.hasSize ?? false,
+        sizes:   body.hasSize && body.sizes?.length ? body.sizes : undefined,
         bikeId: body.bikeId || null,
         isActive: body.isActive ?? true,
         isFeatured: body.isFeatured ?? false,

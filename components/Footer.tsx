@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Facebook, Instagram, Twitter, Phone, Mail } from 'lucide-react';
+import { Phone, Mail, Youtube } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -7,7 +8,6 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 lg:px-16 py-12">
         {/* Top Section - 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          {/* Quick Links Column */}
           <div>
             <h3 className="font-bold text-lg mb-4 uppercase">Quick Links</h3>
             <ul className="space-y-2 text-sm">
@@ -19,7 +19,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact Column */}
           <div>
             <h3 className="font-bold text-lg mb-4 uppercase">Contact</h3>
             <ul className="space-y-2 text-sm">
@@ -28,7 +27,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Policies Column */}
           <div>
             <h3 className="font-bold text-lg mb-4 uppercase">Policies</h3>
             <ul className="space-y-2 text-sm">
@@ -38,13 +36,12 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Middle Section - Customer Care & Map */}
+        {/* Middle Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* Customer Care */}
           <div>
             <h3 className="font-bold text-lg mb-3 uppercase">Customer Care</h3>
             <div className="space-y-2 text-sm">
-              <p>Monday to Sunday, 10am-5pm</p>
+              <p>Monday to Sunday, 10am–5pm</p>
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
                 <Link href="tel:919678248499" className="hover:text-red-600 transition-colors">+91 96782 48499</Link>
@@ -56,7 +53,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Map */}
           <div>
             <h3 className="font-bold text-lg mb-3 uppercase">Brand Store Guwahati</h3>
             <div className="w-full h-48 rounded-lg overflow-hidden shadow-lg">
@@ -68,40 +64,36 @@ export default function Footer() {
                 allowFullScreen={true}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-              ></iframe>
+              />
             </div>
-            <p className="text-sm mt-2">Mangalam Building, Assam Trunk Rd, opp. post office, Road, Bharalumukh, Guwahati, Assam 781009, India</p>
+            <p className="text-sm mt-2">Mangalam Building, Assam Trunk Rd, opp. post office, Bharalumukh, Guwahati, Assam 781009</p>
           </div>
         </div>
 
-        {/* Bottom Section - Social Media */}
+        {/* Bottom Section */}
         <div className="text-center">
           <h3 className="font-bold text-lg mb-4 uppercase">Follow Us</h3>
           <div className="flex justify-center gap-4 mb-6">
             <Link
-              href="#"
-              className="bg-red-500 rounded-full p-3 hover:bg-red-600 transition-all duration-200 hover:scale-110"
-              aria-label="Facebook"
-            >
-              <Facebook className="w-5 h-5 text-white" />
-            </Link>
-            <Link
-              href="#"
+              href="https://www.instagram.com/bikers_studio_guwahati?igsh=ZGZyNzVrZ3JubG1l"
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-red-500 rounded-full p-3 hover:bg-red-600 transition-all duration-200 hover:scale-110"
               aria-label="Instagram"
             >
               <Instagram className="w-5 h-5 text-white" />
             </Link>
             <Link
-              href="#"
+              href="https://youtube.com/@bikersstudioguwahati4295?si=raB1ceDts-nLqW1P"
+              target="_blank"
+              rel="noopener noreferrer"
               className="bg-red-500 rounded-full p-3 hover:bg-red-600 transition-all duration-200 hover:scale-110"
-              aria-label="Twitter"
+              aria-label="YouTube"
             >
-              <Twitter className="w-5 h-5 text-white" />
+              <Youtube className="w-5 h-5 text-white" />
             </Link>
           </div>
 
-          {/* Copyright */}
           <div className="text-sm text-gray-700 pt-4 border-t border-gray-300">
             <p>© 2026 Bikers Studio. All rights reserved.</p>
           </div>

@@ -1,5 +1,5 @@
 'use client';
-
+import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -491,12 +491,14 @@ export default function BikeProductsClient({
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-24">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm mb-4 text-white/90">
-            <span>Home</span>
-            <ChevronDown className="w-4 h-4 -rotate-90" />
-            <span>{bike.brandName}</span>
-            <ChevronDown className="w-4 h-4 -rotate-90" />
-            <span className="font-medium text-white">{bike.name}</span>
-          </div>
+  <Link href="/" className="hover:text-white transition-colors">Home</Link>
+  <ChevronDown className="w-4 h-4 -rotate-90" />
+  <Link href={`/brands/${bike.brandName.toLowerCase()}`} className="hover:text-white transition-colors">
+    {bike.brandName}
+  </Link>
+  <ChevronDown className="w-4 h-4 -rotate-90" />
+  <span className="font-medium text-white">{bike.name}</span>
+</div>
           <div className="flex items-start justify-between gap-6">
             <div>
               <p className="text-white/90 font-bold text-sm uppercase tracking-wide mb-2">

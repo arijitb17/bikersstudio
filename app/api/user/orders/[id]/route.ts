@@ -11,7 +11,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Unwrap params Promise
+
     const { id } = await params;
     
     console.log('=== GET /api/user/orders/[id] called ===');
@@ -27,8 +27,6 @@ export async function GET(
       );
     }
 
-    console.log('User email:', session.user.email);
-
     // Get user
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -41,8 +39,6 @@ export async function GET(
         { status: 404 }
       );
     }
-
-    console.log('User ID:', user.id);
 
     // Fetch the specific order
     const order = await prisma.order.findFirst({
@@ -83,9 +79,6 @@ export async function GET(
         { status: 404 }
       );
     }
-
-    console.log('Order found:', order.orderNumber);
-
     // Convert Decimal fields to numbers for JSON serialization
     const serializedOrder = {
       ...order,
