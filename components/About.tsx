@@ -6,7 +6,7 @@ export default function AboutUs() {
         <div className="max-w-10xl mx-auto bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 lg:p-12">
           {/* Header */}
           <div className="text-center mb-12">
-            <h2 className="text-5xl md:text-6xl font-bold text-red-900 mb-4">
+            <h2 className="text-5xl md:text-6xl font-bold text-black mb-4">
               About Us
             </h2>
           </div>
@@ -17,7 +17,7 @@ export default function AboutUs() {
               {/* Image */}
               <div className="relative overflow-hidden rounded-2xl shadow-xl h-72 lg:h-96">
   <Image
-    src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&q=80"
+    src="about1.jpeg"
     alt="Motorcycle showroom"
     fill
     className="object-cover"
@@ -48,7 +48,7 @@ export default function AboutUs() {
               {/* Image */}
               <div className="relative overflow-hidden rounded-2xl shadow-xl h-72 lg:h-96 lg:order-2 order-1">
   <Image
-    src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&q=80"
+    src="/about2.jpeg"
     alt="Motorcycle display"
     fill
     className="object-cover"

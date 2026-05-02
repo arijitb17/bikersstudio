@@ -34,7 +34,7 @@ export default async function RecommendedVideos() {
   return (
     <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
       <div className="w-full px-6 lg:px-16 xl:px-24">
-        <h2 className="text-4xl md:text-5xl font-bold text-black mb-12 drop-shadow-md">
+        <h2 className="text-4xl md:text-5xl font-bold text-black mb-12 drop-shadow-md text-center">
           Recommended For You
         </h2>
 
