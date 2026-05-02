@@ -22,6 +22,8 @@ interface ExcelRow {
   categorySlug?: unknown;
   bikeId?: unknown;
   bikeSlug?: unknown;
+  brandId?: unknown;
+  brandSlug?: unknown;
   images?: unknown;
   thumbnail?: unknown;
   isActive?: unknown;
@@ -33,6 +35,8 @@ interface ExcelRow {
   material?: unknown;
   color?: unknown;
   size?: unknown;
+  hasSize?: unknown;
+  sizes?: unknown;
   description?: unknown;
   parentId?: unknown;
   parentSlug?: unknown;
@@ -41,8 +45,6 @@ interface ExcelRow {
   showInMenu?: unknown;
   model?: unknown;
   year?: unknown;
-  brandId?: unknown;
-  brandSlug?: unknown;
   image?: unknown;
   type?: unknown;
   icon?: unknown;
@@ -218,6 +220,23 @@ export async function POST(request: Request) {
                 resolvedBikeId = bike.id;
               }
 
+              // Resolve brand by id or slug (optional — for helmets/gear)
+              const rawBrandId = getString(row.brandId);
+              const rawBrandSlug = getString(row.brandSlug);
+              let resolvedBrandId: string | null = null;
+              if (rawBrandId || rawBrandSlug) {
+                const brand = await prisma.brand.findFirst({
+                  where: {
+                    OR: [
+                      ...(rawBrandId ? [{ id: rawBrandId }, { slug: rawBrandId }] : []),
+                      ...(rawBrandSlug ? [{ slug: rawBrandSlug }] : []),
+                    ],
+                  },
+                });
+                if (!brand) throw new Error(`Brand '${rawBrandId || rawBrandSlug}' not found`);
+                resolvedBrandId = brand.id;
+              }
+
               const salePrice = parseNumber(row.salePrice, 'Sale Price', false);
               const weight = parseNumber(row.weight, 'Weight', false);
 
@@ -231,6 +250,15 @@ export async function POST(request: Request) {
 
               const thumbnail = getString(row.thumbnail) || images[0] || '';
 
+              // Parse sizes
+              const hasSize = parseBoolean(row.hasSize ?? false);
+              const sizes = hasSize && row.sizes
+                ? String(row.sizes)
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                : null;
+
               await prisma.product.create({
                 data: {
                   name,
@@ -242,6 +270,9 @@ export async function POST(request: Request) {
                   sku,
                   categoryId: category.id,
                   bikeId: resolvedBikeId,
+                  brandId: resolvedBrandId,
+                  hasSize,
+                  sizes: sizes ?? undefined,
                   images,
                   thumbnail,
                   isActive: parseBoolean(row.isActive ?? true),
@@ -283,7 +314,6 @@ export async function POST(request: Request) {
               const position = parseInteger(row.position, 'Position', false) || 0;
               const menuColumns = parseInteger(row.menuColumns, 'Menu Columns', false) || 1;
 
-              // Resolve parent category by id or slug (optional)
               const rawParentId = getString(row.parentId);
               const rawParentSlug = getString(row.parentSlug);
               let resolvedParentId: string | null = null;
@@ -300,7 +330,6 @@ export async function POST(request: Request) {
                 resolvedParentId = parent.id;
               }
 
-              // Resolve bike by id or slug (optional)
               const rawBikeId = getString(row.bikeId);
               const rawBikeSlug = getString(row.bikeSlug);
               let resolvedBikeId: string | null = null;
@@ -399,7 +428,6 @@ export async function POST(request: Request) {
               const model = validateRequired(row.model, 'Model');
               const year = parseInteger(row.year, 'Year', true)!;
 
-              // Resolve brand by id or slug
               const rawBrandId = getString(row.brandId);
               const rawBrandSlug = getString(row.brandSlug);
               if (!rawBrandId && !rawBrandSlug) {
@@ -417,8 +445,6 @@ export async function POST(request: Request) {
 
               const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
-
-              // image is optional — defaults to empty string if not provided
               const image = getString(row.image) || '';
 
               await prisma.bike.create({
@@ -468,7 +494,6 @@ export async function POST(request: Request) {
               const slug = resolveSlug(row.slug, name, existingSlugs);
               const position = parseInteger(row.position, 'Position', false) || 0;
 
-              // Resolve parent menu item by id or slug (optional)
               const rawParentId = getString(row.parentId);
               const rawParentSlug = getString(row.parentSlug);
               let resolvedParentId: string | null = null;
@@ -485,7 +510,6 @@ export async function POST(request: Request) {
                 resolvedParentId = parent.id;
               }
 
-              // Resolve brand by id or slug (optional)
               const rawBrandId = getString(row.brandId);
               const rawBrandSlug = getString(row.brandSlug);
               let resolvedBrandId: string | null = null;
@@ -502,7 +526,6 @@ export async function POST(request: Request) {
                 resolvedBrandId = brand.id;
               }
 
-              // Resolve category by id or slug (optional)
               const rawCategoryId = getString(row.categoryId);
               const rawCategorySlug = getString(row.categorySlug);
               let resolvedCategoryId: string | null = null;

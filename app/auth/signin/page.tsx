@@ -50,17 +50,8 @@ export default function SignInPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={120}
-              height={40}
-              className="mx-auto"
-            />
-          </Link>
           <h1 className="text-3xl font-bold text-gray-900 mt-6 mb-2">
-            Welcome Back
+            Welcome Back 👋
           </h1>
           <p className="text-gray-600">Sign in to continue shopping</p>
         </div>

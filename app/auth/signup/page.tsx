@@ -98,15 +98,6 @@ export default function SignUpPage() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-block">
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={120}
-              height={40}
-              className="mx-auto"
-            />
-          </Link>
           <h1 className="text-3xl font-bold text-gray-900 mt-6 mb-2">
             Create Account
           </h1>
