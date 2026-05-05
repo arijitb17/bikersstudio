@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { SlidersHorizontal, X, Grid3x3, List, ChevronDown, ChevronUp, Search, Filter, Tag, Package } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -37,6 +37,8 @@ interface ProductCardProps {
   viewMode: 'grid-3' | 'grid-4' | 'list';
 }
 
+const PRODUCTS_PER_PAGE = 12;
+
 export default function EnhancedCategoryPage({ category }: { category: Category }) {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid-3' | 'grid-4' | 'list'>('grid-4');
@@ -48,6 +50,7 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [expandedSections, setExpandedSections] = useState({
     brand: true, bike: true, price: true, availability: true
   });
@@ -92,11 +95,11 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
     });
 
     if (selectedBrands.length > 0) {
-  filtered = filtered.filter((p) => {
-    const brandName = p.brand?.name ?? p.bike?.brand.name;
-    return brandName ? selectedBrands.includes(brandName) : false;
-  });
-}
+      filtered = filtered.filter((p) => {
+        const brandName = p.brand?.name ?? p.bike?.brand.name;
+        return brandName ? selectedBrands.includes(brandName) : false;
+      });
+    }
 
     if (selectedBikes.length > 0) {
       filtered = filtered.filter((p) => p.bike && selectedBikes.includes(`${p.bike.brand.name} ${p.bike.name}`));
@@ -116,6 +119,17 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
     return filtered;
   }, [category.products, searchQuery, priceRange, selectedBrands, selectedBikes, inStockOnly, onSaleOnly, lowStockOnly, sortBy]);
 
+  // Reset to page 1 whenever filters/sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, priceRange, selectedBrands, selectedBikes, inStockOnly, onSaleOnly, lowStockOnly, sortBy]);
+
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * PRODUCTS_PER_PAGE,
+    currentPage * PRODUCTS_PER_PAGE
+  );
+
   const activeFiltersCount =
     selectedBrands.length + selectedBikes.length +
     (inStockOnly ? 1 : 0) + (onSaleOnly ? 1 : 0) + (lowStockOnly ? 1 : 0) +
@@ -132,15 +146,28 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
     setSearchQuery('');
   };
 
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const paginationItems: (number | '...')[] = Array.from({ length: totalPages }, (_, i) => i + 1)
+    .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+    .reduce<(number | '...')[]>((acc, page, idx, arr) => {
+      if (idx > 0 && (page as number) - (arr[idx - 1] as number) > 1) acc.push('...');
+      acc.push(page);
+      return acc;
+    }, []);
+
   return (
     <div className="min-h-screen bg-white">
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-24">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm mb-4 text-white/90">
-  <Link href="/" className="hover:text-white transition-colors">Home</Link>
-  <ChevronDown className="w-4 h-4 -rotate-90" />
-  <span className="font-medium text-white">{category.name}</span>
-</div>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <ChevronDown className="w-4 h-4 -rotate-90" />
+            <span className="font-medium text-white">{category.name}</span>
+          </div>
           {category.description && <p className="text-lg text-white/95">{category.description}</p>}
         </div>
       </div>
@@ -175,7 +202,12 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                 )}
               </button>
               <div className="text-sm text-gray-700">
-                <span className="font-bold text-lg text-gray-900">{filteredProducts.length}</span> of {category.products.length} products
+                <span className="font-bold text-lg text-gray-900">{filteredProducts.length}</span> products
+                {filteredProducts.length > 0 && (
+                  <span className="text-gray-500 ml-1">
+                    (showing {(currentPage - 1) * PRODUCTS_PER_PAGE + 1}–{Math.min(currentPage * PRODUCTS_PER_PAGE, filteredProducts.length)})
+                  </span>
+                )}
               </div>
             </div>
 
@@ -328,19 +360,58 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
             </div>
           </aside>
 
-          <main className="flex-1">
+          <main className="flex-1 min-w-0">
             {filteredProducts.length > 0 ? (
-              <div className={
-                viewMode === 'grid-3'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : viewMode === 'grid-4'
-                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                  : 'space-y-4'
-              }>
-                {filteredProducts.map((p) => (
-                  <ProductCard key={p.id} product={p} viewMode={viewMode} />
-                ))}
-              </div>
+              <>
+                <div className={
+                  viewMode === 'grid-3'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                    : viewMode === 'grid-4'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                    : 'space-y-4'
+                }>
+                  {paginatedProducts.map((p) => (
+                    <ProductCard key={p.id} product={p} viewMode={viewMode} />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-10 pb-4">
+                    <button
+                      onClick={() => goToPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      ← Previous
+                    </button>
+
+                    {paginationItems.map((item, idx) =>
+                      item === '...'
+                        ? <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 select-none">…</span>
+                        : <button
+                            key={item}
+                            onClick={() => goToPage(item as number)}
+                            className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
+                              currentPage === item
+                                ? 'bg-red-600 text-white shadow-sm'
+                                : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            {item}
+                          </button>
+                    )}
+
+                    <button
+                      onClick={() => goToPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="bg-white rounded-xl shadow p-12 text-center">
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -389,51 +460,53 @@ function ProductCard({ product, viewMode }: ProductCardProps) {
 
   if (viewMode === 'list') {
     return (
-      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border overflow-hidden group">
-        <div className="flex gap-4 p-4">
-          <div className="relative w-32 h-32 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
-            <Image
-              src={product.thumbnail}
-              alt={product.name}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform"
-            />
-            {hasDiscount && (
-              <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
-                -{discountPercent}%
-              </span>
-            )}
-          </div>
-          <div className="flex-1 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                <span className="font-medium text-gray-700">{product.category.name}</span>
-                {product.bike && (
-                  <>
-                    <span>•</span>
-                    <span className="text-gray-600">{product.bike.brand.name} {product.bike.name}</span>
-                  </>
-                )}
-              </div>
-              <h3 className="font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
-                {product.name}
-              </h3>
+      <Link href={`/products/${product.slug}`} prefetch>
+        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border overflow-hidden group">
+          <div className="flex gap-4 p-4">
+            <div className="relative w-32 h-32 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
+              <Image
+                src={product.thumbnail}
+                alt={product.name}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform"
+              />
+              {hasDiscount && (
+                <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                  -{discountPercent}%
+                </span>
+              )}
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-gray-900">₹{finalPrice.toLocaleString('en-IN')}</span>
-                {hasDiscount && (
-                  <span className="text-sm text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
-                )}
+            <div className="flex-1 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                  <span className="font-medium text-gray-700">{product.category.name}</span>
+                  {product.bike && (
+                    <>
+                      <span>•</span>
+                      <span className="text-gray-600">{product.bike.brand.name} {product.bike.name}</span>
+                    </>
+                  )}
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
+                  {product.name}
+                </h3>
               </div>
-              {product.stock > 0
-                ? <span className="text-sm text-green-600 font-medium flex items-center gap-1"><div className="w-2 h-2 bg-green-600 rounded-full" />In Stock</span>
-                : <span className="text-sm text-red-600 font-medium">Out of Stock</span>
-              }
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-gray-900">₹{finalPrice.toLocaleString('en-IN')}</span>
+                  {hasDiscount && (
+                    <span className="text-sm text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
+                  )}
+                </div>
+                {product.stock > 0
+                  ? <span className="text-sm text-green-600 font-medium flex items-center gap-1"><div className="w-2 h-2 bg-green-600 rounded-full" />In Stock</span>
+                  : <span className="text-sm text-red-600 font-medium">Out of Stock</span>
+                }
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Link>
     );
   }
 

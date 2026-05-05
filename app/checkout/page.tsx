@@ -67,7 +67,7 @@ export default function CheckoutPage() {
   const [discount, setDiscount] = useState(0);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
-
+  const [scriptError, setScriptError] = useState(false);
   // Redirect if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -241,8 +241,13 @@ export default function CheckoutPage() {
         src="https://checkout.razorpay.com/v1/checkout.js"
         strategy="afterInteractive"
         onLoad={() => setRazorpayLoaded(true)}
+        onError={() => setScriptError(true)}
       />
-
+      {scriptError && (
+  <p className="text-sm text-red-500 text-center mt-2">
+    Payment gateway failed to load. Please disable your ad blocker and refresh.
+  </p>
+)}
       <div className="min-h-screen bg-gray-50 py-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
