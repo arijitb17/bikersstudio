@@ -356,8 +356,10 @@ export default function Navbar() {
                   style={{ maxHeight: "60vh", overflowY: "auto" }}
                 >
                   <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
-                    <div className="grid grid-cols-5 gap-6">
-                      {brands.map((brand) => (
+                    <div className="grid gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+                      {[...brands]
+  .sort((a, b) => b.bikes.length - a.bikes.length)
+  .map((brand) => (
                         <div key={brand.slug} className="space-y-3">
                           <Link
                             href={`/brands/${brand.slug}`}

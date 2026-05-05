@@ -27,6 +27,7 @@ interface RazorpayOptions {
   name: string;
   description: string;
   order_id: string;
+  image?: string;
   handler: (response: RazorpayResponse) => Promise<void>;
   prefill: { name: string; email: string };
   theme: { color: string };
@@ -168,7 +169,8 @@ items: items.map(item => ({
   key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
   amount: Math.round(finalTotal * 100),
   currency: 'INR',
-  name: 'Your Store Name',
+  name: "Biker's Studio",
+  image: 'https://bikerstudioindia.store/logo.png',
   description: `Order #${orderData.orderNumber}`,
   order_id: orderData.razorpayOrderId,
   handler: async function (response: RazorpayResponse) {  // now typed, not any
