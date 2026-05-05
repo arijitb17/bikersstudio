@@ -27,6 +27,7 @@ async function getNewProducts() {
   const products = await prisma.product.findMany({
     where: {
       isActive: true,
+      stock: { gt: 0 },
     },
     include: {
       category: true,

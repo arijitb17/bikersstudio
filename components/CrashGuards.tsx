@@ -51,6 +51,7 @@ export default function CrashGuards() {
       const productsData = await productsResponse.json();
     
       const crashGuardProducts = productsData
+      
         .slice(0, 4)
         .map((p:Product) => ({
           id: p.id,

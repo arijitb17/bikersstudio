@@ -224,7 +224,7 @@ items: items.map(item => ({
         strategy="lazyOnload"
       />
 
-      <div className="min-h-screen bg-gray-50 py-20">
+      <div className="min-h-screen bg-gray-50 py-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
@@ -236,7 +236,7 @@ items: items.map(item => ({
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
                     <MapPin className="w-5 h-5 text-red-600" />
-                    <h2 className="text-xl font-semibold">Delivery Address</h2>
+                    <h2 className="text-xl font-semibold text-gray-700">Delivery Address</h2>
                   </div>
                   <button
                     onClick={() => setShowAddressForm(!showAddressForm)}
@@ -306,20 +306,20 @@ items: items.map(item => ({
 
               {/* Order Items */}
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+                <h2 className="text-xl font-semibold mb-4 text-gray-600">Order Items</h2>
                 <div className="space-y-4">
                   {items.map((item) => {
                     const price = item.salePrice || item.price;
                     return (
                       <div key={item.productId} className="flex gap-4 pb-4 border-b">
-                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
-                          <Image
+                        <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+  <Image
     src={item.thumbnail}
     alt={item.name}
     fill
     className="object-contain"
   />
-                        </div>
+</div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
                           <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
@@ -342,22 +342,22 @@ items: items.map(item => ({
             {/* Right Column - Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
+                <h2 className="text-xl font-semibold mb-4 text-gray-600">Order Summary</h2>
 
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-semibold">Rs. {subtotal.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-600">Rs. {subtotal.toFixed(2)}</span>
                   </div>
                   
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Tax (GST 18%):</span>
-                    <span className="font-semibold">Rs. {tax.toFixed(2)}</span>
+                    <span className="font-semibold text-gray-600">Rs. {tax.toFixed(2)}</span>
                   </div>
 
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Shipping:</span>
-                    <span className="font-semibold">
+                    <span className="font-semibold text-gray-600">
                       {shipping === 0 ? 'FREE' : `Rs. ${shipping.toFixed(2)}`}
                     </span>
                   </div>

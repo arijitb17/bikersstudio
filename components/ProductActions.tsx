@@ -17,6 +17,7 @@ interface ProductActionsProps {
     brandName: string;
     hasSize: boolean;
     sizes: SizeEntry[];
+    stock: number; // ← add this
   };
 }
 
@@ -25,6 +26,7 @@ export function ProductActions({ product }: ProductActionsProps) {
 
   const effectivePrice = selectedSize?.price ?? product.salePrice ?? product.price;
   const needsSizeSelection = product.hasSize && product.sizes.length > 0;
+  const isOutOfStock = product.stock === 0;
 
   return (
     <div className="space-y-4">
@@ -37,7 +39,6 @@ export function ProductActions({ product }: ProductActionsProps) {
               setSelectedSize((prev) => (prev?.size === entry.size ? null : entry))
             }
           />
-          {/* Live price update when size is selected */}
           {selectedSize && (
             <div className="mt-3 pt-3 border-t border-gray-200 flex items-baseline gap-2">
               <span className="text-2xl font-bold text-red-600">
@@ -49,7 +50,7 @@ export function ProductActions({ product }: ProductActionsProps) {
         </div>
       )}
 
-      {needsSizeSelection && !selectedSize && (
+      {needsSizeSelection && !selectedSize && !isOutOfStock && (
         <p className="text-sm text-amber-600 font-medium flex items-center gap-1.5">
           <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
           Please select a size to continue
@@ -59,7 +60,8 @@ export function ProductActions({ product }: ProductActionsProps) {
       <div className="flex gap-3">
         <div className="flex-1">
           <AddToCartButton
-            disabled={needsSizeSelection && !selectedSize}
+            disabled={isOutOfStock || (needsSizeSelection && !selectedSize)}
+            outOfStock={isOutOfStock}
             product={{
               id: product.id,
               name: product.name,

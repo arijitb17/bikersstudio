@@ -17,7 +17,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "bikerstudio.facidance.online",
+        hostname: "bikerstudioindia.store",
         pathname: "/uploads/**",
       },
       {

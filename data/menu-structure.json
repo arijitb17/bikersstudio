@@ -10,74 +10,58 @@
         "slug": "radiator-guards"
       },
       {
-        "name": "Chain Guards",
-        "slug": "chain-guards"
+        "name": "Engine Guards",
+        "slug": "engine-guards"
       },
       {
-        "name": "Skid Plates",
-        "slug": "skid-plates"
-      }
-    ],
-    "Performance & Exhaust": [
-      {
-        "name": "Exhaust Systems",
-        "slug": "exhaust-systems"
+        "name": "Side Stand Extenders",
+        "slug": "side-stand-extenders"
       },
       {
-        "name": "Slip-On Exhausts",
-        "slug": "slip-on-exhausts"
+        "name": "Master Cylinder Guards",
+        "slug": "master-cylinder-guards"
       },
       {
-        "name": "Air Filters",
-        "slug": "air-filters"
-      },
-      {
-        "name": "Performance Chips",
-        "slug": "performance-chips"
-      },
-      {
-        "name": "Fuel Controllers",
-        "slug": "fuel-controllers"
-      },
-      {
-        "name": "Spark Plugs",
-        "slug": "spark-plugs"
+        "name": "Sliders",
+        "slug": "sliders"
       }
     ],
     "Lighting": [
       {
-        "name": "LED Headlights",
-        "slug": "led-headlights"
+        "name": "Fog Light Mounts",
+        "slug": "foglight-mounts"
       },
       {
         "name": "Fog Lights",
         "slug": "fog-lights"
       },
       {
-        "name": "Auxiliary Lights",
-        "slug": "auxiliary-lights"
-      },
-      {
-        "name": "Turn Signals",
-        "slug": "turn-signals"
-      },
-      {
-        "name": "Tail Lights",
-        "slug": "tail-lights"
-      },
-      {
-        "name": "Light Bars",
-        "slug": "light-bars"
+        "name": "Headlights",
+        "slug": "headlights"
       }
     ],
     "Luggage & Storage": [
       {
-        "name": "Top Boxes",
-        "slug": "top-boxes"
+        "name": "Top Racks",
+        "slug": "top-racks"
       },
       {
-        "name": "Side Boxes",
-        "slug": "side-boxes"
+        "name": "Saddles",
+        "slug": "saddles"
+      },
+      {
+        "name": "Backrests",
+        "slug": "backrests"
+      },
+      {
+        "name": "Bottle Holders",
+        "slug": "bottle-holders"
+      }
+    ],
+    "Touring & Travel": [
+      {
+        "name": "Touring Bags",
+        "slug": "touring-bags"
       },
       {
         "name": "Tank Bags",
@@ -88,133 +72,133 @@
         "slug": "tail-bags"
       },
       {
+        "name": "Thigh Bags",
+        "slug": "thigh-bags"
+      },
+      {
+        "name": "Hydration Bags",
+        "slug": "hydration-bags"
+      },
+      {
         "name": "Saddle Bags",
         "slug": "saddle-bags"
       },
       {
-        "name": "Panniers",
-        "slug": "panniers"
+        "name": "Paddock Stands",
+        "slug": "paddock-stands"
+      }
+    ],
+    "Handle & Controls": [
+      {
+        "name": "Handle Bars",
+        "slug": "handle-bars"
       },
       {
-        "name": "Backpacks",
-        "slug": "backpacks"
+        "name": "Handle Risers",
+        "slug": "handle-risers"
+      },
+      {
+        "name": "Footrests",
+        "slug": "footrests"
+      },
+      {
+        "name": "Handle Grips",
+        "slug": "handle-grips"
+      },
+      {
+        "name": "Mirrors",
+        "slug": "mirrors"
+      }
+    ],
+    "Mounting Accessories": [
+      {
+        "name": "Jerry Can Mounts",
+        "slug": "jerry-can-mounts"
+      },
+      {
+        "name": "GPS Mounts",
+        "slug": "gps-mounts"
+      },
+      {
+        "name": "Helmet Mounts",
+        "slug": "helmet-mounts"
+      },
+      {
+        "name": "Mobile Holders",
+        "slug": "mobile-holders"
+      },
+      {
+        "name": "Number Plate Holders",
+        "slug": "number-plate-holders"
+      }
+    ],
+    "Body & Styling": [
+      {
+        "name": "Fuel Lid Covers",
+        "slug": "fuel-lid-covers"
+      },
+      {
+        "name": "Tail Tidy",
+        "slug": "tail-tidy"
+      },
+      {
+        "name": "Huggers",
+        "slug": "huggers"
+      }
+    ],
+    "Performance & Maintenance": [
+      {
+        "name": "RE Silencers",
+        "slug": "re-silencers"
+      },
+      {
+        "name": "Silencer Accessories",
+        "slug": "silencer-accessories"
+      },
+      {
+        "name": "Brake Reservoir Covers",
+        "slug": "brake-reservoir-covers"
+      },
+      {
+        "name": "Air Filters",
+        "slug": "air-filters"
       }
     ]
   },
   "ridingGears": {
-    "Jackets": [
+    "Protective Wear": [
       {
-        "name": "Leather Jackets",
-        "slug": "leather-jackets"
+        "name": "Jackets",
+        "slug": "jackets"
       },
       {
-        "name": "Textile Jackets",
-        "slug": "textile-jackets"
+        "name": "Pants",
+        "slug": "pants"
       },
       {
-        "name": "Mesh Jackets",
-        "slug": "mesh-jackets"
-      },
-      {
-        "name": "Adventure Jackets",
-        "slug": "adventure-jackets"
-      },
-      {
-        "name": "Rain Jackets",
-        "slug": "rain-jackets"
-      },
-      {
-        "name": "Track Suits",
-        "slug": "track-suits"
+        "name": "Boots",
+        "slug": "boots"
       }
     ],
-    "Gloves": [
+    "Rain Gear": [
       {
-        "name": "Summer Gloves",
-        "slug": "summer-gloves"
+        "name": "Rain Pro Jackets",
+        "slug": "rainpro-jackets"
       },
       {
-        "name": "Winter Gloves",
-        "slug": "winter-gloves"
-      },
-      {
-        "name": "All-Season Gloves",
-        "slug": "all-season-gloves"
-      },
-      {
-        "name": "Racing Gloves",
-        "slug": "racing-gloves"
+        "name": "Rain Pro Pants",
+        "slug": "rain-pro-pants"
       }
     ]
   },
   "helmetsAccessories": {
-    "Full Face Helmets": [
+    "Helmets": [
       {
-        "name": "Racing Helmets",
-        "slug": "racing-helmets"
-      },
-      {
-        "name": "Touring Helmets",
-        "slug": "touring-helmets"
-      },
-      {
-        "name": "Sport Helmets",
-        "slug": "sport-helmets"
-      }
-    ],
-    "Helmet Accessories": [
-      {
-        "name": "Visors & Shields",
-        "slug": "visors-shields"
-      },
-      {
-        "name": "Pinlock Inserts",
-        "slug": "pinlock-inserts"
-      },
-      {
-        "name": "Helmet Locks",
-        "slug": "helmet-locks"
+        "name": "Full Face Helmets",
+        "slug": "full-face-helmets"
       }
     ]
   },
-  "maintenanceCare": {
-    "Cleaning Products": [
-      {
-        "name": "Bike Shampoo",
-        "slug": "bike-shampoo"
-      },
-      {
-        "name": "Chain Cleaners",
-        "slug": "chain-cleaners"
-      },
-      {
-        "name": "Polish & Wax",
-        "slug": "polish-wax"
-      }
-    ],
-    "Tools & Equipment": [
-      {
-        "name": "Tool Kits",
-        "slug": "tool-kits"
-      }
-    ]
-  },
-  "tiresWheels": {
-    "Motorcycle Tires": [
-      {
-        "name": "Touring Tires",
-        "slug": "touring-tires"
-      },
-      {
-        "name": "Cruiser Tires",
-        "slug": "cruiser-tires"
-      }
-    ],
-    "Wheels & Rims": [
-      {
-        "name": "Spoke Wheels",
-        "slug": "spoke-wheels"
-      }
-    ]
-  }
+  "maintenanceCare": {},
+  "tiresWheels": {}
 }

@@ -207,18 +207,19 @@ const lowestSizePrice = hasSizeVariants
 
             {/* Action Buttons — client component handles size selection + cart */}
             <ProductActions
-              product={{
-                id: product.id,
-                name: product.name,
-                slug: product.slug,
-                price,
-                salePrice,
-                thumbnail: product.thumbnail,
-                brandName: brandName ?? 'General',
-                hasSize: hasSizeVariants,
-                sizes,
-              }}
-            />
+  product={{
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    price,
+    salePrice,
+    thumbnail: product.thumbnail,
+    brandName: brandName ?? 'General',
+    hasSize: hasSizeVariants,
+    sizes,
+    stock: product.stock,  
+  }}
+/>
 
             {/* SKU */}
             <div className="pt-4 border-t border-gray-200">

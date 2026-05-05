@@ -28,6 +28,7 @@ export async function GET(
       where: {
         categoryId: category.id,
         isActive: true,
+        stock: { gt: 0 },
       },
       select: {
         id: true,

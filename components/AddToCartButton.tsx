@@ -6,6 +6,7 @@ import { Check, ShoppingCart } from 'lucide-react';
 
 interface AddToCartButtonProps {
   disabled?: boolean;
+  outOfStock?: boolean;
   product: {
     id: string;
     name: string;
@@ -17,17 +18,25 @@ interface AddToCartButtonProps {
   };
 }
 
-export default function AddToCartButton({ product, disabled }: AddToCartButtonProps) {
+export default function AddToCartButton({
+  product,
+  disabled = false,
+  outOfStock = false,
+}: AddToCartButtonProps) {
   const { addToCart } = useCart();
   const [isAdded, setIsAdded] = useState(false);
 
   const handleAddToCart = () => {
-    if (disabled) return;
+    if (disabled || outOfStock) return;
 
     addToCart({
-      id: product.selectedSize ? `${product.id}-${product.selectedSize}` : product.id,
+      id: product.selectedSize
+        ? `${product.id}-${product.selectedSize}`
+        : product.id,
       productId: product.id,
-      name: product.selectedSize ? `${product.name} (${product.selectedSize})` : product.name,
+      name: product.selectedSize
+        ? `${product.name} (${product.selectedSize})`
+        : product.name,
       price: product.price,
       salePrice: product.salePrice,
       thumbnail: product.thumbnail,
@@ -39,18 +48,21 @@ export default function AddToCartButton({ product, disabled }: AddToCartButtonPr
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const isDisabled = disabled || isAdded;
+  const isDisabled = disabled || outOfStock || isAdded;
 
   return (
     <button
       onClick={handleAddToCart}
       disabled={isDisabled}
       className={`w-full font-bold py-4 rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2
-        ${isAdded
-          ? 'bg-green-600 text-white cursor-default'
-          : disabled
-          ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-          : 'bg-red-600 hover:bg-red-700 text-white hover:scale-105 transform'
+        ${
+          isAdded
+            ? 'bg-green-600 text-white cursor-default'
+            : outOfStock
+            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            : disabled
+            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            : 'bg-red-600 hover:bg-red-700 text-white hover:scale-105 transform'
         }`}
     >
       {isAdded ? (
@@ -61,7 +73,11 @@ export default function AddToCartButton({ product, disabled }: AddToCartButtonPr
       ) : (
         <>
           <ShoppingCart className="w-5 h-5" />
-          {disabled ? 'Select a size first' : 'Add to Cart'}
+          {outOfStock
+            ? 'Out of Stock'
+            : disabled
+            ? 'Select a size first'
+            : 'Add to Cart'}
         </>
       )}
     </button>

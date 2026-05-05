@@ -23,7 +23,6 @@ export default function Footer() {
             <h3 className="font-bold text-lg mb-4 uppercase">Contact</h3>
             <ul className="space-y-2 text-sm">
               <li><Link href="/help" className="hover:text-red-600 transition-colors">Help & FAQ</Link></li>
-              <li><Link href="/shipping" className="hover:text-red-600 transition-colors">Shipping</Link></li>
             </ul>
           </div>
 
