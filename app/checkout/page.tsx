@@ -10,16 +10,19 @@ import { Loader2, MapPin, CreditCard, Tag } from 'lucide-react';
 import Script from 'next/script';
 import AddressForm from '@/components/AddressForm';
 import Image from 'next/image';
+
 declare global {
   interface Window {
     Razorpay: new (options: RazorpayOptions) => { open: () => void };
   }
 }
+
 interface RazorpayResponse {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
 }
+
 interface RazorpayOptions {
   key: string;
   amount: number;
@@ -32,7 +35,8 @@ interface RazorpayOptions {
   prefill: { name: string; email: string };
   theme: { color: string };
   modal: { ondismiss: () => void };
-}   
+}
+
 interface AppliedCoupon {
   code: string;
   discount: number;
@@ -62,6 +66,7 @@ export default function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
   const [discount, setDiscount] = useState(0);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -89,10 +94,9 @@ export default function CheckoutPage() {
     try {
       const response = await fetch('/api/user/addresses');
       const data = await response.json();
-      
+
       if (response.ok) {
         setAddresses(data.addresses);
-        // Auto-select default address
         const defaultAddr = data.addresses.find((a: Address) => a.isDefault);
         if (defaultAddr) {
           setSelectedAddress(defaultAddr.id);
@@ -121,7 +125,7 @@ export default function CheckoutPage() {
   };
 
   const subtotal = total;
-  const tax = subtotal * 0.18; // 18% GST
+  const tax = subtotal * 0.18;
   const shipping = subtotal > 1000 ? 0 : 50;
   const finalTotal = subtotal + tax + shipping - discount;
 
@@ -131,10 +135,14 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!razorpayLoaded || !window.Razorpay) {
+      alert('Payment gateway is still loading. Please wait a moment and try again.');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
-      // Create order on backend
       const orderResponse = await fetch('/api/orders/create', {
         method: 'POST',
         headers: {
@@ -142,13 +150,12 @@ export default function CheckoutPage() {
         },
         body: JSON.stringify({
           addressId: selectedAddress,
-          // Current — missing selectedSize
-items: items.map(item => ({
-  productId: item.productId,
-  quantity: item.quantity,
-  price: item.salePrice || item.price,
-  selectedSize: item.selectedSize ?? null, 
-})),
+          items: items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.salePrice || item.price,
+            selectedSize: item.selectedSize ?? null,
+          })),
           subtotal,
           tax,
           shippingCost: shipping,
@@ -164,45 +171,54 @@ items: items.map(item => ({
         throw new Error(orderData.error || 'Failed to create order');
       }
 
-      // Initialize Razorpay
       const options: RazorpayOptions = {
-  key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-  amount: Math.round(finalTotal * 100),
-  currency: 'INR',
-  name: "Biker's Studio",
-  image: 'https://bikerstudioindia.store/logo.png',
-  description: `Order #${orderData.orderNumber}`,
-  order_id: orderData.razorpayOrderId,
-  handler: async function (response: RazorpayResponse) {  // now typed, not any
-    const verifyResponse = await fetch('/api/orders/verify-payment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        orderId: orderData.orderId,
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature,
-      }),
-    });
-    await verifyResponse.json();
-    if (verifyResponse.ok) {
-      clearCart();
-      sessionStorage.removeItem('appliedCoupon');
-      router.push(`/orders/${orderData.orderId}?success=true`);
-    } else {
-      alert('Payment verification failed. Please contact support.');
-    }
-  },
-  prefill: { name: session?.user?.name || '', email: session?.user?.email || '' },
-  theme: { color: '#DC2626' },
-  modal: { ondismiss: () => { setIsProcessing(false); } },
-};
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+        amount: Math.round(finalTotal * 100),
+        currency: 'INR',
+        name: "Biker's Studio",
+        image: 'https://bikerstudioindia.store/logo.png',
+        description: `Order #${orderData.orderNumber}`,
+        order_id: orderData.razorpayOrderId,
+        handler: async function (response: RazorpayResponse) {
+          const verifyResponse = await fetch('/api/orders/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: orderData.orderId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+
+          const verifyData = await verifyResponse.json();
+
+          if (verifyResponse.ok) {
+            clearCart();
+            sessionStorage.removeItem('appliedCoupon');
+            router.push(`/orders/${orderData.orderId}?success=true`);
+          } else {
+            alert(verifyData.error || 'Payment verification failed. Please contact support.');
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: session?.user?.name || '',
+          email: session?.user?.email || '',
+        },
+        theme: { color: '#DC2626' },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false);
+          },
+        },
+      };
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Failed to process payment. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to process payment. Please try again.');
       setIsProcessing(false);
     }
   };
@@ -223,7 +239,8 @@ items: items.map(item => ({
     <>
       <Script
         src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
+        onLoad={() => setRazorpayLoaded(true)}
       />
 
       <div className="min-h-screen bg-gray-50 py-40">
@@ -313,17 +330,23 @@ items: items.map(item => ({
                   {items.map((item) => {
                     const price = item.salePrice || item.price;
                     return (
-                      <div key={item.productId} className="flex gap-4 pb-4 border-b">
+                      <div
+                        key={`${item.productId}-${item.selectedSize ?? 'default'}`}
+                        className="flex gap-4 pb-4 border-b"
+                      >
                         <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
-  <Image
-    src={item.thumbnail}
-    alt={item.name}
-    fill
-    className="object-contain"
-  />
-</div>
+                          <Image
+                            src={item.thumbnail}
+                            alt={item.name}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                          {item.selectedSize && (
+                            <p className="text-sm text-gray-500">Size: {item.selectedSize}</p>
+                          )}
                           <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                           <p className="text-sm font-semibold text-red-600 mt-1">
                             Rs. {price.toFixed(2)} × {item.quantity}
@@ -351,7 +374,7 @@ items: items.map(item => ({
                     <span className="text-gray-600">Subtotal:</span>
                     <span className="font-semibold text-gray-600">Rs. {subtotal.toFixed(2)}</span>
                   </div>
-                  
+
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Tax (GST 18%):</span>
                     <span className="font-semibold text-gray-600">Rs. {tax.toFixed(2)}</span>
@@ -388,13 +411,18 @@ items: items.map(item => ({
 
                 <button
                   onClick={handlePayment}
-                  disabled={isProcessing || !selectedAddress}
+                  disabled={isProcessing || !selectedAddress || !razorpayLoaded}
                   className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   {isProcessing ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
                       Processing...
+                    </>
+                  ) : !razorpayLoaded ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Loading Payment Gateway...
                     </>
                   ) : (
                     <>
