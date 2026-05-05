@@ -87,7 +87,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
+          build-args: |
+            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
       # Build the migrator image (separate stage, shares layer cache)
       - name: Build and push migrator image
         uses: docker/build-push-action@v5

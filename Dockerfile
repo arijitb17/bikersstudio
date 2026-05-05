@@ -26,15 +26,14 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Dummy DATABASE_URL satisfies prisma.config.ts at generate time (no DB connection made)
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" npx prisma generate
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Stub all secrets so API route modules don't crash during static page collection.
-# These are NEVER baked into the final image — Next.js only reads them while
-# bundling. Real values come from .env / docker-compose at runtime.
+# Accept the public key as a build arg from CI
+ARG NEXT_PUBLIC_RAZORPAY_KEY_ID
+
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     NEXTAUTH_SECRET="stub" \
     NEXTAUTH_URL="http://localhost:3000" \
@@ -42,7 +41,7 @@ RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     GOOGLE_CLIENT_SECRET="stub" \
     RAZORPAY_KEY_ID="stub" \
     RAZORPAY_KEY_SECRET="stub" \
-    NEXT_PUBLIC_RAZORPAY_KEY_ID="stub" \
+    NEXT_PUBLIC_RAZORPAY_KEY_ID="${NEXT_PUBLIC_RAZORPAY_KEY_ID}" \
     REDIS_HOST="localhost" \
     REDIS_PORT="6379" \
     npm run build
