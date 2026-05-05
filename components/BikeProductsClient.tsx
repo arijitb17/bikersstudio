@@ -15,6 +15,8 @@ import {
   Grid3x3,
   List,
   Bike,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 interface Product {
@@ -94,7 +96,9 @@ interface FilterSidebarProps {
   >;
 }
 
-// ─── FilterSidebar (defined at module level to avoid "component created during render" error) ───
+const ITEMS_PER_PAGE = 12;
+
+// ─── FilterSidebar ────────────────────────────────────────────────────────────
 
 function FilterSidebar({
   filterOptions,
@@ -115,7 +119,6 @@ function FilterSidebar({
 }: FilterSidebarProps) {
   return (
     <>
-      {/* Brand Filter — only show if there are multiple brands */}
       {filterOptions.brands.length > 0 && (
         <FilterSection
           title="Brand"
@@ -151,7 +154,6 @@ function FilterSidebar({
         </FilterSection>
       )}
 
-      {/* Category Filter */}
       <FilterSection
         title="Category"
         icon={<Package className="w-4 h-4" />}
@@ -185,7 +187,6 @@ function FilterSidebar({
         </div>
       </FilterSection>
 
-      {/* Price Range Filter */}
       <FilterSection
         title="Price Range"
         icon={<span className="font-bold text-sm">₹</span>}
@@ -233,7 +234,6 @@ function FilterSidebar({
         </div>
       </FilterSection>
 
-      {/* Availability Filter */}
       <FilterSection
         title="Availability"
         icon={<Bike className="w-4 h-4" />}
@@ -282,6 +282,100 @@ function FilterSidebar({
   );
 }
 
+// ─── Pagination Component ─────────────────────────────────────────────────────
+
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  totalItems: number;
+  itemsPerPage: number;
+}
+
+function Pagination({
+  currentPage,
+  totalPages,
+  onPageChange,
+  totalItems,
+  itemsPerPage,
+}: PaginationProps) {
+  if (totalPages <= 1) return null;
+
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+  // Build page number list with ellipsis
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('ellipsis');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('ellipsis');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  return (
+    <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 pt-6">
+      <p className="text-sm text-gray-600">
+        Showing <span className="font-semibold text-gray-900">{startItem}–{endItem}</span>{' '}
+        of <span className="font-semibold text-gray-900">{totalItems}</span> products
+      </p>
+
+      <div className="flex items-center gap-1">
+        {/* Prev */}
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Prev
+        </button>
+
+        {/* Page numbers */}
+        <div className="flex items-center gap-1">
+          {getPageNumbers().map((page, idx) =>
+            page === 'ellipsis' ? (
+              <span key={`ellipsis-${idx}`} className="px-2 py-2 text-gray-400 text-sm select-none">
+                …
+              </span>
+            ) : (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
+                  currentPage === page
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {page}
+              </button>
+            ),
+          )}
+        </div>
+
+        {/* Next */}
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        >
+          Next
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function BikeProductsClient({
@@ -299,6 +393,7 @@ export default function BikeProductsClient({
   const [inStockOnly, setInStockOnly] = useState(false);
   const [onSaleOnly, setOnSaleOnly] = useState(false);
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const [expandedSections, setExpandedSections] = useState({
     brand: true,
     category: true,
@@ -309,15 +404,12 @@ export default function BikeProductsClient({
   const filterOptions = useMemo(() => {
     const categories = new Set<string>();
     const brands = new Set<string>();
-    let minPrice = Infinity,
-      maxPrice = 0;
+    let minPrice = Infinity, maxPrice = 0;
 
     products.forEach((p) => {
       categories.add(p.category.name);
-
       const brandName = p.brand?.name ?? p.bike?.brand.name;
       if (brandName) brands.add(brandName);
-
       const price = p.salePrice ?? p.price;
       minPrice = Math.min(minPrice, price);
       maxPrice = Math.max(maxPrice, price);
@@ -326,10 +418,7 @@ export default function BikeProductsClient({
     return {
       categories: Array.from(categories).sort(),
       brands: Array.from(brands).sort(),
-      priceRange: [Math.floor(minPrice), Math.ceil(maxPrice)] as [
-        number,
-        number,
-      ],
+      priceRange: [Math.floor(minPrice), Math.ceil(maxPrice)] as [number, number],
     };
   }, [products]);
 
@@ -414,6 +503,18 @@ export default function BikeProductsClient({
     sortBy,
   ]);
 
+  // Reset to page 1 whenever filters change
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE,
+  );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const activeFiltersCount =
     selectedCategories.length +
     selectedBrands.length +
@@ -434,7 +535,11 @@ export default function BikeProductsClient({
     setOnSaleOnly(false);
     setLowStockOnly(false);
     setSearchQuery('');
+    setCurrentPage(1);
   };
+
+  // Reset page on any filter/sort change
+  const resetPage = () => setCurrentPage(1);
 
   const removeFilter = (type: string, value?: string) => {
     switch (type) {
@@ -460,13 +565,13 @@ export default function BikeProductsClient({
         setSearchQuery('');
         break;
     }
+    resetPage();
   };
 
   const handleProductClick = (productSlug: string) => {
     router.push(`/products/${productSlug}`);
   };
 
-  // Shared props passed to both desktop and mobile FilterSidebar instances
   const filterSidebarProps: FilterSidebarProps = {
     filterOptions,
     selectedBrands,
@@ -476,12 +581,12 @@ export default function BikeProductsClient({
     lowStockOnly,
     priceRange,
     expandedSections,
-    setSelectedBrands,
-    setSelectedCategories,
-    setInStockOnly,
-    setOnSaleOnly,
-    setLowStockOnly,
-    setPriceRange,
+    setSelectedBrands: (v) => { setSelectedBrands(v); resetPage(); },
+    setSelectedCategories: (v) => { setSelectedCategories(v); resetPage(); },
+    setInStockOnly: (v) => { setInStockOnly(v); resetPage(); },
+    setOnSaleOnly: (v) => { setOnSaleOnly(v); resetPage(); },
+    setLowStockOnly: (v) => { setLowStockOnly(v); resetPage(); },
+    setPriceRange: (v) => { setPriceRange(v); resetPage(); },
     setExpandedSections,
   };
 
@@ -491,14 +596,14 @@ export default function BikeProductsClient({
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-24">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2 text-sm mb-4 text-white/90">
-  <Link href="/" className="hover:text-white transition-colors">Home</Link>
-  <ChevronDown className="w-4 h-4 -rotate-90" />
-  <Link href={`/brands/${bike.brandName.toLowerCase()}`} className="hover:text-white transition-colors">
-    {bike.brandName}
-  </Link>
-  <ChevronDown className="w-4 h-4 -rotate-90" />
-  <span className="font-medium text-white">{bike.name}</span>
-</div>
+            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+            <ChevronDown className="w-4 h-4 -rotate-90" />
+            <Link href={`/brands/${bike.brandName.toLowerCase()}`} className="hover:text-white transition-colors">
+              {bike.brandName}
+            </Link>
+            <ChevronDown className="w-4 h-4 -rotate-90" />
+            <span className="font-medium text-white">{bike.name}</span>
+          </div>
           <div className="flex items-start justify-between gap-6">
             <div>
               <p className="text-white/90 font-bold text-sm uppercase tracking-wide mb-2">
@@ -523,13 +628,13 @@ export default function BikeProductsClient({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
               placeholder="Search products..."
               className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => { setSearchQuery(''); resetPage(); }}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X className="w-5 h-5" />
@@ -562,7 +667,7 @@ export default function BikeProductsClient({
             <div className="flex items-center gap-3">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => { setSortBy(e.target.value); resetPage(); }}
                 className="px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm font-medium min-w-[180px] text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-red-500"
               >
                 <option value="featured">Featured</option>
@@ -584,12 +689,7 @@ export default function BikeProductsClient({
                   onClick={() => setViewMode('grid-4')}
                   className={`p-2 rounded ${viewMode === 'grid-4' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
                 >
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                  >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="3" width="7" height="7" strokeWidth="2" />
                     <rect x="14" y="3" width="7" height="7" strokeWidth="2" />
                     <rect x="3" y="14" width="7" height="7" strokeWidth="2" />
@@ -611,9 +711,7 @@ export default function BikeProductsClient({
         {activeFiltersCount > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">
-                Active Filters
-              </h3>
+              <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
               <button
                 onClick={clearAllFilters}
                 className="text-sm text-red-600 hover:text-red-700 font-medium"
@@ -645,22 +743,13 @@ export default function BikeProductsClient({
                 />
               ))}
               {inStockOnly && (
-                <FilterTag
-                  label="In Stock"
-                  onRemove={() => removeFilter('inStock')}
-                />
+                <FilterTag label="In Stock" onRemove={() => removeFilter('inStock')} />
               )}
               {onSaleOnly && (
-                <FilterTag
-                  label="On Sale"
-                  onRemove={() => removeFilter('onSale')}
-                />
+                <FilterTag label="On Sale" onRemove={() => removeFilter('onSale')} />
               )}
               {lowStockOnly && (
-                <FilterTag
-                  label="Low Stock"
-                  onRemove={() => removeFilter('lowStock')}
-                />
+                <FilterTag label="Low Stock" onRemove={() => removeFilter('lowStock')} />
               )}
               {(priceRange[0] > filterOptions.priceRange[0] ||
                 priceRange[1] < filterOptions.priceRange[1]) && (
@@ -736,26 +825,36 @@ export default function BikeProductsClient({
           )}
 
           {/* Product Grid */}
-          <main className="flex-1">
-            {filteredProducts.length > 0 ? (
-              <div
-                className={
-                  viewMode === 'grid-3'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
-                    : viewMode === 'grid-4'
-                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                      : 'space-y-4'
-                }
-              >
-                {filteredProducts.map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    viewMode={viewMode}
-                    onProductClick={handleProductClick}
-                  />
-                ))}
-              </div>
+          <main className="flex-1 min-w-0">
+            {paginatedProducts.length > 0 ? (
+              <>
+                <div
+                  className={
+                    viewMode === 'grid-3'
+                      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'
+                      : viewMode === 'grid-4'
+                        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+                        : 'space-y-4'
+                  }
+                >
+                  {paginatedProducts.map((p) => (
+                    <ProductCard
+                      key={p.id}
+                      product={p}
+                      viewMode={viewMode}
+                      onProductClick={handleProductClick}
+                    />
+                  ))}
+                </div>
+
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                  totalItems={filteredProducts.length}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                />
+              </>
             ) : (
               <div className="bg-white rounded-xl shadow p-12 text-center">
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -764,9 +863,7 @@ export default function BikeProductsClient({
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   No Products Found
                 </h3>
-                <p className="text-gray-600 mb-4">
-                  Try adjusting your filters
-                </p>
+                <p className="text-gray-600 mb-4">Try adjusting your filters</p>
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearAllFilters}
@@ -825,10 +922,7 @@ function FilterTag({ label, icon, onRemove }: FilterTagProps) {
     <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-sm rounded-full">
       {icon}
       {label}
-      <button
-        onClick={onRemove}
-        className="hover:bg-red-700 rounded-full p-0.5"
-      >
+      <button onClick={onRemove} className="hover:bg-red-700 rounded-full p-0.5">
         <X className="w-3.5 h-3.5" />
       </button>
     </span>
