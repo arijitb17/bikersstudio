@@ -478,7 +478,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
       </select>
     </div>
 
-    <div>  {/* ← closes correctly */}
+    <div>
       <label className="block text-sm font-medium mb-2 text-black">Bike (Optional)</label>
       <select
         className="w-full px-4 py-2 border rounded-lg text-black"
@@ -490,7 +490,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
           <option key={bike.id} value={bike.id}>{bike.name}</option>
         ))}
       </select>
-    </div>  {/* ← this was missing — SizeManager was nested inside this div */}
+    </div>
 
     <div>
       <label className="block text-sm font-medium mb-2 text-black">Size Variants</label>
@@ -503,6 +503,36 @@ const ProductForm: React.FC<ProductFormProps> = ({
         }}
         onChange={setSizes}
       />
+    </div>
+
+    {/* Color + Group Key */}
+    <div className="grid grid-cols-2 gap-4">
+      <div>
+        <label className="block text-sm font-medium mb-2 text-black">Color</label>
+        <input
+          type="text"
+          className="w-full px-4 py-2 border rounded-lg text-black"
+          placeholder="e.g. Red, Matte Black"
+          value={(formData.color as string) || ''}
+          onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium mb-2 text-black">
+          Group Key
+          <span className="ml-1 text-xs font-normal text-gray-400">(links colour variants)</span>
+        </label>
+        <input
+          type="text"
+          className="w-full px-4 py-2 border rounded-lg text-black"
+          placeholder="e.g. helmet-axxis-draken"
+          value={(formData.groupKey as string) || ''}
+          onChange={(e) => setFormData({ ...formData, groupKey: e.target.value })}
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Same key on all colour variants groups them together
+        </p>
+      </div>
     </div>
 
     <div>

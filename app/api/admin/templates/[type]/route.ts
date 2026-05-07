@@ -36,7 +36,8 @@ export async function GET(
             dimensions: '10x20x5 cm',
             material: 'Aluminum',
             color: 'Black',
-            size: 'Medium'
+            groupKey: 'interceptor-650-crash-guard (same for all color variants)',
+            size: 'Medium',
           },
           {
             name: 'Another Product',
@@ -57,14 +58,16 @@ export async function GET(
             weight: '',
             dimensions: '',
             material: '',
-            color: '',
-            size: ''
+            color: 'Silver',
+            groupKey: 'interceptor-650-crash-guard',
+            size: '',
           }
         ];
         
         instructions = {
           'INSTRUCTIONS': 'Read this carefully before filling the template',
           'Required Fields': 'name, price, stock, sku, categoryId',
+          'Variant Support': 'Use color + groupKey for color variants',
           'Optional Fields': 'All other fields can be left blank',
           'slug': 'Auto-generated from name if left blank. Must be unique.',
           'price': 'Product price in decimal format (e.g., 1000.00)',
@@ -77,7 +80,9 @@ export async function GET(
           'thumbnail': 'Single URL. Auto-uses first image if blank.',
           'isActive': 'TRUE or FALSE (default: TRUE)',
           'isFeatured': 'TRUE or FALSE (default: FALSE)',
-          'Boolean Fields': 'Use TRUE or FALSE (case insensitive)'
+          'Boolean Fields': 'Use TRUE or FALSE (case insensitive)',
+          'groupKey': 'Use same value for product variants (e.g. same product in different colors)',
+          'color': 'Set variant color (e.g. Black, Silver, Red)',
         };
         break;
 

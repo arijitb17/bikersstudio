@@ -9,9 +9,11 @@ interface CartItem {
   price: number;
   salePrice: number | null;
   thumbnail: string;
-  quantity: number;
   brandName?: string;
-  selectedSize?: string;  // ← add this
+  quantity: number;
+  selectedSize?: string;
+  selectedColor?: string;
+  maxStock?: number; // ← add this
 }
 
 interface CartContextType {
@@ -20,8 +22,8 @@ interface CartContextType {
   total: number;
   isOpen: boolean;
   addToCart: (item: Omit<CartItem, 'quantity'>) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
@@ -33,7 +35,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('shopping-cart');
     if (savedCart) {
@@ -45,57 +46,59 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('shopping-cart', JSON.stringify(items));
   }, [items]);
 
-const addToCart = (newItem: Omit<CartItem, 'quantity'>) => {
-  setItems(currentItems => {
-    // deduplicate on id (not productId) so M and L are separate lines
-    const existingItem = currentItems.find(item => item.id === newItem.id);
+  const addToCart = (newItem: Omit<CartItem, 'quantity'>) => {
+    setItems(currentItems => {
+      const existingItem = currentItems.find(item => item.id === newItem.id);
 
-    if (existingItem) {
-      return currentItems.map(item =>
-        item.id === newItem.id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      );
-    }
+      if (existingItem) {
+        const max = existingItem.maxStock ?? Infinity;
+        // Already at stock limit — don't increment
+        if (existingItem.quantity >= max) return currentItems;
 
-    return [...currentItems, { ...newItem, quantity: 1 }];
-  });
+        return currentItems.map(item =>
+          item.id === newItem.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
 
-  setIsOpen(true);
-};
+      return [...currentItems, { ...newItem, quantity: 1 }];
+    });
 
-const removeFromCart = (id: string) => {
-  setItems(currentItems => currentItems.filter(item => item.id !== id));
-};
-
-const updateQuantity = (id: string, quantity: number) => {
-  if (quantity <= 0) {
-    removeFromCart(id);
-    return;
-  }
-  setItems(currentItems =>
-    currentItems.map(item =>
-      item.id === id ? { ...item, quantity } : item
-    )
-  );
-};
-
-  const clearCart = () => {
-    setItems([]);
+    setIsOpen(true);
   };
 
+  const removeFromCart = (id: string) => {
+    setItems(currentItems => currentItems.filter(item => item.id !== id));
+  };
+
+  const updateQuantity = (id: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    setItems(currentItems =>
+      currentItems.map(item => {
+        if (item.id !== id) return item;
+        const max = item.maxStock ?? Infinity;
+        // Clamp to stock limit
+        return { ...item, quantity: Math.min(quantity, max) };
+      })
+    );
+  };
+
+  const clearCart = () => setItems([]);
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const total = items.reduce((sum, item) => {
-    const price = item.salePrice || item.price;
-    return sum + (price * item.quantity);
+    const price = item.salePrice ?? item.price;
+    return sum + price * item.quantity;
   }, 0);
 
   return (

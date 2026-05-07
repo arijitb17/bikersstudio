@@ -127,6 +127,7 @@ export async function POST(_req: NextRequest) {
         dimensions: body.dimensions || null,
         material: body.material || null,
         color: body.color || null,
+        groupKey: body.groupKey?.trim() || null,
         size: body.size || null,
       },
       include: {

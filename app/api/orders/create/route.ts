@@ -1,19 +1,20 @@
-// app/api/orders/create/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import type { Session } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { applyRateLimit, ORDER_LIMITER } from '@/lib/rateLimiter';
-import { invalidatePattern } from '@/lib/cache';
 import { handleApiError, ok } from '@/lib/apiHelpers';
 import Razorpay from 'razorpay';
+
 interface OrderItem {
   productId: string;
   quantity: number;
   price: number;
-  selectedSize?: string | null;  // ← add this
+  selectedSize?: string | null;
+  selectedColor?: string | null;
 }
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID!,
   key_secret: process.env.RAZORPAY_KEY_SECRET!,
@@ -42,13 +43,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No items in cart' }, { status: 400 });
     }
 
-    // Verify address
     const address = await prisma.address.findFirst({
       where: { id: addressId, userId: user.id },
     });
     if (!address) return NextResponse.json({ error: 'Invalid address' }, { status: 400 });
 
-    // Verify stock — batched lookup
     const productIds = items.map((i: OrderItem) => i.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
@@ -89,14 +88,15 @@ export async function POST(req: NextRequest) {
           paymentStatus: 'PENDING',
           paymentMethod: 'CARD',
           items: {
-  create: items.map((item: OrderItem) => ({
-    productId: item.productId,
-    quantity: item.quantity,
-    price: item.price,
-    subtotal: item.price * item.quantity,
-    selectedSize: item.selectedSize ?? null,  // ← add this
-  })),
-},
+            create: items.map((item: OrderItem) => ({
+              productId: item.productId,
+              quantity: item.quantity,
+              price: item.price,
+              subtotal: item.price * item.quantity,
+              selectedSize: item.selectedSize ?? null,
+              selectedColor: item.selectedColor ?? null,
+            })),
+          },
         },
       });
 
@@ -109,9 +109,6 @@ export async function POST(req: NextRequest) {
 
       return created;
     });
-
-    // Invalidate user orders cache
-    await invalidatePattern(`orders:user:${user.id}`);
 
     return ok({
       orderId: order.id,

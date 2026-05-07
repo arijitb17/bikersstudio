@@ -1,21 +1,19 @@
-// app/orders/page.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Loader2, 
-  Package, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Loader2,
+  Package,
+  Clock,
+  CheckCircle,
+  XCircle,
   Truck,
   MapPin,
   Calendar,
-  IndianRupee
+  IndianRupee,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -25,7 +23,8 @@ interface OrderItem {
   quantity: number;
   price: number | { toNumber: () => number };
   subtotal: number | { toNumber: () => number };
-  selectedSize?: string | null;   
+  selectedSize?: string | null;
+  selectedColor?: string | null; // ← added
   product: {
     name: string;
     thumbnail: string;
@@ -81,53 +80,44 @@ const statusIcons = {
 export default function OrdersPage() {
   const { status } = useSession();
   const router = useRouter();
-
- const [orders, setOrders] = useState<Order[]>([]);  
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<string>('ALL');
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/orders');
     }
   }, [status, router]);
 
-  // Load orders
   useEffect(() => {
-    if (status === 'authenticated') {
-      loadOrders();
-    }
+    if (status === 'authenticated') loadOrders();
   }, [status]);
 
-const loadOrders = async () => {
-  try {
-    const response = await fetch('/api/user/orders');
-    const json = await response.json();
-
-    if (response.ok) {
-      // ok() passes data directly — no wrapper
-      // buildPaginatedResponse returns { data: [], pagination: {} }
-      const orders = json?.data ?? [];
-      setOrders(Array.isArray(orders) ? orders : []);
+  const loadOrders = async () => {
+    try {
+      const response = await fetch('/api/user/orders');
+      const json = await response.json();
+      if (response.ok) {
+        const orders = json?.data ?? [];
+        setOrders(Array.isArray(orders) ? orders : []);
+      }
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error('Error loading orders:', error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-  // Helper function to convert Decimal to number
- type DecimalLike = number | string | { toNumber: () => number };
+  };
 
-const toNumber = (value: DecimalLike): number => {
-  if (typeof value === 'number') return value;
-  if (typeof value === 'string') return parseFloat(value);
-  return value.toNumber();
-};
-  const filteredOrders = filter === 'ALL' 
-    ? orders 
-    : orders.filter(order => order.status === filter);
+  type DecimalLike = number | string | { toNumber: () => number };
+  const toNumber = (value: DecimalLike): number => {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') return parseFloat(value);
+    return value.toNumber();
+  };
+
+  const filteredOrders =
+    filter === 'ALL' ? orders : orders.filter((order) => order.status === filter);
 
   if (status === 'loading' || isLoading) {
     return (
@@ -142,10 +132,7 @@ const toNumber = (value: DecimalLike): number => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Orders</h1>
-          <Link
-            href="/profile"
-            className="text-red-600 hover:text-red-700 font-medium"
-          >
+          <Link href="/profile" className="text-red-600 hover:text-red-700 font-medium">
             Back to Profile
           </Link>
         </div>
@@ -153,21 +140,19 @@ const toNumber = (value: DecimalLike): number => {
         {/* Filter Tabs */}
         <div className="bg-white rounded-lg shadow-md mb-6 overflow-x-auto">
           <div className="flex border-b">
-            {['ALL', 'PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((status) => (
+            {['ALL', 'PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'].map((s) => (
               <button
-                key={status}
-                onClick={() => setFilter(status)}
+                key={s}
+                onClick={() => setFilter(s)}
                 className={`px-6 py-4 font-medium text-sm whitespace-nowrap transition-colors ${
-                  filter === status
+                  filter === s
                     ? 'border-b-2 border-red-600 text-red-600'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                {status === 'ALL' ? 'All Orders' : status}
+                {s === 'ALL' ? 'All Orders' : s}
                 <span className="ml-2 text-xs bg-gray-100 px-2 py-1 rounded-full">
-                  {status === 'ALL' 
-                    ? orders.length 
-                    : orders.filter(o => o.status === status).length}
+                  {s === 'ALL' ? orders.length : orders.filter((o) => o.status === s).length}
                 </span>
               </button>
             ))}
@@ -182,8 +167,8 @@ const toNumber = (value: DecimalLike): number => {
               {filter === 'ALL' ? 'No orders yet' : `No ${filter.toLowerCase()} orders`}
             </h2>
             <p className="text-gray-600 mb-6">
-              {filter === 'ALL' 
-                ? "Start shopping to see your orders here"
+              {filter === 'ALL'
+                ? 'Start shopping to see your orders here'
                 : `You don't have any ${filter.toLowerCase()} orders`}
             </p>
             <Link
@@ -197,7 +182,6 @@ const toNumber = (value: DecimalLike): number => {
           <div className="space-y-6">
             {filteredOrders.map((order) => {
               const StatusIcon = statusIcons[order.status as keyof typeof statusIcons];
-              
               return (
                 <div key={order.id} className="bg-white rounded-lg shadow-md overflow-hidden">
                   {/* Order Header */}
@@ -215,7 +199,7 @@ const toNumber = (value: DecimalLike): number => {
                             {new Date(order.createdAt).toLocaleDateString('en-IN', {
                               day: 'numeric',
                               month: 'short',
-                              year: 'numeric'
+                              year: 'numeric',
                             })}
                           </p>
                         </div>
@@ -227,11 +211,12 @@ const toNumber = (value: DecimalLike): number => {
                           </p>
                         </div>
                       </div>
-
                       <div className="flex items-center gap-3">
-                        <span className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                          statusColors[order.status as keyof typeof statusColors]
-                        }`}>
+                        <span
+                          className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                            statusColors[order.status as keyof typeof statusColors]
+                          }`}
+                        >
                           <StatusIcon className="w-4 h-4" />
                           {order.status}
                         </span>
@@ -250,27 +235,37 @@ const toNumber = (value: DecimalLike): number => {
                     <div className="space-y-4 mb-4">
                       {order.items.map((item) => (
                         <div key={item.id} className="flex gap-4">
-                          
                           <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
-                            <Image src={item.product.thumbnail} alt={item.product.name} fill className="object-contain" />
+                            <Image
+                              src={item.product.thumbnail}
+                              alt={item.product.name}
+                              fill
+                              className="object-contain"
+                            />
                           </div>
-
                           <div className="flex-1">
-  <Link
-    href={`/products/${item.product.slug}`}
-    className="font-semibold text-gray-900 hover:text-red-600"
-  >
-    {item.product.name}
-  </Link>
-  {item.selectedSize && (
-    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
-      Size: {item.selectedSize}
-    </span>
-  )}
-  <p className="text-sm text-gray-600">
-    Qty: {item.quantity} × Rs. {toNumber(item.price).toFixed(2)}
-  </p>
-</div>
+                            <Link
+                              href={`/products/${item.product.slug}`}
+                              className="font-semibold text-gray-900 hover:text-red-600"
+                            >
+                              {item.product.name}
+                            </Link>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {item.selectedSize && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                  Size: {item.selectedSize}
+                                </span>
+                              )}
+                              {item.selectedColor && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                  Color: {item.selectedColor}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Qty: {item.quantity} × Rs. {toNumber(item.price).toFixed(2)}
+                            </p>
+                          </div>
                           <div className="text-right">
                             <p className="font-bold text-gray-900">
                               Rs. {toNumber(item.subtotal).toFixed(2)}
@@ -295,7 +290,6 @@ const toNumber = (value: DecimalLike): number => {
                           <p className="text-gray-600">Phone: {order.address.phone}</p>
                         </div>
                       </div>
-
                       {order.trackingNumber && (
                         <div className="mt-3 flex items-center gap-2 text-sm">
                           <Truck className="w-4 h-4 text-gray-400" />

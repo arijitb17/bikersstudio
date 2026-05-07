@@ -237,7 +237,7 @@ model Product {
   size        String?
   isActive    Boolean  @default(true)
   isFeatured  Boolean  @default(false)
-
+  groupKey  String?
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
@@ -368,6 +368,7 @@ model OrderItem {
   subtotal  Decimal @db.Decimal(10, 2)
   createdAt DateTime @default(now())
   selectedSize  String?
+  selectedColor String?
   @@index([orderId])
   @@index([productId])
 }

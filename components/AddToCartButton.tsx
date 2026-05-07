@@ -7,6 +7,7 @@ import { Check, ShoppingCart } from 'lucide-react';
 interface AddToCartButtonProps {
   disabled?: boolean;
   outOfStock?: boolean;
+  stock?: number;
   product: {
     id: string;
     name: string;
@@ -15,6 +16,7 @@ interface AddToCartButtonProps {
     thumbnail: string;
     brandName?: string;
     selectedSize?: string;
+    selectedColor?: string | null;
   };
 }
 
@@ -22,33 +24,43 @@ export default function AddToCartButton({
   product,
   disabled = false,
   outOfStock = false,
+  stock = Infinity,
 }: AddToCartButtonProps) {
-  const { addToCart } = useCart();
+  const { addToCart, items } = useCart();
   const [isAdded, setIsAdded] = useState(false);
 
+  const cartId = [product.id, product.selectedColor, product.selectedSize]
+    .filter(Boolean)
+    .join('-');
+
+  const currentQtyInCart = items.find((i) => i.id === cartId)?.quantity ?? 0;
+  const isAtStockLimit = currentQtyInCart >= stock;
+
   const handleAddToCart = () => {
-    if (disabled || outOfStock) return;
+    if (disabled || outOfStock || isAtStockLimit) return;
+
+    const tags = [product.selectedColor, product.selectedSize].filter(Boolean);
+    const displayName =
+      tags.length > 0 ? `${product.name} (${tags.join(', ')})` : product.name;
 
     addToCart({
-      id: product.selectedSize
-        ? `${product.id}-${product.selectedSize}`
-        : product.id,
+      id: cartId,
       productId: product.id,
-      name: product.selectedSize
-        ? `${product.name} (${product.selectedSize})`
-        : product.name,
+      name: displayName,
       price: product.price,
       salePrice: product.salePrice,
       thumbnail: product.thumbnail,
       brandName: product.brandName,
       selectedSize: product.selectedSize,
+      selectedColor: product.selectedColor ?? undefined,
+      maxStock: stock,
     });
 
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const isDisabled = disabled || outOfStock || isAdded;
+  const isDisabled = disabled || outOfStock || isAdded || isAtStockLimit;
 
   return (
     <button
@@ -58,7 +70,7 @@ export default function AddToCartButton({
         ${
           isAdded
             ? 'bg-green-600 text-white cursor-default'
-            : outOfStock
+            : outOfStock || isAtStockLimit
             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
             : disabled
             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -75,6 +87,8 @@ export default function AddToCartButton({
           <ShoppingCart className="w-5 h-5" />
           {outOfStock
             ? 'Out of Stock'
+            : isAtStockLimit
+            ? `Max stock reached (${stock})`
             : disabled
             ? 'Select a size first'
             : 'Add to Cart'}

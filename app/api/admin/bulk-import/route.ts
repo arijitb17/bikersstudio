@@ -54,6 +54,7 @@ interface ExcelRow {
   bgColor?: unknown;
   textColor?: unknown;
   menuColumns?: unknown;
+  groupKey?: unknown;
 }
 
 type MenuItemType = 'BRAND_MENU' | 'CATEGORY_MENU' | 'CUSTOM_MENU';
@@ -289,6 +290,7 @@ export async function POST(request: Request) {
                 material: getString(row.material) || undefined,
                 color: getString(row.color) || undefined,
                 size: getString(row.size) || undefined,
+                groupKey: getString(row.groupKey) || undefined,
               } satisfies Prisma.ProductCreateManyInput);
 
               successCount++;

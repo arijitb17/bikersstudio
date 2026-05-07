@@ -14,9 +14,6 @@ export async function GET(
 
     const { id } = await params;
     
-    console.log('=== GET /api/user/orders/[id] called ===');
-    console.log('Order ID from params:', id);
-    
     const session = await getServerSession(authOptions) as Session | null;
 
     if (!session?.user?.email) {

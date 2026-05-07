@@ -1,5 +1,3 @@
-// app/checkout/page.tsx
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -68,21 +66,19 @@ export default function CheckoutPage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [scriptError, setScriptError] = useState(false);
-  // Redirect if not authenticated
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/checkout');
     }
   }, [status, router]);
 
-  // Redirect if cart is empty
   useEffect(() => {
     if (items.length === 0 && status === 'authenticated') {
       router.push('/');
     }
   }, [items, status, router]);
 
-  // Load addresses and applied coupon
   useEffect(() => {
     if (status === 'authenticated') {
       loadAddresses();
@@ -94,13 +90,10 @@ export default function CheckoutPage() {
     try {
       const response = await fetch('/api/user/addresses');
       const data = await response.json();
-
       if (response.ok) {
         setAddresses(data.addresses);
         const defaultAddr = data.addresses.find((a: Address) => a.isDefault);
-        if (defaultAddr) {
-          setSelectedAddress(defaultAddr.id);
-        }
+        if (defaultAddr) setSelectedAddress(defaultAddr.id);
       }
     } catch (error) {
       console.error('Error loading addresses:', error);
@@ -124,10 +117,9 @@ export default function CheckoutPage() {
     setShowAddressForm(false);
   };
 
-  const subtotal = total;
-  const tax = subtotal * 0.18;
-  const shipping = subtotal > 1000 ? 0 : 50;
-  const finalTotal = subtotal + tax + shipping - discount;
+const subtotal = total;
+const shipping = 500;                       // flat ₹500
+const finalTotal = subtotal + shipping - discount;
 
   const handlePayment = async () => {
     if (!selectedAddress) {
@@ -145,9 +137,7 @@ export default function CheckoutPage() {
     try {
       const orderResponse = await fetch('/api/orders/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           addressId: selectedAddress,
           items: items.map(item => ({
@@ -155,10 +145,11 @@ export default function CheckoutPage() {
             quantity: item.quantity,
             price: item.salePrice || item.price,
             selectedSize: item.selectedSize ?? null,
+            selectedColor: item.selectedColor ?? null, // ← added
           })),
           subtotal,
-          tax,
-          shippingCost: shipping,
+          tax: 0,    
+          shippingCost: 500,
           discount,
           total: finalTotal,
           couponCode: appliedCoupon?.code,
@@ -166,10 +157,7 @@ export default function CheckoutPage() {
       });
 
       const orderData = await orderResponse.json();
-
-      if (!orderResponse.ok) {
-        throw new Error(orderData.error || 'Failed to create order');
-      }
+      if (!orderResponse.ok) throw new Error(orderData.error || 'Failed to create order');
 
       const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -192,7 +180,6 @@ export default function CheckoutPage() {
           });
 
           const verifyData = await verifyResponse.json();
-
           if (verifyResponse.ok) {
             clearCart();
             sessionStorage.removeItem('appliedCoupon');
@@ -208,9 +195,7 @@ export default function CheckoutPage() {
         },
         theme: { color: '#DC2626' },
         modal: {
-          ondismiss: () => {
-            setIsProcessing(false);
-          },
+          ondismiss: () => setIsProcessing(false),
         },
       };
 
@@ -231,9 +216,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (items.length === 0) {
-    return null;
-  }
+  if (items.length === 0) return null;
 
   return (
     <>
@@ -244,16 +227,17 @@ export default function CheckoutPage() {
         onError={() => setScriptError(true)}
       />
       {scriptError && (
-  <p className="text-sm text-red-500 text-center mt-2">
-    Payment gateway failed to load. Please disable your ad blocker and refresh.
-  </p>
-)}
+        <p className="text-sm text-red-500 text-center mt-2">
+          Payment gateway failed to load. Please disable your ad blocker and refresh.
+        </p>
+      )}
+
       <div className="min-h-screen bg-gray-50 py-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column - Address & Items */}
+            {/* Left Column */}
             <div className="lg:col-span-2 space-y-6">
               {/* Delivery Address */}
               <div className="bg-white rounded-lg shadow-md p-6">
@@ -303,18 +287,12 @@ export default function CheckoutPage() {
                         />
                         <div className="flex justify-between">
                           <div>
-                            <p className="font-semibold text-gray-900">
-                              {address.fullName}
-                            </p>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {address.street}
-                            </p>
+                            <p className="font-semibold text-gray-900">{address.fullName}</p>
+                            <p className="text-sm text-gray-600 mt-1">{address.street}</p>
                             <p className="text-sm text-gray-600">
                               {address.city}, {address.state} - {address.pincode}
                             </p>
-                            <p className="text-sm text-gray-600">
-                              Phone: {address.phone}
-                            </p>
+                            <p className="text-sm text-gray-600">Phone: {address.phone}</p>
                           </div>
                           {address.isDefault && (
                             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded h-fit">
@@ -336,7 +314,7 @@ export default function CheckoutPage() {
                     const price = item.salePrice || item.price;
                     return (
                       <div
-                        key={`${item.productId}-${item.selectedSize ?? 'default'}`}
+                        key={item.id}
                         className="flex gap-4 pb-4 border-b"
                       >
                         <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
@@ -349,10 +327,19 @@ export default function CheckoutPage() {
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                          {item.selectedSize && (
-                            <p className="text-sm text-gray-500">Size: {item.selectedSize}</p>
-                          )}
-                          <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {item.selectedSize && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                Size: {item.selectedSize}
+                              </span>
+                            )}
+                            {item.selectedColor && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                Color: {item.selectedColor}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
                           <p className="text-sm font-semibold text-red-600 mt-1">
                             Rs. {price.toFixed(2)} × {item.quantity}
                           </p>
@@ -375,44 +362,37 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-semibold mb-4 text-gray-600">Order Summary</h2>
 
                 <div className="space-y-3 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-semibold text-gray-600">Rs. {subtotal.toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tax (GST 18%):</span>
-                    <span className="font-semibold text-gray-600">Rs. {tax.toFixed(2)}</span>
-                  </div>
-
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping:</span>
-                    <span className="font-semibold text-gray-600">
-                      {shipping === 0 ? 'FREE' : `Rs. ${shipping.toFixed(2)}`}
-                    </span>
-                  </div>
-
-                  {discount > 0 && appliedCoupon && (
-                    <div className="flex justify-between text-sm">
-                      <div className="flex items-center gap-1">
-                        <Tag className="w-3 h-3 text-green-600" />
-                        <span className="text-green-600">Coupon ({appliedCoupon.code}):</span>
-                      </div>
-                      <span className="font-semibold text-green-600">
-                        - Rs. {discount.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="border-t pt-3">
-                    <div className="flex justify-between text-lg">
-                      <span className="font-bold text-gray-900">Total:</span>
-                      <span className="font-bold text-2xl text-red-600">
-                        Rs. {finalTotal.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+  <div className="flex justify-between text-sm">
+    <span className="text-gray-600">Subtotal:</span>
+    <span className="font-semibold text-gray-600">Rs. {subtotal.toFixed(2)}</span>
+  </div>
+  <div className="flex justify-between text-sm">
+    <span className="text-gray-600">Shipping:</span>
+    <span className="font-semibold text-gray-600">Rs. 500.00</span>
+  </div>
+  <div className="flex justify-between text-xs text-gray-400">
+    <span>GST included in product prices</span>
+  </div>
+  {discount > 0 && appliedCoupon && (
+    <div className="flex justify-between text-sm">
+      <div className="flex items-center gap-1">
+        <Tag className="w-3 h-3 text-green-600" />
+        <span className="text-green-600">Coupon ({appliedCoupon.code}):</span>
+      </div>
+      <span className="font-semibold text-green-600">
+        - Rs. {discount.toFixed(2)}
+      </span>
+    </div>
+  )}
+  <div className="border-t pt-3">
+    <div className="flex justify-between text-lg">
+      <span className="font-bold text-gray-900">Total:</span>
+      <span className="font-bold text-2xl text-red-600">
+        Rs. {finalTotal.toFixed(2)}
+      </span>
+    </div>
+  </div>
+</div>
 
                 <button
                   onClick={handlePayment}

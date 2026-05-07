@@ -71,7 +71,8 @@ interface OrderItem {
   quantity: number;
   price: string | number;
   subtotal: string | number;
-  selectedSize?: string | null;  // ← add this
+  selectedSize?: string | null;  
+   selectedColor?: string | null; 
 }
 
 interface Order {
@@ -490,15 +491,22 @@ function OrderDetailPanel({
                       </div>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
   <p className="font-medium text-gray-900 text-sm truncate">
     {item.product?.name || "Unknown Product"}
   </p>
-  {item.selectedSize && (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 mt-0.5">
-      Size: {item.selectedSize}
-    </span>
-  )}
+  <div className="flex flex-wrap gap-1 mt-0.5">
+    {item.selectedSize && (
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+        Size: {item.selectedSize}
+      </span>
+    )}
+    {item.selectedColor && (
+      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+        Color: {item.selectedColor}
+      </span>
+    )}
+  </div>
   <p className="text-xs text-gray-400 mt-0.5">
     Qty: {item.quantity} × {formatCurrency(item.price)}
   </p>

@@ -8,6 +8,7 @@ import { applyRateLimit, ORDER_LIMITER } from '@/lib/rateLimiter';
 import { invalidatePattern } from '@/lib/cache';
 import { handleApiError, ok } from '@/lib/apiHelpers';
 import crypto from 'crypto';
+import { createDelhiveryShipment } from '@/lib/delhivery';
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions) as Session | null;
@@ -54,7 +55,6 @@ export async function POST(req: NextRequest) {
         include: { items: true },
       });
 
-      // Decrement stock for each item
       for (const item of updated.items) {
         await tx.product.update({
           where: { id: item.productId },
@@ -62,7 +62,6 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Clear cart
       await tx.cartItem.deleteMany({ where: { userId: user.id } });
 
       return updated;
@@ -73,8 +72,70 @@ export async function POST(req: NextRequest) {
       invalidatePattern(`orders:user:${user.id}`),
       invalidatePattern(`orders:admin:*`),
       invalidatePattern(`dashboard:*`),
-      invalidatePattern(`products:*`), // stock changed
+      invalidatePattern(`products:*`),
     ]);
+
+    // Fetch full order details for Delhivery
+    const fullOrder = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        items: {
+          include: {
+            product: { select: { name: true, weight: true } },
+          },
+        },
+        address: true,
+        user: { select: { name: true, email: true, phone: true } },
+      },
+    });
+
+    // Create Delhivery shipment — non-blocking, never fails the payment response
+    if (fullOrder) {
+      createDelhiveryShipment({
+        orderNumber: fullOrder.orderNumber,
+        totalAmount: Number(fullOrder.total),
+        paymentMethod: 'Prepaid',
+        customer: {
+          name: fullOrder.address.fullName,
+          phone: fullOrder.address.phone,
+          email: fullOrder.user?.email ?? undefined,
+        },
+        address: {
+          street: fullOrder.address.street,
+          city: fullOrder.address.city,
+          state: fullOrder.address.state,
+          pincode: fullOrder.address.pincode,
+          country: fullOrder.address.country,
+        },
+        items: fullOrder.items.map((i) => ({
+          name: i.product.name,
+          quantity: i.quantity,
+          price: Number(i.price),
+        })),
+        // Sum product weights if available, fallback to 0.5 kg
+        weight: fullOrder.items.reduce((sum, i) => {
+          const w = i.product.weight ? Number(i.product.weight) * i.quantity : 0;
+          return sum + w;
+        }, 0) || 0.5,
+      })
+        .then(async ({ awb, trackingUrl }) => {
+          await prisma.order.update({
+            where: { id: order.id },
+            data: {
+              awbCode: awb,
+              courierService: 'Delhivery',
+              trackingUrl,
+              status: 'PROCESSING',
+              shippedAt: new Date(),
+            },
+          });
+        })
+        .catch((err) => {
+          // Order is confirmed & paid — log the error but don't surface it to the user.
+          // A retry job should pick up orders where awbCode is still null.
+          console.error('[Delhivery] Shipment creation failed for order', order.id, err);
+        });
+    }
 
     return ok({ success: true, orderId: order.id, orderNumber: order.orderNumber });
   } catch (e) {

@@ -1,5 +1,6 @@
+// components/Footer.tsx
 import Link from 'next/link';
-import { Phone, Mail, Youtube } from 'lucide-react';
+import { Phone, Mail, Youtube, MapPin } from 'lucide-react';
 import { Instagram } from 'lucide-react';
 
 export default function Footer() {
@@ -20,8 +21,10 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-bold text-lg mb-4 uppercase">Contact</h3>
+            <h3 className="font-bold text-lg mb-4 uppercase">My Account</h3>
             <ul className="space-y-2 text-sm">
+              <li><Link href="/orders" className="hover:text-red-600 transition-colors">My Orders</Link></li>
+              <li><Link href="/orders/track" className="hover:text-red-600 transition-colors">Track My Order</Link></li>
               <li><Link href="/help" className="hover:text-red-600 transition-colors">Help & FAQ</Link></li>
             </ul>
           </div>
@@ -29,10 +32,10 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-4 uppercase">Policies</h3>
             <ul className="space-y-2 text-sm">
-  <li><Link href="/privacy-policy" className="hover:text-red-600 transition-colors">Privacy Policy</Link></li>
-  <li><Link href="/terms-of-service" className="hover:text-red-600 transition-colors">Terms of Service</Link></li>
-  <li><Link href="/return-policy" className="hover:text-red-600 transition-colors">Return Policy</Link></li>
-</ul>
+              <li><Link href="/privacy-policy" className="hover:text-red-600 transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms-of-service" className="hover:text-red-600 transition-colors">Terms of Service</Link></li>
+              <li><Link href="/return-policy" className="hover:text-red-600 transition-colors">Return Policy</Link></li>
+            </ul>
           </div>
         </div>
 
@@ -43,11 +46,11 @@ export default function Footer() {
             <div className="space-y-2 text-sm">
               <p>Monday to Sunday, 10am–5pm</p>
               <p className="flex items-center gap-2">
-                <Phone className="w-4 h-4" />
+                <Phone className="w-4 h-4 shrink-0" />
                 <Link href="tel:919678248499" className="hover:text-red-600 transition-colors">+91 96782 48499</Link>
               </p>
               <p className="flex items-center gap-2">
-                <Mail className="w-4 h-4" />
+                <Mail className="w-4 h-4 shrink-0" />
                 <Link href="mailto:bikerstudio.com@gmail.com" className="hover:text-red-600 transition-colors">bikerstudio.com@gmail.com</Link>
               </p>
             </div>
@@ -66,7 +69,10 @@ export default function Footer() {
                 referrerPolicy="no-referrer-when-downgrade"
               />
             </div>
-            <p className="text-sm mt-2">Mangalam Building, Assam Trunk Rd, opp. post office, Bharalumukh, Guwahati, Assam 781009</p>
+            <p className="flex items-start gap-2 text-sm mt-2 text-gray-600">
+              <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />
+              Mangalam Building, Assam Trunk Rd, opp. post office, Bharalumukh, Guwahati, Assam 781009
+            </p>
           </div>
         </div>
 

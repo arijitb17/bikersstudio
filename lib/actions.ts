@@ -5,6 +5,8 @@ import { authOptions } from './auth';
 import { prisma } from './prisma';
 import { revalidatePath } from 'next/cache';
 import { Prisma, PaymentMethod } from '@/app/generated/prisma/client';
+import { SizeEntry } from '@/app/admin/components/SizeManager';
+import { parseSizes } from './parseSizes';
 
 // -----------------
 // BRANDS & BIKES
@@ -78,7 +80,7 @@ export async function getBikeWithProducts(slug: string) {
         where: { isActive: true },
         include: {
           category: true,
-          brand: true, // add this
+          brand: true,
           bike: {
             include: {
               brand: true,
@@ -92,9 +94,23 @@ export async function getBikeWithProducts(slug: string) {
 
   if (!bike) return null;
 
+  // ── Deduplicate grouped color variants ──────────────────────────────
+  // For products sharing a groupKey, only keep the first one encountered
+const seen = new Set<string>();
+
+const deduped = bike.products.filter((p) => {
+  const key = p.groupKey;
+
+  if (!key) return true;
+  if (seen.has(key)) return false;
+
+  seen.add(key);
+  return true;
+});
+
   return {
     ...bike,
-    products: bike.products.map((p: ProductWithRelations) => ({
+    products: deduped.map((p: ProductWithRelations) => ({
       id: p.id,
       name: p.name,
       slug: p.slug,
@@ -113,7 +129,7 @@ export async function getBikeWithProducts(slug: string) {
         name: p.category.name,
       },
 
-      brand: p.brand // add this
+      brand: p.brand
         ? {
             name: p.brand.name,
           }
@@ -179,15 +195,21 @@ export async function getCategoryWithProducts(slug: string) {
 
   if (!category) return null;
 
-  type CategoryWithProducts = NonNullable<typeof category>;
-
   const allProducts = [
     ...category.products,
-    ...category.children.flatMap(
-      (child: CategoryWithProducts['children'][number]) => child.products
-    ),
+    ...category.children.flatMap((child) => child.products),
   ];
+const seen = new Set<string>();
 
+const deduped = allProducts.filter((p) => {
+  const key = p.groupKey;
+
+  if (!key) return true;
+  if (seen.has(key)) return false;
+
+  seen.add(key);
+  return true;
+});
   return {
     id: category.id,
     name: category.name,
@@ -195,7 +217,7 @@ export async function getCategoryWithProducts(slug: string) {
     description: category.description,
     image: category.image,
     isActive: category.isActive,
-    products: allProducts.map((p) => ({
+    products: deduped.map((p) => ({
   id: p.id,
   slug: p.slug,
   name: p.name,
@@ -256,73 +278,65 @@ export type ProductBySlug = Prisma.ProductGetPayload<{
     };
   };
 }> | null;
-
-export async function getProductBySlug(slug: string): Promise<ProductBySlug> {
+// Add this type near the top with other types
+export type ColorVariant = {
+  id: string;
+  slug: string;
+  name: string;
+  color: string | null;
+  thumbnail: string;
+  price: number;
+  salePrice: number | null;
+  stock: number;
+  sku: string;
+  images: string[];
+  sizes?: SizeEntry[];
+  
+};
+export async function getProductBySlug(slug: string): Promise<ProductBySlug & { colorVariants: ColorVariant[] } | null> {
   try {
     const product = await prisma.product.findFirst({
-      where: {
-        slug,
-        isActive: true,
-      },
+      where: { slug, isActive: true },
       include: {
-        category: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-
-        // ✅ Direct brand relation (for helmet/standalone products with brandId but no bikeId)
-        brand: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-            logo: true,
-          },
-        },
-
-        // ✅ Bike relation with its own brand (for bike-specific parts/accessories)
-        bike: {
-          include: {
-            brand: {
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-                logo: true,
-              },
-            },
-          },
-        },
-
+        category: { select: { id: true, name: true, slug: true } },
+        brand: { select: { id: true, name: true, slug: true, logo: true } },
+        bike: { include: { brand: { select: { id: true, name: true, slug: true, logo: true } } } },
         reviews: {
-          where: {
-            isApproved: true,
-          },
-          include: {
-            user: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
+          where: { isApproved: true },
+          include: { user: { select: { name: true, email: true } } },
+          orderBy: { createdAt: 'desc' },
         },
       },
     });
 
-    return product;
+    if (!product) return null;
+
+    // Fetch color variants if groupKey exists
+    let colorVariants: ColorVariant[] = [];
+    if (product.groupKey) {
+      const variants = await prisma.product.findMany({
+        where: { groupKey: product.groupKey, isActive: true },
+        select: {
+          id: true, slug: true, name: true, color: true,
+          thumbnail: true, price: true, salePrice: true,
+          stock: true, sku: true, images: true,sizes: true,
+        },
+        orderBy: { name: 'asc' },
+      });
+      colorVariants = variants.map((v) => ({
+  ...v,
+  price: Number(v.price),
+  salePrice: v.salePrice ? Number(v.salePrice) : null,
+  sizes: parseSizes(v.sizes),
+}));
+    }
+
+    return { ...product, colorVariants };
   } catch (error) {
     console.error('Error fetching product:', error);
     return null;
   }
 }
-
 // ✅ FIX: Added `brand` to the include so the inferred return type includes
 //    brand?.name — without this, TypeScript collapses brand to `never` and
 //    any downstream access like related.brand?.name errors with
