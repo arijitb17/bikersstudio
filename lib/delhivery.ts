@@ -45,9 +45,14 @@ const waybillRes = await fetch(
     throw new Error(`Failed to generate Delhivery waybill: ${waybillRes.status} ${errText}`);
   }
 
-  const waybillData = await waybillRes.json();
-  const awb: string = waybillData.wbn_list?.[0];
-  if (!awb) throw new Error('No waybill returned from Delhivery');
+const waybillData = await waybillRes.json();
+
+const awb =
+  typeof waybillData === 'string'
+    ? waybillData
+    : waybillData?.wbn_list?.[0];
+
+if (!awb) throw new Error('No waybill returned from Delhivery');
 
   // Step 2: create the shipment using that waybill
   const shipmentData = {
@@ -72,7 +77,7 @@ const waybillRes = await fetch(
         products_desc: payload.items.map((i) => i.name).join(', '),
         hsn_code: '',
         cod_amount: payload.paymentMethod === 'COD' ? payload.totalAmount.toString() : '0',
-        order_date: new Date().toISOString(),
+        order_date: new Date().toISOString().split('T')[0],
         total_amount: payload.totalAmount.toString(),
         seller_add: process.env.DELHIVERY_RETURN_ADDRESS!,
         seller_name: "Biker's Studio",
@@ -100,7 +105,7 @@ const waybillRes = await fetch(
     data: JSON.stringify(shipmentData),
   }).toString();
 
-  const createRes = await fetch(`${BASE_URL}/api/backend/clientshipment/create/`, {
+  const createRes = await fetch(`${BASE_URL}/api/cmu/create.json`, {
     method: 'POST',
     headers: {
       ...authHeaders,
@@ -120,9 +125,9 @@ const waybillRes = await fetch(
   if (!createData || typeof createData !== 'object') {
     throw new Error('Delhivery returned an unexpected response shape');
   }
-  if (!createData.success) {
-    throw new Error(`Delhivery error: ${JSON.stringify(createData)}`);
-  }
+  if (createData.error || createData.success === false) {
+  throw new Error(`Delhivery error: ${JSON.stringify(createData)}`);
+}
 
   return {
     awb,
