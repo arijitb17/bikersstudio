@@ -26,18 +26,50 @@ export async function POST(req: NextRequest) {
   if (limited) return limited;
 
   try {
-    const { orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = await req.json();
+    const body = await req.json();
+    const { orderId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
-    // Constant-time comparison to prevent timing attacks
+    // --- Input validation ---
+    if (
+      typeof orderId !== 'string' ||
+      typeof razorpay_order_id !== 'string' ||
+      typeof razorpay_payment_id !== 'string' ||
+      typeof razorpay_signature !== 'string'
+    ) {
+      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    }
+
+    // --- Verify this order belongs to the requesting user and is still PENDING ---
+    const existingOrder = await prisma.order.findFirst({
+      where: { id: orderId, userId: user.id },
+      select: { id: true, paymentStatus: true },
+    });
+
+    if (!existingOrder) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    // Idempotency: already verified
+    if (existingOrder.paymentStatus === 'COMPLETED') {
+      return ok({ success: true, orderId, alreadyVerified: true });
+    }
+
+    // --- Signature verification (safe against length-mismatch crash) ---
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    const isValid = crypto.timingSafeEqual(
-      Buffer.from(expectedSignature),
-      Buffer.from(razorpay_signature)
-    );
+    let isValid = false;
+    try {
+      // timingSafeEqual throws if buffers differ in length — guard it
+      isValid = crypto.timingSafeEqual(
+        Buffer.from(expectedSignature, 'hex'),
+        Buffer.from(razorpay_signature, 'hex'),
+      );
+    } catch {
+      isValid = false;
+    }
 
     if (!isValid) {
       await prisma.order.update({
@@ -47,27 +79,49 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 });
     }
 
-    // Atomic: update order + reduce stock + clear cart in one transaction
+    // --- Atomic: mark paid + reduce stock + clear cart ---
     const order = await prisma.$transaction(async (tx) => {
-      const updated = await tx.order.update({
+      // Re-fetch items with current stock inside the transaction
+      const orderWithItems = await tx.order.findUnique({
         where: { id: orderId },
-        data: { status: 'CONFIRMED', paymentStatus: 'COMPLETED', paymentId: razorpay_payment_id },
         include: { items: true },
       });
 
-      for (const item of updated.items) {
+      if (!orderWithItems) throw new Error('Order disappeared during transaction');
+
+      // Reduce stock — checked inside transaction to prevent oversell
+      for (const item of orderWithItems.items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+          select: { stock: true, name: true },
+        });
+        if (!product || product.stock < item.quantity) {
+          throw new Error(`Insufficient stock for product ${item.productId}`);
+        }
         await tx.product.update({
           where: { id: item.productId },
           data: { stock: { decrement: item.quantity } },
         });
       }
 
+      const updated = await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: 'CONFIRMED',
+          paymentStatus: 'COMPLETED',
+          paymentId: razorpay_payment_id,
+        },
+        include: { items: true },
+      });
+
       await tx.cartItem.deleteMany({ where: { userId: user.id } });
 
       return updated;
+    }, {
+      isolationLevel: 'Serializable',
     });
 
-    // Invalidate caches
+    // --- Invalidate caches ---
     await Promise.all([
       invalidatePattern(`orders:user:${user.id}`),
       invalidatePattern(`orders:admin:*`),
@@ -75,7 +129,7 @@ export async function POST(req: NextRequest) {
       invalidatePattern(`products:*`),
     ]);
 
-    // Fetch full order details for Delhivery
+    // --- Fetch full order details for Delhivery ---
     const fullOrder = await prisma.order.findUnique({
       where: { id: order.id },
       include: {
@@ -89,7 +143,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Create Delhivery shipment — non-blocking, never fails the payment response
+    // --- Create Delhivery shipment (non-blocking, never fails the payment response) ---
     if (fullOrder) {
       createDelhiveryShipment({
         orderNumber: fullOrder.orderNumber,
@@ -112,13 +166,15 @@ export async function POST(req: NextRequest) {
           quantity: i.quantity,
           price: Number(i.price),
         })),
-        // Sum product weights if available, fallback to 0.5 kg
-        weight: fullOrder.items.reduce((sum, i) => {
-          const w = i.product.weight ? Number(i.product.weight) * i.quantity : 0;
-          return sum + w;
-        }, 0) || 0.5,
+        weight:
+          fullOrder.items.reduce((sum, i) => {
+            const w = i.product.weight ? Number(i.product.weight) * i.quantity : 0;
+            return sum + w;
+          }, 0) || 0.5,
       })
         .then(async ({ awb, trackingUrl }) => {
+          // Only set shippedAt when the order physically leaves — not here.
+          // Status moves to PROCESSING; SHIPPED is set by the admin/webhook later.
           await prisma.order.update({
             where: { id: order.id },
             data: {
@@ -126,19 +182,29 @@ export async function POST(req: NextRequest) {
               courierService: 'Delhivery',
               trackingUrl,
               status: 'PROCESSING',
-              shippedAt: new Date(),
+              // shippedAt intentionally NOT set here — set it on actual dispatch
             },
           });
         })
         .catch((err) => {
-          // Order is confirmed & paid — log the error but don't surface it to the user.
-          // A retry job should pick up orders where awbCode is still null.
-          console.error('[Delhivery] Shipment creation failed for order', order.id, err);
+          // Payment is confirmed — log prominently so a retry job can pick up
+          // orders where awbCode is still null after N minutes.
+          console.error(
+            '[Delhivery] Shipment creation failed for order',
+            order.id,
+            order.orderNumber,
+            err,
+          );
+          // TODO: push to a dead-letter queue / alerting system here
         });
     }
 
     return ok({ success: true, orderId: order.id, orderNumber: order.orderNumber });
   } catch (e) {
+    const message = e instanceof Error ? e.message : '';
+    if (message.startsWith('Insufficient stock')) {
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
     return handleApiError(e, 'POST /api/orders/verify-payment');
   }
 }
