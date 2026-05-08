@@ -36,10 +36,10 @@ export async function createDelhiveryShipment(payload: DelhiveryShipmentPayload)
   trackingUrl: string;
 }> {
   // Step 1: get a waybill
-  const waybillRes = await fetch(
-    `${BASE_URL}/api/backend/generate/wbn/?count=1`,
-    { headers: authHeaders },
-  );
+const waybillRes = await fetch(
+  `${BASE_URL}/waybill/api/bulk/json/?count=1`,
+  { headers: authHeaders },
+);
   if (!waybillRes.ok) {
     const errText = await waybillRes.text();
     throw new Error(`Failed to generate Delhivery waybill: ${waybillRes.status} ${errText}`);
