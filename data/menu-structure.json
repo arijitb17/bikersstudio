@@ -14,12 +14,12 @@
         "slug": "engine-guards"
       },
       {
-        "name": "Side Stand Extenders",
-        "slug": "side-stand-extenders"
-      },
-      {
         "name": "Master Cylinder Guards",
         "slug": "master-cylinder-guards"
+      },
+      {
+        "name": "Side Stand Extenders",
+        "slug": "side-stand-extenders"
       },
       {
         "name": "Sliders",
@@ -29,7 +29,7 @@
     "Lighting": [
       {
         "name": "Fog Light Mounts",
-        "slug": "foglight-mounts"
+        "slug": "fog-light-mounts"
       },
       {
         "name": "Fog Lights",
@@ -56,9 +56,13 @@
       {
         "name": "Bottle Holders",
         "slug": "bottle-holders"
+      },
+      {
+        "name": "Paddock Stands",
+        "slug": "paddock-stands"
       }
     ],
-    "Touring & Travel": [
+    "Travel & Luggage": [
       {
         "name": "Touring Bags",
         "slug": "touring-bags"
@@ -76,16 +80,16 @@
         "slug": "thigh-bags"
       },
       {
-        "name": "Hydration Bags",
-        "slug": "hydration-bags"
-      },
-      {
         "name": "Saddle Bags",
         "slug": "saddle-bags"
       },
       {
-        "name": "Paddock Stands",
-        "slug": "paddock-stands"
+        "name": "Backpacks",
+        "slug": "backpacks"
+      },
+      {
+        "name": "Hydration Bags",
+        "slug": "hydration-bags"
       }
     ],
     "Handle & Controls": [
@@ -98,12 +102,12 @@
         "slug": "handle-risers"
       },
       {
-        "name": "Footrests",
-        "slug": "footrests"
-      },
-      {
         "name": "Handle Grips",
         "slug": "handle-grips"
+      },
+      {
+        "name": "Footrests",
+        "slug": "footrests"
       },
       {
         "name": "Mirrors",
@@ -112,20 +116,20 @@
     ],
     "Mounting Accessories": [
       {
-        "name": "Jerry Can Mounts",
-        "slug": "jerry-can-mounts"
-      },
-      {
         "name": "GPS Mounts",
         "slug": "gps-mounts"
+      },
+      {
+        "name": "Mobile Holders",
+        "slug": "mobile-holders"
       },
       {
         "name": "Helmet Mounts",
         "slug": "helmet-mounts"
       },
       {
-        "name": "Mobile Holders",
-        "slug": "mobile-holders"
+        "name": "Jerry Can Mounts",
+        "slug": "jerry-can-mounts"
       },
       {
         "name": "Number Plate Holders",
@@ -162,6 +166,54 @@
       {
         "name": "Air Filters",
         "slug": "air-filters"
+      },
+      {
+        "name": "Tool Kits",
+        "slug": "tool-kits"
+      }
+    ]
+  },
+  "universalAccessories": {
+    "Universal": [
+      {
+        "name": "Accessories",
+        "slug": "accessories"
+      },
+      {
+        "name": "Electronics",
+        "slug": "electronics"
+      },
+      {
+        "name": "Horns",
+        "slug": "horns"
+      },
+      {
+        "name": "Indicators",
+        "slug": "indicators"
+      },
+      {
+        "name": "Goggles",
+        "slug": "goggles"
+      },
+      {
+        "name": "Phone Holders",
+        "slug": "phone-holders"
+      },
+      {
+        "name": "Locks & Security",
+        "slug": "locks-security"
+      },
+      {
+        "name": "Cleaning & Care",
+        "slug": "cleaning-care"
+      },
+      {
+        "name": "Hand Guards",
+        "slug": "hand-guards"
+      },
+      {
+        "name": "Windshields & Visors",
+        "slug": "windshields-visors"
       }
     ]
   },
@@ -178,6 +230,18 @@
       {
         "name": "Boots",
         "slug": "boots"
+      },
+      {
+        "name": "Gloves",
+        "slug": "gloves"
+      },
+      {
+        "name": "Armours",
+        "slug": "armours"
+      },
+      {
+        "name": "Base Layers",
+        "slug": "base-layers"
       }
     ],
     "Rain Gear": [
@@ -188,6 +252,10 @@
       {
         "name": "Rain Pro Pants",
         "slug": "rain-pro-pants"
+      },
+      {
+        "name": "Rain Covers",
+        "slug": "rain-covers"
       }
     ]
   },
@@ -196,9 +264,21 @@
       {
         "name": "Full Face Helmets",
         "slug": "full-face-helmets"
+      },
+      {
+        "name": "Half Face Helmets",
+        "slug": "half-face-helmets"
+      },
+      {
+        "name": "Vintage Helmets",
+        "slug": "vintage-helmets"
+      }
+    ],
+    "Helmet Accessories": [
+      {
+        "name": "Helmet Accessories",
+        "slug": "helmet-accessories"
       }
     ]
-  },
-  "maintenanceCare": {},
-  "tiresWheels": {}
+  }
 }
