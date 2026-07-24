@@ -101,7 +101,10 @@ export default function VideoCard({ video }: VideoCardProps) {
 
   return (
     <div
-      className="group relative bg-gray-900 rounded-2xl overflow-hidden transition-all duration-300 ease-out hover:-translate-y-3 shadow-xl hover:shadow-2xl cursor-pointer"
+      className="group relative bg-neutral-900 rounded-3xl overflow-hidden border border-neutral-800
+                 transition-all duration-300 ease-out hover:-translate-y-3 hover:border-yellow-400
+                 shadow-[0_8px_24px_rgba(0,0,0,0.4)] hover:shadow-[0_16px_40px_rgba(234,179,8,0.2)]
+                 cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -132,16 +135,16 @@ export default function VideoCard({ video }: VideoCardProps) {
         {/* Top Info Bar - Shows on hover */}
         <div className={`absolute top-0 left-0 right-0 p-4 flex justify-between items-start transition-all duration-300 z-20 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'}`}>
           {/* Views Badge */}
-          <div className="bg-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+          <div className="bg-yellow-400 text-black px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
               <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd"/>
             </svg>
             {video.views}
           </div>
-          
+
           {/* Duration Badge */}
-          <div className="bg-black/90 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg">
+          <div className="bg-black/90 text-white px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg border border-yellow-400/30">
             {video.duration}
           </div>
         </div>
@@ -151,7 +154,7 @@ export default function VideoCard({ video }: VideoCardProps) {
           <div className={`absolute inset-0 flex items-center justify-center z-20 transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
             <button
               onClick={togglePlayPause}
-              className="w-16 h-16 rounded-full bg-white/95 flex items-center justify-center transform transition-all duration-300 hover:scale-110 hover:bg-white shadow-2xl"
+              className="w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center transform transition-all duration-300 hover:scale-110 hover:bg-yellow-300 shadow-2xl"
             >
               {isPlaying ? (
                 <Pause className="w-7 h-7 text-black" fill="currentColor" />
@@ -175,7 +178,7 @@ export default function VideoCard({ video }: VideoCardProps) {
             {!isEmbed && (
               <button
                 onClick={toggleMute}
-                className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:bg-white/30 hover:scale-110 shadow-lg"
+                className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:bg-white/20 hover:scale-110 shadow-lg border border-white/10"
                 title={isMuted ? "Unmute" : "Mute"}
               >
                 {isMuted ? (
@@ -185,31 +188,31 @@ export default function VideoCard({ video }: VideoCardProps) {
                 )}
               </button>
             )}
-            
+
             {/* Like Button */}
             <button
               onClick={toggleLike}
-              className={`w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg ${
-                isLiked ? 'bg-red-600' : 'bg-white/20 hover:bg-white/30'
+              className={`w-10 h-10 rounded-full backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-lg border ${
+                isLiked ? 'bg-yellow-400 border-yellow-400' : 'bg-white/10 hover:bg-white/20 border-white/10'
               }`}
               title="Like"
             >
-              <Heart className={`w-5 h-5 ${isLiked ? 'text-white fill-white' : 'text-white'}`} />
+              <Heart className={`w-5 h-5 ${isLiked ? 'text-black fill-black' : 'text-white'}`} />
             </button>
 
             {/* Share Button */}
             <button
               onClick={handleShare}
-              className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:bg-white/30 hover:scale-110 shadow-lg"
+              className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center transition-all duration-200 hover:bg-white/20 hover:scale-110 shadow-lg border border-white/10"
               title="Share"
             >
               <Share2 className="w-5 h-5 text-white" />
             </button>
 
             {/* Shop Now Button */}
-            <button 
+            <button
               onClick={handleShopNow}
-              className="ml-auto px-4 py-2 rounded-full bg-red-600 text-white font-bold text-sm transition-all duration-200 hover:bg-red-700 hover:scale-105 shadow-lg flex items-center gap-2"
+              className="ml-auto px-4 py-2 rounded-full bg-yellow-400 text-black font-bold text-sm uppercase tracking-wide transition-all duration-200 hover:bg-yellow-300 hover:scale-105 shadow-lg flex items-center gap-2"
             >
               <ShoppingCart className="w-4 h-4" />
               Shop Now

@@ -14,7 +14,10 @@ import {
   Plus,
   Trash2,
   Check,
-  X
+  X,
+  Package,
+  Calendar,
+  ShoppingBag
 } from 'lucide-react';
 import AddressForm from '@/components/AddressForm';
 
@@ -198,8 +201,8 @@ export default function ProfilePage() {
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -208,21 +211,37 @@ export default function ProfilePage() {
     return null;
   }
 
+  const initials = (profile.name || profile.email || '?')
+    .split(' ')
+    .map((s) => s[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
-    <div className="min-h-screen bg-gray-50 py-20 mt-30">
+    <div className="min-h-screen bg-neutral-50 py-20 mt-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
+        {/* Header with avatar */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-14 h-14 rounded-full bg-black text-yellow-400 flex items-center justify-center font-black text-lg flex-shrink-0">
+            {initials}
+          </div>
+          <div>
+            <h1 className="text-3xl font-black uppercase tracking-tight text-black">My Profile</h1>
+            <p className="text-neutral-500 text-sm font-mono">{profile.email}</p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Profile Information */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
+                <h2 className="text-xl font-black uppercase tracking-tight text-black">Personal Information</h2>
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                    className="flex items-center gap-2 text-sm font-medium text-black hover:text-yellow-600 transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
                     Edit
@@ -232,7 +251,7 @@ export default function ProfilePage() {
                     <button
                       onClick={handleSaveProfile}
                       disabled={isSaving}
-                      className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-black text-yellow-400 rounded-lg hover:bg-neutral-900 disabled:bg-neutral-400 disabled:text-white font-bold text-sm uppercase transition-colors"
                     >
                       {isSaving ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -247,7 +266,7 @@ export default function ProfilePage() {
                         setName(profile.name);
                         setPhone(profile.phone || '');
                       }}
-                      className="flex items-center gap-1 px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="flex items-center gap-1 px-3 py-1.5 border border-neutral-300 rounded-lg hover:bg-neutral-50 font-medium text-sm text-black transition-colors"
                     >
                       <X className="w-4 h-4" />
                       Cancel
@@ -256,9 +275,9 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-mono uppercase tracking-wide text-neutral-500 mb-1.5">
                     Name
                   </label>
                   {isEditing ? (
@@ -266,29 +285,29 @@ export default function ProfilePage() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-black outline-none transition-shadow"
                     />
                   ) : (
-                    <div className="flex items-center gap-2 text-gray-900">
-                      <User className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center gap-2 text-black font-medium">
+                      <User className="w-4 h-4 text-neutral-400" />
                       {profile.name || 'Not set'}
                     </div>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-mono uppercase tracking-wide text-neutral-500 mb-1.5">
                     Email
                   </label>
-                  <div className="flex items-center gap-2 text-gray-900">
-                    <Mail className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center gap-2 text-black font-medium">
+                    <Mail className="w-4 h-4 text-neutral-400" />
                     {profile.email}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                  <p className="text-xs text-neutral-400 mt-1">Email cannot be changed</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-mono uppercase tracking-wide text-neutral-500 mb-1.5">
                     Phone
                   </label>
                   {isEditing ? (
@@ -297,11 +316,11 @@ export default function ProfilePage() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+91 XXXXX XXXXX"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-black outline-none transition-shadow"
                     />
                   ) : (
-                    <div className="flex items-center gap-2 text-gray-900">
-                      <Phone className="w-4 h-4 text-gray-400" />
+                    <div className="flex items-center gap-2 text-black font-medium">
+                      <Phone className="w-4 h-4 text-neutral-400" />
                       {profile.phone || 'Not set'}
                     </div>
                   )}
@@ -310,15 +329,15 @@ export default function ProfilePage() {
             </div>
 
             {/* Addresses */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-red-600" />
-                  <h2 className="text-xl font-semibold text-gray-900">Saved Addresses</h2>
+                  <MapPin className="w-5 h-5 text-black" />
+                  <h2 className="text-xl font-black uppercase tracking-tight text-black">Saved Addresses</h2>
                 </div>
                 <button
                   onClick={() => setShowAddressForm(!showAddressForm)}
-                  className="flex items-center gap-2 text-red-600 hover:text-red-700"
+                  className="flex items-center gap-2 text-sm font-medium text-black hover:text-yellow-600 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   Add New
@@ -330,7 +349,7 @@ export default function ProfilePage() {
                   <AddressForm onSuccess={handleAddressAdded} />
                   <button
                     onClick={() => setShowAddressForm(false)}
-                    className="mt-2 text-sm text-gray-600 hover:text-gray-800"
+                    className="mt-2 text-sm text-neutral-500 hover:text-black transition-colors"
                   >
                     Cancel
                   </button>
@@ -338,12 +357,14 @@ export default function ProfilePage() {
               )}
 
               {addresses.length === 0 && !showAddressForm ? (
-                <div className="text-center py-8">
-                  <MapPin className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-4">No saved addresses</p>
+                <div className="text-center py-10">
+                  <div className="w-14 h-14 bg-neutral-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <MapPin className="w-6 h-6 text-neutral-400" />
+                  </div>
+                  <p className="text-neutral-500 mb-4 text-sm">No saved addresses</p>
                   <button
                     onClick={() => setShowAddressForm(true)}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    className="px-5 py-2.5 bg-black text-yellow-400 rounded-lg hover:bg-neutral-900 font-bold uppercase text-sm transition-colors"
                   >
                     Add Your First Address
                   </button>
@@ -353,39 +374,39 @@ export default function ProfilePage() {
                   {addresses.map((address) => (
                     <div
                       key={address.id}
-                      className="border rounded-lg p-4 hover:border-red-300 transition-colors"
+                      className="border border-neutral-200 rounded-lg p-4 hover:border-black transition-colors"
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <p className="font-semibold text-gray-900">
+                            <p className="font-semibold text-black">
                               {address.fullName}
                             </p>
                             {address.isDefault && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                              <span className="text-xs bg-yellow-400 text-black px-2 py-0.5 rounded-full font-bold uppercase">
                                 Default
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600">{address.street}</p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-neutral-600">{address.street}</p>
+                          <p className="text-sm text-neutral-600">
                             {address.city}, {address.state} - {address.pincode}
                           </p>
-                          <p className="text-sm text-gray-600">Phone: {address.phone}</p>
+                          <p className="text-sm text-neutral-600">Phone: {address.phone}</p>
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-3">
                           {!address.isDefault && (
                             <button
                               onClick={() => handleSetDefaultAddress(address.id)}
-                              className="text-sm text-blue-600 hover:text-blue-700"
+                              className="text-sm font-medium text-black hover:text-yellow-600 underline decoration-yellow-400 underline-offset-4 transition-colors"
                             >
                               Set Default
                             </button>
                           )}
                           <button
                             onClick={() => handleDeleteAddress(address.id)}
-                            className="text-red-600 hover:text-red-700"
+                            className="text-neutral-400 hover:text-black transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -400,23 +421,34 @@ export default function ProfilePage() {
 
           {/* Quick Stats */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-              <h2 className="text-xl font-semibold text-gray-900">Account Overview</h2>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b">
-                  <span className="text-gray-600">Total Orders</span>
-                  <span className="font-bold text-gray-900">{orderCount}</span>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200 sticky top-4">
+              <h2 className="text-xl font-black uppercase tracking-tight text-black mb-5">Account Overview</h2>
+
+              <div className="space-y-1">
+                <div className="flex items-center justify-between py-3.5 border-b border-neutral-200">
+                  <span className="text-neutral-600 flex items-center gap-2 text-sm">
+                    <ShoppingBag className="w-4 h-4 text-neutral-400" />
+                    Total Orders
+                  </span>
+                  <span className="font-black text-black tabular-nums bg-yellow-400 px-2 py-0.5 rounded">
+                    {orderCount}
+                  </span>
                 </div>
-                
-                <div className="flex items-center justify-between py-3 border-b">
-                  <span className="text-gray-600">Saved Addresses</span>
-                  <span className="font-bold text-gray-900">{addresses.length}</span>
+
+                <div className="flex items-center justify-between py-3.5 border-b border-neutral-200">
+                  <span className="text-neutral-600 flex items-center gap-2 text-sm">
+                    <Package className="w-4 h-4 text-neutral-400" />
+                    Saved Addresses
+                  </span>
+                  <span className="font-black text-black tabular-nums">{addresses.length}</span>
                 </div>
-                
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-gray-600">Member Since</span>
-                  <span className="font-bold text-gray-900">
+
+                <div className="flex items-center justify-between py-3.5">
+                  <span className="text-neutral-600 flex items-center gap-2 text-sm">
+                    <Calendar className="w-4 h-4 text-neutral-400" />
+                    Member Since
+                  </span>
+                  <span className="font-semibold text-black text-sm">
                     {profile?.createdAt 
                       ? new Date(profile.createdAt).toLocaleDateString('en-IN', {
                           month: 'short',
@@ -429,7 +461,7 @@ export default function ProfilePage() {
 
               <button
                 onClick={() => router.push('/orders')}
-                className="w-full mt-6 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="w-full mt-6 px-4 py-3 bg-black text-yellow-400 rounded-lg hover:bg-neutral-900 transition-colors font-bold uppercase text-sm border border-transparent hover:border-yellow-400"
               >
                 View Orders
               </button>

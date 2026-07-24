@@ -4,7 +4,7 @@ import { getBrandWithBikes } from '@/lib/actions';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Calendar } from 'lucide-react';
+import { ArrowRight, Calendar, Bike as BikeIcon } from 'lucide-react';
 
 export default async function BrandBikesPage({
   params
@@ -13,106 +13,121 @@ export default async function BrandBikesPage({
 }) {
   const { brand: brandSlug } = await params;
   const brand = await getBrandWithBikes(brandSlug);
-  
+
   if (!brand) {
     return notFound();
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-40 pb-16">
-      {/* Bikes Grid Section */}
-      <div className="max-w-7xl mx-auto px-6 lg:px-16">
-        {/* Section Header */}
-        <div className="mb-12 animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-            {brand.name} - Available Models
-          </h2>
-          <p className="text-gray-600 text-lg">
-            Explore our complete range of {brand.name} motorcycles
+    <div className="min-h-screen bg-white">
+      {/* Hero band */}
+      <div className="relative bg-black overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(115deg, #facc15 0px, #facc15 2px, transparent 2px, transparent 40px)',
+          }}
+        />
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-16 pt-40 pb-16">
+          <div className="flex items-center gap-2 text-yellow-400 text-xs font-bold tracking-[0.35em] uppercase mb-4 font-mono">
+            <span className="h-1.5 w-1.5 bg-yellow-400 rounded-full" />
+            Model Lineup
+          </div>
+          <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tight text-white italic -skew-x-3">
+            {brand.name}
+          </h1>
+          <div className="mt-5 h-1.5 w-24 bg-gradient-to-r from-yellow-400 to-yellow-200 rounded-full skew-x-[-20deg]" />
+          <p className="mt-6 text-neutral-400 font-mono text-sm tracking-wide">
+            {String(brand.bikes.length).padStart(2, '0')} {brand.bikes.length === 1 ? 'model' : 'models'} in the lineup
           </p>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 lg:px-16 py-16">
         {/* No Bikes Message */}
         {brand.bikes.length === 0 && (
-          <div className="text-center py-20 animate-fade-in">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-gray-100 rounded-full mb-6">
-              <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-black rounded-full mb-6">
+              <BikeIcon className="w-11 h-11 text-yellow-400" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">No Bikes Available</h3>
-            <p className="text-gray-600 mb-8">We&apos;re working on adding {brand.name} bikes. Check back soon!</p>
+            <h3 className="text-2xl font-black uppercase text-black mb-2">No Bikes Available</h3>
+            <p className="text-neutral-500 mb-8 font-mono text-sm">
+              We&apos;re working on adding {brand.name} bikes. Check back soon.
+            </p>
             <Link
-              href="/"
-              className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg"
+              href="/brands"
+              className="inline-flex items-center gap-2 bg-black hover:bg-neutral-900 text-white font-bold uppercase text-sm px-8 py-4 rounded-xl transition-all border border-transparent hover:border-yellow-400 shadow-lg"
             >
               Browse Other Brands
-              <ArrowRight className="w-5 h-5" />
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         )}
 
-        {/* Bikes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        {/* Bikes Grid — plate-style spec cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
           {brand.bikes.map((bike) => (
             <Link
               key={bike.id}
               href={`/bikes/${bike.slug}`}
-              className="group animate-fade-in-up"
+              className="group"
             >
-              <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 h-full flex flex-col">
-                {/* Image Container */}
-                <div className="relative h-64 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+              <div
+                className="relative rounded-2xl bg-white border border-neutral-200 overflow-hidden h-full flex flex-col
+                           transition-all duration-300 ease-out
+                           hover:-translate-y-2 hover:border-yellow-400
+                           shadow-[0_8px_24px_rgba(0,0,0,0.08)]
+                           hover:shadow-[0_16px_40px_rgba(234,179,8,0.25)]"
+              >
+                {/* Image stage */}
+                <div className="relative h-60 bg-neutral-100 overflow-hidden">
                   {bike.image ? (
                     <Image
                       src={bike.image}
                       alt={bike.name}
                       fill
-                      className="object-contain p-4 group-hover:scale-110 transition-transform duration-500"
+                      className="object-contain p-4 transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <svg className="w-20 h-20 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
+                      <BikeIcon className="w-16 h-16 text-neutral-300" />
                     </div>
                   )}
-                  
-                  {/* Overlay on Hover */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
+
+                {/* Speed stripe divider */}
+                <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-yellow-400 to-transparent opacity-80" />
 
                 {/* Content */}
                 <div className="p-6 flex-1 flex flex-col">
-                  {/* Bike Name */}
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">
+                  <h3 className="text-lg font-black uppercase tracking-tight text-black mb-3 group-hover:text-yellow-600 transition-colors">
                     {bike.name}
                   </h3>
 
-                  {/* Model & Year */}
-                  <div className="flex items-center gap-3 mb-3 text-sm text-gray-600">
-                    <span className="bg-gray-100 px-3 py-1 rounded-full font-medium">
+                  {/* Spec readout row */}
+                  <div className="flex items-center gap-2 mb-3 font-mono text-xs">
+                    <span className="bg-black text-yellow-400 px-3 py-1 rounded-full font-bold tracking-wide">
                       {bike.model}
                     </span>
                     {bike.year && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
+                      <span className="flex items-center gap-1 text-neutral-500">
+                        <Calendar className="w-3.5 h-3.5" />
                         {bike.year}
                       </span>
                     )}
                   </div>
 
-                  {/* Description */}
                   {bike.description && (
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2 flex-1">
+                    <p className="text-neutral-500 text-sm mb-4 line-clamp-2 flex-1">
                       {bike.description}
                     </p>
                   )}
 
-                  {/* Action Button */}
-                  <button className="w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 rounded-xl transition-all transform group-hover:scale-105 shadow-md hover:shadow-xl flex items-center justify-center gap-2">
+                  <button className="w-full bg-black hover:bg-neutral-900 text-white font-bold uppercase text-sm py-3 rounded-xl transition-all border border-transparent group-hover:border-yellow-400 flex items-center justify-center gap-2">
                     View Products
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
               </div>

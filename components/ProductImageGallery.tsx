@@ -18,7 +18,7 @@ export default function ProductImageGallery({
   discount = 0,
 }: ProductImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(0);
-  
+
   // Use actual images if available, otherwise use placeholder
   const allImages = images.length > 0 ? images : [thumbnail];
 
@@ -33,7 +33,7 @@ export default function ProductImageGallery({
   return (
     <div className="space-y-3">
       {/* Main Image - Reduced Height */}
-      <div className="relative h-[400px] bg-white rounded-xl overflow-hidden shadow-md group">
+      <div className="relative h-[400px] bg-white rounded-xl overflow-hidden shadow-md border border-neutral-200 group">
         <Image
           src={allImages[selectedImage]}
           alt={`${productName} - Image ${selectedImage + 1}`}
@@ -41,10 +41,10 @@ export default function ProductImageGallery({
           className="object-contain p-6"
           priority
         />
-        
+
         {/* Discount Badge */}
         {discount > 0 && (
-          <div className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1.5 rounded-full font-bold text-sm shadow-lg z-10">
+          <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black px-3 py-1.5 rounded-full font-bold text-sm shadow-lg z-10">
             {discount}% OFF
           </div>
         )}
@@ -54,24 +54,24 @@ export default function ProductImageGallery({
           <>
             <button
               onClick={prevImage}
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all"
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/80 hover:bg-black p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all"
               aria-label="Previous image"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-900" />
+              <ChevronLeft className="w-5 h-5 text-yellow-400" />
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/80 hover:bg-black p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-all"
               aria-label="Next image"
             >
-              <ChevronRight className="w-5 h-5 text-gray-900" />
+              <ChevronRight className="w-5 h-5 text-yellow-400" />
             </button>
           </>
         )}
 
         {/* Image Counter */}
         {allImages.length > 1 && (
-          <div className="absolute bottom-3 left-3 bg-black/60 text-white px-2 py-1 rounded-full text-xs font-semibold">
+          <div className="absolute bottom-3 left-3 bg-black/80 text-yellow-400 px-2 py-1 rounded-full text-xs font-semibold font-mono">
             {selectedImage + 1} / {allImages.length}
           </div>
         )}
@@ -86,8 +86,8 @@ export default function ProductImageGallery({
               onClick={() => setSelectedImage(idx)}
               className={`relative aspect-square bg-white rounded-lg overflow-hidden transition-all ${
                 selectedImage === idx
-                  ? 'ring-2 ring-red-600 shadow-md'
-                  : 'ring-1 ring-gray-200 hover:ring-gray-400'
+                  ? 'ring-2 ring-yellow-400 shadow-md'
+                  : 'ring-1 ring-neutral-200 hover:ring-neutral-400'
               }`}
             >
               <Image

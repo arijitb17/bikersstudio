@@ -30,26 +30,26 @@ export default async function ProductPage({ params }: PageProps) {
   const sizes = parseSizes(product.sizes);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-white">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-black border-b border-neutral-800">
         <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-4 pt-28">
-          <nav className="flex items-center gap-2 text-sm text-gray-600">
-            <Link href="/" className="hover:text-red-600 transition-colors font-medium">Home</Link>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-            <Link href={`/categories/${product.category.slug}`} className="hover:text-red-600 transition-colors font-medium">
+          <nav className="flex items-center gap-2 text-sm text-neutral-400 font-mono">
+            <Link href="/" className="hover:text-yellow-400 transition-colors font-medium">Home</Link>
+            <ChevronRight className="w-4 h-4 text-neutral-600" />
+            <Link href={`/categories/${product.category.slug}`} className="hover:text-yellow-400 transition-colors font-medium">
               {product.category.name}
             </Link>
             {product.bike && (
               <>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-                <Link href={`/bikes/${product.bike.slug}`} className="hover:text-red-600 transition-colors font-medium">
+                <ChevronRight className="w-4 h-4 text-neutral-600" />
+                <Link href={`/bikes/${product.bike.slug}`} className="hover:text-yellow-400 transition-colors font-medium">
                   {product.bike.name}
                 </Link>
               </>
             )}
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="text-gray-900 font-semibold truncate">{product.name}</span>
+            <ChevronRight className="w-4 h-4 text-neutral-600" />
+            <span className="text-yellow-400 font-semibold truncate">{product.name}</span>
           </nav>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default async function ProductPage({ params }: PageProps) {
         </div>
 
         {/* Description & Specifications */}
-<div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 mb-10 border border-gray-100">
+<div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 mb-10 border border-neutral-200">
   {(() => {
     const specs = [
       { label: 'Weight',     value: product.weight     ? `${Number(product.weight)} kg` : null },
@@ -96,25 +96,25 @@ export default async function ProductPage({ params }: PageProps) {
       <div className={`grid gap-8 ${specs.length > 0 ? 'lg:grid-cols-2' : 'lg:grid-cols-1'}`}>
         {/* Description */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3 ">
-            <span className="w-1.5 h-7 bg-gradient-to-b from-red-600 to-red-400 rounded-full" />
+          <h2 className="text-xl font-black uppercase tracking-tight text-black mb-4 flex items-center gap-3 ">
+            <span className="w-1.5 h-7 bg-gradient-to-b from-yellow-400 to-yellow-200 rounded-full" />
             Description
           </h2>
-          <p className="text-sm text-gray-700 leading-relaxed text-justify">{product.description}</p>
+          <p className="text-sm text-neutral-700 leading-relaxed text-justify">{product.description}</p>
         </div>
 
         {/* Specifications — only rendered if at least one value exists */}
         {specs.length > 0 && (
           <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3 ">
-              <span className="w-1.5 h-7 bg-gradient-to-b from-red-600 to-red-400 rounded-full" />
+            <h2 className="text-xl font-black uppercase tracking-tight text-black mb-4 flex items-center gap-3 ">
+              <span className="w-1.5 h-7 bg-gradient-to-b from-yellow-400 to-yellow-200 rounded-full" />
               Specifications
             </h2>
             <div className="space-y-3">
               {specs.map(({ label, value }) => (
-                <div key={label} className="flex justify-between items-center py-2 border-b border-gray-200">
-                  <span className="text-sm text-gray-600 font-medium">{label}</span>
-                  <span className="text-sm font-bold text-gray-900">{value}</span>
+                <div key={label} className="flex justify-between items-center py-2 border-b border-neutral-200">
+                  <span className="text-sm text-neutral-600 font-medium font-mono">{label}</span>
+                  <span className="text-sm font-bold text-black">{value}</span>
                 </div>
               ))}
             </div>
@@ -138,11 +138,11 @@ export default async function ProductPage({ params }: PageProps) {
         {relatedProducts.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <span className="w-1.5 h-7 bg-gradient-to-b from-red-600 to-red-400 rounded-full" />
+              <h2 className="text-2xl font-black uppercase tracking-tight text-black flex items-center gap-3">
+                <span className="w-1.5 h-7 bg-gradient-to-b from-yellow-400 to-yellow-200 rounded-full" />
                 You May Also Like
               </h2>
-              <Link href={`/categories/${product.category.slug}`} className="text-red-600 hover:text-red-700 font-bold text-sm flex items-center gap-2 group">
+              <Link href={`/categories/${product.category.slug}`} className="text-black hover:text-yellow-600 font-bold text-sm flex items-center gap-2 group">
                 View All
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
@@ -160,11 +160,11 @@ export default async function ProductPage({ params }: PageProps) {
                   <Link
                     key={related.id}
                     href={`/products/${related.slug}`}
-                    className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-red-200"
+                    className="group bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-neutral-200 hover:border-yellow-400"
                   >
-                    <div className="relative h-48 bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+                    <div className="relative h-48 bg-neutral-100 overflow-hidden">
                       {relatedDiscount > 0 && (
-                        <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-red-600 to-red-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg">
+                        <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg">
                           {relatedDiscount}% OFF
                         </div>
                       )}
@@ -172,19 +172,19 @@ export default async function ProductPage({ params }: PageProps) {
                     </div>
                     <div className="p-4">
                       {relatedBrandName && (
-                        <p className="text-xs font-semibold text-red-500 mb-1 uppercase tracking-wide">{relatedBrandName}</p>
+                        <p className="text-xs font-semibold text-yellow-600 mb-1 uppercase tracking-wide font-mono">{relatedBrandName}</p>
                       )}
-                      <h3 className="text-sm font-bold text-gray-900 mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-red-600 transition-colors">
+                      <h3 className="text-sm font-bold text-black mb-2 line-clamp-2 min-h-[2.5rem] group-hover:text-yellow-600 transition-colors">
                         {related.name}
                       </h3>
                       <div className="flex items-center gap-2">
                         {relatedSalePrice ? (
                           <>
-                            <span className="text-lg font-bold text-red-600">Rs. {relatedSalePrice.toLocaleString()}</span>
-                            <span className="text-sm text-gray-400 line-through">Rs. {relatedPrice.toLocaleString()}</span>
+                            <span className="text-lg font-black text-black tabular-nums">Rs. {relatedSalePrice.toLocaleString()}</span>
+                            <span className="text-sm text-neutral-400 line-through tabular-nums">Rs. {relatedPrice.toLocaleString()}</span>
                           </>
                         ) : (
-                          <span className="text-lg font-bold text-gray-900">Rs. {relatedPrice.toLocaleString()}</span>
+                          <span className="text-lg font-black text-black tabular-nums">Rs. {relatedPrice.toLocaleString()}</span>
                         )}
                       </div>
                     </div>

@@ -68,7 +68,7 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
         setTitle('');
         setComment('');
         setShowReviewForm(false);
-        
+
         // Refresh the page to show new review
         setTimeout(() => {
           router.refresh();
@@ -88,22 +88,22 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
   const ratingDistribution = [5, 4, 3, 2, 1].map(stars => ({
     stars,
     count: reviews.filter(r => r.rating === stars).length,
-    percentage: reviews.length > 0 
-      ? (reviews.filter(r => r.rating === stars).length / reviews.length) * 100 
+    percentage: reviews.length > 0
+      ? (reviews.filter(r => r.rating === stars).length / reviews.length) * 100
       : 0
   }));
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 border border-gray-100">
+    <div className="bg-white rounded-2xl shadow-lg p-6 lg:p-8 border border-neutral-200">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-          <span className="w-1.5 h-7 bg-gradient-to-b from-red-600 to-red-400 rounded-full"></span>
+        <h2 className="text-2xl font-black uppercase tracking-tight text-black flex items-center gap-3">
+          <span className="w-1.5 h-7 bg-gradient-to-b from-yellow-400 to-yellow-200 rounded-full"></span>
           Customer Reviews
         </h2>
         <button
           onClick={() => setShowReviewForm(!showReviewForm)}
-          className="bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors"
+          className="bg-black hover:bg-neutral-900 text-white px-6 py-2.5 rounded-lg font-bold text-sm uppercase transition-colors border border-transparent hover:border-yellow-400"
         >
           {showReviewForm ? 'Cancel' : 'Write a Review'}
         </button>
@@ -111,38 +111,47 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
 
       {/* Success/Error Messages */}
       {success && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-green-800 font-medium">{success}</p>
+        <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+          <p className="text-black font-medium">{success}</p>
         </div>
       )}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800 font-medium">{error}</p>
+        <div className="mb-6 p-4 bg-neutral-100 border-l-4 border-black rounded-lg">
+          <p className="text-black font-medium">{error}</p>
         </div>
       )}
 
       {/* Overall Rating Summary */}
-      <div className="grid md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-gray-200">
+      <div className="grid md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-neutral-200">
         {/* Left: Average Rating */}
-        <div className="flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6">
-          <div className="text-5xl font-bold text-gray-900 mb-2">
-            {averageRating.toFixed(1)}
+        <div className="flex flex-col items-center justify-center bg-black rounded-xl p-6 relative overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-[0.06]"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(115deg, #facc15 0px, #facc15 2px, transparent 2px, transparent 40px)',
+            }}
+          />
+          <div className="relative flex flex-col items-center">
+            <div className="text-5xl font-black text-yellow-400 mb-2 tabular-nums">
+              {averageRating.toFixed(1)}
+            </div>
+            <div className="flex items-center gap-1 mb-2">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-6 h-6 ${
+                    i < Math.round(averageRating)
+                      ? 'fill-yellow-400 text-yellow-400'
+                      : 'text-neutral-600'
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-sm text-neutral-400 font-mono">
+              Based on {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
+            </p>
           </div>
-          <div className="flex items-center gap-1 mb-2">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-6 h-6 ${
-                  i < Math.round(averageRating)
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          <p className="text-sm text-gray-600">
-            Based on {reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}
-          </p>
         </div>
 
         {/* Right: Rating Distribution */}
@@ -150,16 +159,16 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
           {ratingDistribution.map(({ stars, count, percentage }) => (
             <div key={stars} className="flex items-center gap-3">
               <div className="flex items-center gap-1 w-20">
-                <span className="text-sm font-medium text-gray-700">{stars}</span>
+                <span className="text-sm font-medium text-black">{stars}</span>
                 <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
               </div>
-              <div className="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div className="flex-1 bg-neutral-200 rounded-full h-2.5 overflow-hidden">
                 <div
-                  className="bg-yellow-400 h-full rounded-full transition-all duration-500"
+                  className="bg-black h-full rounded-full transition-all duration-500"
                   style={{ width: `${percentage}%` }}
                 />
               </div>
-              <span className="text-sm text-gray-600 w-12 text-right">{count}</span>
+              <span className="text-sm text-neutral-600 w-12 text-right font-mono">{count}</span>
             </div>
           ))}
         </div>
@@ -167,10 +176,10 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
 
       {/* Review Form */}
       {showReviewForm && (
-        <div className="mb-8 pb-8 border-b border-gray-200">
+        <div className="mb-8 pb-8 border-b border-neutral-200">
           <form onSubmit={handleSubmitReview} className="space-y-5">
             <div>
-              <label className="block text-sm font-bold text-gray-900 mb-2">
+              <label className="block text-sm font-bold text-black mb-2">
                 Your Rating *
               </label>
               <div className="flex items-center gap-2">
@@ -187,13 +196,13 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
                       className={`w-8 h-8 ${
                         star <= (hoverRating || rating)
                           ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
+                          : 'text-neutral-300'
                       }`}
                     />
                   </button>
                 ))}
                 {rating > 0 && (
-                  <span className="ml-2 text-sm font-medium text-gray-700">
+                  <span className="ml-2 text-sm font-medium text-black">
                     {rating} {rating === 1 ? 'star' : 'stars'}
                   </span>
                 )}
@@ -201,7 +210,7 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
             </div>
 
             <div>
-              <label htmlFor="title" className="block text-sm font-bold text-gray-900 mb-2">
+              <label htmlFor="title" className="block text-sm font-bold text-black mb-2">
                 Review Title (Optional)
               </label>
               <input
@@ -209,14 +218,14 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
+                className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 text-sm text-black"
                 placeholder="Summarize your experience"
                 maxLength={100}
               />
             </div>
 
             <div>
-              <label htmlFor="comment" className="block text-sm font-bold text-gray-900 mb-2">
+              <label htmlFor="comment" className="block text-sm font-bold text-black mb-2">
                 Your Review *
               </label>
               <textarea
@@ -224,12 +233,12 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 rows={5}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none text-sm"
+                className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 resize-none text-sm text-black"
                 placeholder="Share your experience with this product..."
                 required
                 minLength={10}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-neutral-500 font-mono">
                 Minimum 10 characters ({comment.length}/10)
               </p>
             </div>
@@ -238,7 +247,7 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
               <button
                 type="submit"
                 disabled={isSubmitting || rating === 0 || comment.trim().length < 10}
-                className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg font-bold text-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="bg-black hover:bg-neutral-900 text-white px-8 py-3 rounded-lg font-bold text-sm uppercase transition-colors disabled:bg-neutral-300 disabled:cursor-not-allowed border border-transparent hover:border-yellow-400"
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Review'}
               </button>
@@ -251,7 +260,7 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
                   setComment('');
                   setError('');
                 }}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-8 py-3 rounded-lg font-bold text-sm transition-colors"
+                className="bg-neutral-100 hover:bg-neutral-200 text-black px-8 py-3 rounded-lg font-bold text-sm uppercase transition-colors"
               >
                 Cancel
               </button>
@@ -264,35 +273,35 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
       <div className="space-y-6">
         {reviews.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MessageSquare className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+              <MessageSquare className="w-8 h-8 text-yellow-400" />
             </div>
-            <p className="text-gray-600 font-medium">No reviews yet</p>
-            <p className="text-sm text-gray-500 mt-1">Be the first to review this product!</p>
+            <p className="text-black font-medium">No reviews yet</p>
+            <p className="text-sm text-neutral-500 mt-1">Be the first to review this product!</p>
           </div>
         ) : (
           reviews.map((review) => (
             <div
               key={review.id}
-              className="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-red-200 transition-colors"
+              className="bg-neutral-50 rounded-xl p-5 border border-neutral-200 hover:border-yellow-400 transition-colors"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-red-600" />
+                  <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
+                    <User className="w-5 h-5 text-yellow-400" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-bold text-gray-900 text-sm">
+                      <p className="font-bold text-black text-sm">
                         {review.user.name || 'Anonymous'}
                       </p>
                       {review.isVerifiedPurchase && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                        <span className="text-xs bg-yellow-400 text-black px-2 py-0.5 rounded-full font-semibold">
                           Verified Purchase
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-neutral-500 font-mono">
                       {new Date(review.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
@@ -308,18 +317,18 @@ export default function ReviewsSection({ productId, reviews, averageRating }: Re
                       className={`w-4 h-4 ${
                         i < review.rating
                           ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
+                          : 'text-neutral-300'
                       }`}
                     />
                   ))}
                 </div>
               </div>
-              
+
               {review.title && (
-                <h3 className="font-bold text-gray-900 mb-2">{review.title}</h3>
+                <h3 className="font-bold text-black mb-2">{review.title}</h3>
               )}
-              
-              <p className="text-sm text-gray-700 leading-relaxed">
+
+              <p className="text-sm text-neutral-700 leading-relaxed">
                 {review.comment}
               </p>
             </div>

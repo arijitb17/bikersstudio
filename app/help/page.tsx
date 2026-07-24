@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Phone, Mail } from 'lucide-react';
 
 export default function HelpFAQPage() {
   const faqs = [
@@ -94,27 +95,30 @@ export default function HelpFAQPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-40 pb-20">
+    <div className="min-h-screen bg-neutral-50 pt-40 pb-20">
       <div className="max-w-4xl mx-auto px-6 lg:px-16 py-12">
 
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-8 lg:p-12 mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Help & FAQ</h1>
-          <p className="text-lg text-gray-700">
+        <div className="bg-white rounded-lg shadow-md p-8 lg:p-12 mb-8 border border-neutral-200">
+          <h1 className="text-4xl font-black uppercase tracking-tight text-black mb-2">Help &amp; FAQ</h1>
+          <div className="w-16 h-1 bg-yellow-400 mb-6" />
+          <p className="text-lg text-neutral-700">
             Find answers to the most common questions below. Can&apos;t find what you&apos;re looking for? Reach out to us directly.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 mt-6">
+          <div className="flex flex-col sm:flex-row gap-3 mt-6">
             <Link
               href="tel:919678248499"
-              className="flex items-center gap-2 px-4 py-2 bg-red-400 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2.5 bg-black text-yellow-400 rounded-lg hover:bg-neutral-900 transition-colors text-sm font-bold uppercase"
             >
-              📞 +91 96782 48499
+              <Phone className="w-4 h-4" />
+              +91 96782 48499
             </Link>
             <Link
               href="mailto:bikerstudio.com@gmail.com"
-              className="flex items-center gap-2 px-4 py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2.5 border border-black text-black rounded-lg hover:bg-yellow-50 transition-colors text-sm font-bold uppercase"
             >
-              ✉️ bikerstudio.com@gmail.com
+              <Mail className="w-4 h-4" />
+              bikerstudio.com@gmail.com
             </Link>
           </div>
         </div>
@@ -122,15 +126,15 @@ export default function HelpFAQPage() {
         {/* FAQ Sections */}
         <div className="space-y-6">
           {faqs.map((section) => (
-            <div key={section.category} className="bg-white rounded-lg shadow-md p-8 lg:p-10">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 pb-3 border-b border-gray-200">
+            <div key={section.category} className="bg-white rounded-lg shadow-md p-8 lg:p-10 border border-neutral-200">
+              <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-6 pb-3 border-b border-neutral-200">
                 {section.category}
               </h2>
               <div className="space-y-6">
                 {section.questions.map((item) => (
-                  <div key={item.q}>
-                    <h3 className="text-base font-semibold text-gray-900 mb-2">{item.q}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">{item.a}</p>
+                  <div key={item.q} className="border-l-2 border-yellow-400 pl-4">
+                    <h3 className="text-base font-semibold text-black mb-1.5">{item.q}</h3>
+                    <p className="text-neutral-600 text-sm leading-relaxed">{item.a}</p>
                   </div>
                 ))}
               </div>
@@ -139,28 +143,28 @@ export default function HelpFAQPage() {
         </div>
 
         {/* Still need help */}
-        <div className="bg-red-600 rounded-lg shadow-md p-8 mt-8 text-center text-white">
-          <h2 className="text-2xl font-bold mb-2">Still need help?</h2>
-          <p className="text-red-100 mb-6">
+        <div className="bg-black rounded-lg shadow-md p-8 mt-8 text-center">
+          <h2 className="text-2xl font-black uppercase tracking-tight text-yellow-400 mb-2">Still need help?</h2>
+          <p className="text-neutral-300 mb-6 text-sm">
             Our team is available Monday to Sunday, 10am – 5pm.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
               href="tel:919678248499"
-              className="px-6 py-2 bg-white text-red-600 font-semibold rounded-lg hover:bg-red-50 transition-colors"
+              className="px-6 py-2.5 bg-yellow-400 text-black font-bold uppercase text-sm rounded-lg hover:bg-yellow-300 transition-colors"
             >
               Call Us
             </Link>
             <Link
               href="mailto:bikerstudio.com@gmail.com"
-              className="px-6 py-2 border-2 border-white text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+              className="px-6 py-2.5 border-2 border-yellow-400 text-yellow-400 font-bold uppercase text-sm rounded-lg hover:bg-neutral-900 transition-colors"
             >
               Email Us
             </Link>
           </div>
         </div>
 
-        <p className="text-sm text-gray-500 mt-8 text-center">Last Updated: April 2026</p>
+        <p className="text-sm text-neutral-500 mt-8 text-center font-mono">Last Updated: April 2026</p>
       </div>
     </div>
   );

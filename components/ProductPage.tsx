@@ -35,12 +35,12 @@ export function ProductCard({ product }: ProductCardProps) {
     : 0;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 h-full flex flex-col group">
-      
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-neutral-200 hover:border-yellow-400 h-full flex flex-col group">
+
       {/* Clickable: image + name */}
       <Link href={`/products/${product.slug}`} className="block flex-shrink-0">
         {/* Image */}
-        <div className="relative h-64 bg-gray-50 overflow-hidden">
+        <div className="relative h-64 bg-neutral-100 overflow-hidden">
           <Image
             src={product.thumbnail}
             alt={product.name}
@@ -49,17 +49,17 @@ export function ProductCard({ product }: ProductCardProps) {
           />
           <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
             {hasDiscount && (
-              <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+              <span className="bg-gradient-to-r from-yellow-400 to-yellow-300 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                 {discountPercent}% OFF
               </span>
             )}
             {product.stock > 0 && product.stock < 10 && (
-              <span className="bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+              <span className="bg-black text-yellow-400 text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
                 Only {product.stock} left
               </span>
             )}
             {product.stock === 0 && (
-              <span className="bg-gray-800 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
+              <span className="bg-neutral-800 text-white text-xs font-semibold px-3 py-1 rounded-full shadow-lg">
                 Out of Stock
               </span>
             )}
@@ -68,7 +68,7 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Name + category */}
         <div className="px-4 pt-4">
-          <div className="flex items-center gap-2 mb-1.5 text-xs text-gray-500">
+          <div className="flex items-center gap-2 mb-1.5 text-xs text-neutral-500 font-mono">
             <span className="font-medium">{product.category.name}</span>
             {product.bike && (
               <>
@@ -79,7 +79,7 @@ export function ProductCard({ product }: ProductCardProps) {
               </>
             )}
           </div>
-          <h3 className="text-base font-bold text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+          <h3 className="text-base font-bold text-black line-clamp-2 group-hover:text-yellow-600 transition-colors">
             {product.name}
           </h3>
         </div>
@@ -98,18 +98,18 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
 
         <div className="flex items-center gap-2">
-          <span className="text-xl font-bold text-red-600">
+          <span className="text-xl font-black text-black tabular-nums">
             ₹{effectivePrice.toLocaleString('en-IN')}
           </span>
           {/* Show original only when no size selected and there's a sale */}
           {!selectedSize && hasDiscount && (
-            <span className="text-sm text-gray-400 line-through">
+            <span className="text-sm text-neutral-400 line-through tabular-nums">
               ₹{product.price.toLocaleString('en-IN')}
             </span>
           )}
           {/* Show size label when selected */}
           {selectedSize && (
-            <span className="text-xs text-gray-500 font-medium">
+            <span className="text-xs text-neutral-500 font-medium font-mono">
               Size: {selectedSize.size}
             </span>
           )}

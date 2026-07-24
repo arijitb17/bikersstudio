@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from '@/components/Navbar';
 import CartWrapper from "@/components/CartWrapper";
 import AuthProvider from "@/components/AuthProvider";
+import PageLoader from "@/components/PageLoader";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -27,11 +28,12 @@ export default function RootLayout({
         className={`${poppins.variable} antialiased`}
       >
         <AuthProvider>
-        <CartWrapper>
-        <Navbar />
-        {children}
-        
-        </CartWrapper>
+          <CartWrapper>
+            <PageLoader>
+              <Navbar />
+              {children}
+            </PageLoader>
+          </CartWrapper>
         </AuthProvider>
       </body>
     </html>

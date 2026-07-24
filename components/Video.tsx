@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic'
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { Sparkles } from 'lucide-react';
 import VideoCard from './VideoCard';
 
 interface Video {
@@ -32,11 +33,19 @@ export default async function RecommendedVideos() {
   }
 
   return (
-    <section className="py-16 bg-gradient-to-b from-gray-50 to-white">
+    <section className="py-20 bg-white">
       <div className="w-full px-6 lg:px-16 xl:px-24">
-        <h2 className="text-4xl md:text-5xl font-bold text-black mb-12 drop-shadow-md text-center">
-          Recommended For You
-        </h2>
+        {/* Section header */}
+        <div className="flex flex-col items-center text-center mb-14">
+          <div className="flex items-center gap-2 text-yellow-500 text-xs font-bold tracking-[0.3em] uppercase mb-3">
+            <Sparkles size={14} className="fill-yellow-500" />
+            Watch & Shop
+          </div>
+          <h2 className="text-4xl md:text-6xl font-black text-black tracking-tight uppercase">
+            Recommended For You
+          </h2>
+          <div className="mt-4 h-1.5 w-20 bg-gradient-to-r from-yellow-400 to-yellow-200 rounded-full skew-x-[-20deg]" />
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {videos.map((video) => (

@@ -1,6 +1,5 @@
 "use client"
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Banner {
   id: string;
@@ -65,7 +64,7 @@ export default function HeroSection() {
 
   if (!mounted || loading) {
     return (
-      <div className="relative h-screen overflow-hidden mt-[80px] bg-gray-900 flex items-center justify-center">
+      <div className="relative h-screen overflow-hidden mt-[80px] bg-black flex items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
@@ -133,20 +132,7 @@ export default function HeroSection() {
       {/* Navigation Arrows - Only show if more than 1 banner */}
       {banners.length > 1 && (
         <>
-          <button
-            onClick={goToPrevious}
-            className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-full transition-all z-20 group"
-            aria-label="Previous slide"
-          >
-            <ChevronLeft className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-          </button>
-          <button
-            onClick={goToNext}
-            className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 backdrop-blur-md p-3 rounded-full transition-all z-20 group"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-          </button>
+
 
           {/* Slide Indicators */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">

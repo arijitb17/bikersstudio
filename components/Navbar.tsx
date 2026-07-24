@@ -44,14 +44,18 @@ function MegaMenuGrid({
 }) {
   return (
     <div
-      className="fixed left-0 right-0 top-[152px] w-full bg-white border-t border-gray-200 shadow-xl z-50 animate-slideDown mega-menu"
-      style={{ maxHeight: "60vh", overflowY: "auto" }}
+      className="fixed left-0 right-0 top-[152px] w-full border-t border-yellow-600/30 shadow-xl z-50 animate-slideDown mega-menu"
+      style={{
+        maxHeight: "60vh",
+        overflowY: "auto",
+        background: "linear-gradient(180deg, #f0b414 0%, #e6a800 100%)",
+      }}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
         <div className={`grid grid-cols-${cols} gap-8`}>
           {Object.entries(data).map(([category, items]) => (
             <div key={category} className="space-y-3">
-              <h3 className="font-bold text-gray-900 text-sm uppercase tracking-wide border-b border-gray-200 pb-2">
+              <h3 className="font-bold text-white text-base uppercase tracking-wide border-b border-black/20 pb-2">
                 {category}
               </h3>
               <div className="space-y-2">
@@ -59,7 +63,7 @@ function MegaMenuGrid({
                   <Link
                     key={item.slug}
                     href={`/categories/${item.slug}`}
-                    className="block text-sm text-gray-600 hover:text-red-600 hover:pl-2 transition-all"
+                    className="block text-base text-white/80 hover:text-white hover:pl-2 transition-all"
                     onClick={onClose}
                   >
                     {item.name}
@@ -156,9 +160,15 @@ export default function Navbar() {
   );
 
   return (
-    <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+    <nav
+  className="fixed top-0 left-0 right-0 z-50 shadow-lg"
+  style={{
+    background: "linear-gradient(180deg, #111111 0%, #0b0b0b 100%)",
+    borderBottom: "1px solid rgba(255, 193, 7, 0.18)",
+  }}
+>
       {/* Top bar */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-yellow-600/30">
         <div className="w-full px-6 lg:px-12">
           <div className="flex items-center justify-between h-21">
 <Link href="/" className="flex-shrink-0 flex items-center gap-2 sm:gap-2.5 h-full">
@@ -170,68 +180,104 @@ export default function Navbar() {
     priority
     className="h-14 sm:h-16 md:h-[68px] w-auto object-contain"
   />
-  <div className="flex flex-col leading-none">
-    <span
-      className="font-black text-2xl sm:text-3xl md:text-4xl tracking-wide italic inline-block pr-1"
-      style={{
-        background: "linear-gradient(180deg, #ff3b30 0%, #b30000 100%)",
-        WebkitBackgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-        letterSpacing: "0.02em",
-        lineHeight: 1.1,
-      }}
-    >
-      BIKER&apos;S
-    </span>
-    <span
-      className="font-bold text-xs sm:text-sm md:text-base tracking-[0.3em] self-end -mt-1"
-      style={{
-        background: "linear-gradient(180deg, #ff3b30 0%, #b30000 100%)",
-        WebkitBackgroundClip: "text",
-        WebkitTextFillColor: "transparent",
-      }}
-    >
-      STUDIO
-    </span>
-  </div>
+
 </Link>
             <div className="hidden md:flex flex-1 max-w-3xl mx-12">
-              <div className="relative w-full" ref={searchRef}>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() => searchResults.length > 0 && setShowResults(true)}
-                  placeholder="Search products..."
-                  className="w-full px-6 py-3 pr-12 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 text-gray-700 placeholder:text-gray-500"
-                />
-                <button className="absolute right-4 top-1/2 -translate-y-1/2">
-                  <Search className="w-5 h-5 text-gray-500" />
-                </button>
-                {showResults && searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 mt-2 w-full bg-white shadow-xl rounded-xl border border-gray-200 max-h-80 overflow-y-auto z-50">
-                    {searchResults.map((item) => (
-                      <Link
-                        key={item.id}
-                        href={`/products/${item.slug}`}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition"
-                        onClick={() => { setShowResults(false); setSearchQuery(""); }}
-                      >
-                        <Image src={item.thumbnail} alt={item.name} width={40} height={40} className="rounded" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                          <p className="text-xs text-gray-500">₹{item.price}</p>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+  <div className="relative w-full" ref={searchRef}>
+    <input
+      type="text"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      onFocus={() => searchResults.length > 0 && setShowResults(true)}
+      placeholder="Search products..."
+      className="
+        w-full
+        h-14
+        pl-6
+        pr-14
+        rounded-full
+        bg-[#1a1a1a]
+        border
+        border-yellow-500/25
+        text-white
+        placeholder:text-gray-400
+        text-base
+        transition-all
+        duration-300
+        shadow-lg
+        focus:outline-none
+        focus:border-yellow-400
+        focus:ring-4
+        focus:ring-yellow-400/20
+      "
+    />
+
+    <button className="absolute right-5 top-1/2 -translate-y-1/2">
+      <Search className="w-5 h-5 text-yellow-400" />
+    </button>
+
+    {showResults && searchResults.length > 0 && (
+      <div className="
+        absolute
+        top-full
+        left-0
+        mt-3
+        w-full
+        bg-[#111]
+        border
+        border-yellow-500/20
+        rounded-2xl
+        shadow-2xl
+        overflow-hidden
+        max-h-96
+        overflow-y-auto
+        z-50
+      ">
+        {searchResults.map((item) => (
+          <Link
+            key={item.id}
+            href={`/products/${item.slug}`}
+            className="
+              flex
+              items-center
+              gap-4
+              px-5
+              py-4
+              hover:bg-yellow-500/10
+              transition
+            "
+            onClick={() => {
+              setShowResults(false);
+              setSearchQuery("");
+            }}
+          >
+            <Image
+              src={item.thumbnail}
+              alt={item.name}
+              width={50}
+              height={50}
+              className="rounded-lg border border-neutral-700"
+            />
+
+            <div className="flex-1">
+              <p className="font-semibold text-white">
+                {item.name}
+              </p>
+
+              <p className="text-yellow-400 font-medium">
+                ₹{item.price}
+              </p>
             </div>
+          </Link>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
 
             <div className="flex items-center gap-6 min-w-[120px] justify-end">
               <button onClick={openCart} className="relative hidden sm:block hover:scale-110 transition-transform group">
-                <ShoppingCart className="w-6 h-6 text-gray-700 group-hover:text-red-600 transition-colors" />
+                <ShoppingCart className="w-7 h-7 text-white transition-colors" />
                 {itemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold animate-pulse">
                     {itemCount}
@@ -241,14 +287,14 @@ export default function Navbar() {
 
               <div className="relative hidden sm:block user-menu-container">
                 {status === "loading" ? (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse"></div>
+                  <div className="w-8 h-8 rounded-full bg-white/30 animate-pulse"></div>
                 ) : session ? (
                   <div className="relative">
                     <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-2 hover:scale-110 transition-transform">
                       {session.user.image ? (
                         <Image src={session.user.image} alt={session.user.name || "User"} width={32} height={32} className="rounded-full" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center font-bold">
+                        <div className="w-8 h-8 rounded-full bg-white text-yellow-800 flex items-center justify-center font-bold text-lg">
                           {session.user.name?.[0]?.toUpperCase() || "U"}
                         </div>
                       )}
@@ -256,29 +302,29 @@ export default function Navbar() {
                     {userMenuOpen && (
                       <div className="absolute right-0 top-12 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 z-50">
                         <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="font-semibold text-gray-900">{session.user.name}</p>
+                          <p className="font-semibold text-gray-900 text-lg">{session.user.name}</p>
                           <p className="text-sm text-gray-500">{session.user.email}</p>
                         </div>
                         <div className="py-2">
-                          <Link href="/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors" onClick={closeAllMenus}><User className="w-4 h-4" /><span>My Profile</span></Link>
-                          <Link href="/orders" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors" onClick={closeAllMenus}><Package className="w-4 h-4" /><span>My Orders</span></Link>
+                          <Link href="/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors text-base" onClick={closeAllMenus}><User className="w-4 h-4" /><span>My Profile</span></Link>
+                          <Link href="/orders" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors text-base" onClick={closeAllMenus}><Package className="w-4 h-4" /><span>My Orders</span></Link>
                           {session.user.role === "ADMIN" && (
-                            <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors" onClick={closeAllMenus}><Settings className="w-4 h-4" /><span>Admin Panel</span></Link>
+                            <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 text-gray-700 transition-colors text-base" onClick={closeAllMenus}><Settings className="w-4 h-4" /><span>Admin Panel</span></Link>
                           )}
                         </div>
                         <div className="border-t border-gray-100 pt-2">
-                          <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 transition-colors w-full"><LogOut className="w-4 h-4" /><span>Sign Out</span></button>
+                          <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 text-red-600 transition-colors w-full text-base"><LogOut className="w-4 h-4" /><span>Sign Out</span></button>
                         </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <Link href="/auth/signin" className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"><User className="w-4 h-4" />Sign In</Link>
+                  <Link href="/auth/signin" className="flex items-center gap-2 px-5 py-2.5 bg-white text-yellow-800 rounded-lg hover:bg-yellow-50 transition-colors font-semibold text-lg"><User className="w-5 h-5" />Sign In</Link>
                 )}
               </div>
 
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden hover:bg-gray-100 p-2 rounded-lg transition-colors">
-                {mobileMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
+              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden hover:bg-black/10 p-2 rounded-lg transition-colors">
+                {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
               </button>
             </div>
           </div>
@@ -286,7 +332,7 @@ export default function Navbar() {
       </div>
 
       {/* Main Navigation — fully dynamic from JSON */}
-      <div className="border-b border-gray-200 hidden md:block">
+      <div className="border-b border-yellow-600/30 hidden md:block">
         <div className="w-full px-6 lg:px-12">
           <div className="flex items-center justify-center gap-8 h-14">
 
@@ -294,21 +340,28 @@ export default function Navbar() {
             <div className="relative dropdown-container">
               <button
                 onClick={() => handleDropdownToggle("brands")}
-                className="flex items-center gap-1 text-gray-700 hover:text-red-600 font-medium transition-colors"
+                className="flex items-center gap-1 text-white hover:text-white/70 font-semibold text-lg transition-colors"
               >
                 Shop by Bike
-                <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === "brands" ? "rotate-180" : ""}`} />
+                <ChevronDown className={`w-5 h-5 transition-transform ${openDropdown === "brands" ? "rotate-180" : ""}`} />
               </button>
               {openDropdown === "brands" && (
-                <div className="fixed left-0 right-0 top-[152px] w-full bg-white border-t border-gray-200 shadow-xl z-50 animate-slideDown mega-menu" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                <div
+                  className="fixed left-0 right-0 top-[152px] w-full border-t border-yellow-600/30 shadow-xl z-50 animate-slideDown mega-menu"
+                  style={{
+                    maxHeight: "60vh",
+                    overflowY: "auto",
+                    background: "linear-gradient(180deg, #f0b414 0%, #e6a800 100%)",
+                  }}
+                >
                   <div className="max-w-7xl mx-auto px-6 lg:px-12 py-8">
                     <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
                       {[...brands].sort((a, b) => b.bikes.length - a.bikes.length).map((brand) => (
                         <div key={brand.slug} className="space-y-3">
-                          <Link href={`/brands/${brand.slug}`} className="block font-bold text-gray-900 hover:text-red-600 transition-colors text-lg mb-4" onClick={closeAllMenus}>{brand.name}</Link>
+                          <Link href={`/brands/${brand.slug}`} className="block font-bold text-white hover:text-white/70 transition-colors text-xl mb-4" onClick={closeAllMenus}>{brand.name}</Link>
                           <div className="space-y-2">
                             {brand.bikes.map((bike) => (
-                              <Link key={bike.slug} href={`/bikes/${bike.slug}`} className="block text-sm text-gray-600 hover:text-red-600 hover:pl-2 transition-all" onClick={closeAllMenus}>{bike.name}</Link>
+                              <Link key={bike.slug} href={`/bikes/${bike.slug}`} className="block text-base text-white/80 hover:text-white hover:pl-2 transition-all" onClick={closeAllMenus}>{bike.name}</Link>
                             ))}
                           </div>
                         </div>
@@ -324,10 +377,10 @@ export default function Navbar() {
               <div key={key} className="relative dropdown-container">
                 <button
                   onClick={() => handleDropdownToggle(key)}
-                  className="flex items-center gap-1 text-gray-700 hover:text-red-600 font-medium transition-colors"
+                  className="flex items-center gap-1 text-white hover:text-white/70 font-semibold text-lg transition-colors"
                 >
                   {SECTION_LABELS[key] || key.replace(/([A-Z])/g, " $1").trim()}
-                  <ChevronDown className={`w-4 h-4 transition-transform ${openDropdown === key ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-5 h-5 transition-transform ${openDropdown === key ? "rotate-180" : ""}`} />
                 </button>
                 {openDropdown === key && (
                   <MegaMenuGrid data={data} cols={Object.keys(data).length > 3 ? 4 : 3} onClose={closeAllMenus} />
@@ -341,43 +394,46 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-200 max-h-[calc(100vh-80px)] overflow-y-auto">
+        <div
+          className="md:hidden border-t border-yellow-600/30 max-h-[calc(100vh-80px)] overflow-y-auto"
+          style={{ background: "linear-gradient(180deg, #f0b414 0%, #e6a800 100%)" }}
+        >
           <div className="px-6 py-4 space-y-4">
             <div className="relative">
-              <input type="text" placeholder="Search products..." className="w-full px-4 py-3 pr-12 rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-red-500" />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2"><Search className="w-5 h-5 text-gray-500" /></button>
+              <input type="text" placeholder="Search products..." className="w-full px-4 py-3 pr-12 rounded-lg bg-black/10 text-white placeholder:text-white/70 text-lg focus:outline-none focus:ring-2 focus:ring-black/30" />
+              <button className="absolute right-3 top-1/2 -translate-y-1/2"><Search className="w-5 h-5 text-white" /></button>
             </div>
 
             {session ? (
-              <div className="border-b border-gray-200 pb-4">
+              <div className="border-b border-black/10 pb-4">
                 <div className="flex items-center gap-3 mb-3">
                   {session.user.image ? (
                     <Image src={session.user.image} alt={session.user.name || "User"} width={40} height={40} className="rounded-full" />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center font-bold">{session.user.name?.[0]?.toUpperCase() || "U"}</div>
+                    <div className="w-10 h-10 rounded-full bg-white text-yellow-800 flex items-center justify-center font-bold text-xl">{session.user.name?.[0]?.toUpperCase() || "U"}</div>
                   )}
                   <div>
-                    <p className="font-semibold text-gray-900">{session.user.name}</p>
-                    <p className="text-sm text-gray-500">{session.user.email}</p>
+                    <p className="font-semibold text-white text-lg">{session.user.name}</p>
+                    <p className="text-base text-white/70">{session.user.email}</p>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Link href="/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 rounded-lg text-gray-700" onClick={closeAllMenus}><User className="w-4 h-4" /><span>My Profile</span></Link>
-                  <Link href="/orders" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 rounded-lg text-gray-700" onClick={closeAllMenus}><Package className="w-4 h-4" /><span>My Orders</span></Link>
+                  <Link href="/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white text-lg" onClick={closeAllMenus}><User className="w-5 h-5" /><span>My Profile</span></Link>
+                  <Link href="/orders" className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white text-lg" onClick={closeAllMenus}><Package className="w-5 h-5" /><span>My Orders</span></Link>
                   {session.user.role === "ADMIN" && (
-                    <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-gray-50 rounded-lg text-gray-700" onClick={closeAllMenus}><Settings className="w-4 h-4" /><span>Admin Panel</span></Link>
+                    <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white text-lg" onClick={closeAllMenus}><Settings className="w-5 h-5" /><span>Admin Panel</span></Link>
                   )}
-                  <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2 hover:bg-red-50 rounded-lg text-red-600 w-full"><LogOut className="w-4 h-4" /><span>Sign Out</span></button>
+                  <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white w-full text-lg"><LogOut className="w-5 h-5" /><span>Sign Out</span></button>
                 </div>
               </div>
             ) : (
-              <Link href="/auth/signin" className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium" onClick={closeAllMenus}><User className="w-4 h-4" />Sign In</Link>
+              <Link href="/auth/signin" className="flex items-center justify-center gap-2 px-4 py-3 bg-white text-yellow-800 rounded-lg hover:bg-yellow-50 transition-colors font-semibold text-lg" onClick={closeAllMenus}><User className="w-5 h-5" />Sign In</Link>
             )}
 
-            <button onClick={() => { openCart(); closeAllMenus(); }} className="flex items-center justify-between w-full px-4 py-3 hover:bg-gray-50 rounded-lg">
+            <button onClick={() => { openCart(); closeAllMenus(); }} className="flex items-center justify-between w-full px-4 py-3 hover:bg-black/10 rounded-lg">
               <div className="flex items-center gap-3">
-                <ShoppingCart className="w-5 h-5 text-gray-700" />
-                <span className="font-medium text-gray-700">Shopping Cart</span>
+                <ShoppingCart className="w-6 h-6 text-white" />
+                <span className="font-medium text-white text-lg">Shopping Cart</span>
               </div>
               {itemCount > 0 && <span className="bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-semibold">{itemCount}</span>}
             </button>
@@ -385,13 +441,13 @@ export default function Navbar() {
             <div className="space-y-4">
               {/* Mobile: Shop by Bike */}
               <div>
-                <div className="font-bold text-gray-900 mb-3 text-lg">Shop by Bike</div>
+                <div className="font-bold text-white mb-3 text-xl">Shop by Bike</div>
                 {brands.map((brand) => (
                   <div key={brand.slug} className="mb-4">
-                    <Link href={`/brands/${brand.slug}`} className="block font-semibold text-gray-800 hover:text-red-600 mb-2" onClick={closeAllMenus}>{brand.name}</Link>
+                    <Link href={`/brands/${brand.slug}`} className="block font-semibold text-white hover:text-white/70 mb-2 text-lg" onClick={closeAllMenus}>{brand.name}</Link>
                     <div className="pl-4 space-y-1">
                       {brand.bikes.map((bike) => (
-                        <Link key={bike.slug} href={`/bikes/${bike.slug}`} className="block text-sm text-gray-600 hover:text-red-600 py-1" onClick={closeAllMenus}>{bike.name}</Link>
+                        <Link key={bike.slug} href={`/bikes/${bike.slug}`} className="block text-base text-white/80 hover:text-white py-1" onClick={closeAllMenus}>{bike.name}</Link>
                       ))}
                     </div>
                   </div>
@@ -401,15 +457,15 @@ export default function Navbar() {
               {/* Mobile: dynamic sections */}
               {menuSections.map(([key, data]) => (
                 <div key={key}>
-                  <div className="font-bold text-gray-900 mb-3 text-lg">
+                  <div className="font-bold text-white mb-3 text-xl">
                     {SECTION_LABELS[key] || key.replace(/([A-Z])/g, " $1").trim()}
                   </div>
                   {Object.entries(data).map(([category, items]) => (
                     <div key={category} className="mb-4">
-                      <div className="font-semibold text-gray-800 text-sm mb-2">{category}</div>
+                      <div className="font-semibold text-white text-base mb-2">{category}</div>
                       <div className="pl-4 space-y-1">
                         {items.map((item) => (
-                          <Link key={item.slug} href={`/categories/${item.slug}`} className="block text-sm text-gray-600 hover:text-red-600 py-1" onClick={closeAllMenus}>{item.name}</Link>
+                          <Link key={item.slug} href={`/categories/${item.slug}`} className="block text-base text-white/80 hover:text-white py-1" onClick={closeAllMenus}>{item.name}</Link>
                         ))}
                       </div>
                     </div>

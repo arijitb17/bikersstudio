@@ -133,7 +133,7 @@ function FilterSidebar({
             {filterOptions.brands.map((brand) => (
               <label
                 key={brand}
-                className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+                className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded"
               >
                 <input
                   type="checkbox"
@@ -145,9 +145,9 @@ function FilterSidebar({
                         : p.filter((b) => b !== brand),
                     )
                   }
-                  className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                  className="w-4 h-4 accent-black rounded focus:ring-yellow-400"
                 />
-                <span className="text-sm text-gray-900">{brand}</span>
+                <span className="text-sm text-black">{brand}</span>
               </label>
             ))}
           </div>
@@ -167,7 +167,7 @@ function FilterSidebar({
           {filterOptions.categories.map((category) => (
             <label
               key={category}
-              className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded"
+              className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded"
             >
               <input
                 type="checkbox"
@@ -179,9 +179,9 @@ function FilterSidebar({
                       : p.filter((c) => c !== category),
                   )
                 }
-                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                className="w-4 h-4 accent-black rounded focus:ring-yellow-400"
               />
-              <span className="text-sm text-gray-900">{category}</span>
+              <span className="text-sm text-black">{category}</span>
             </label>
           ))}
         </div>
@@ -205,7 +205,7 @@ function FilterSidebar({
             onChange={(e) =>
               setPriceRange([priceRange[0], parseInt(e.target.value)])
             }
-            className="w-full accent-red-600"
+            className="w-full accent-black"
           />
           <div className="flex gap-3">
             <input
@@ -214,10 +214,10 @@ function FilterSidebar({
               onChange={(e) =>
                 setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
+              className="w-full px-3 py-2 border border-neutral-300 rounded text-sm text-black focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
               placeholder="Min"
             />
-            <span className="text-gray-500 self-center">-</span>
+            <span className="text-neutral-500 self-center">-</span>
             <input
               type="number"
               value={priceRange[1]}
@@ -227,7 +227,7 @@ function FilterSidebar({
                   parseInt(e.target.value) || 100000,
                 ])
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
+              className="w-full px-3 py-2 border border-neutral-300 rounded text-sm text-black focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
               placeholder="Max"
             />
           </div>
@@ -249,32 +249,32 @@ function FilterSidebar({
         }
       >
         <div className="space-y-3">
-          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded">
             <input
               type="checkbox"
               checked={inStockOnly}
               onChange={(e) => setInStockOnly(e.target.checked)}
-              className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              className="w-4 h-4 accent-black rounded focus:ring-yellow-400"
             />
-            <span className="text-sm text-gray-900">In Stock Only</span>
+            <span className="text-sm text-black">In Stock Only</span>
           </label>
-          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded">
             <input
               type="checkbox"
               checked={onSaleOnly}
               onChange={(e) => setOnSaleOnly(e.target.checked)}
-              className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              className="w-4 h-4 accent-black rounded focus:ring-yellow-400"
             />
-            <span className="text-sm text-gray-900">On Sale</span>
+            <span className="text-sm text-black">On Sale</span>
           </label>
-          <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+          <label className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded">
             <input
               type="checkbox"
               checked={lowStockOnly}
               onChange={(e) => setLowStockOnly(e.target.checked)}
-              className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              className="w-4 h-4 accent-black rounded focus:ring-yellow-400"
             />
-            <span className="text-sm text-gray-900">Limited Stock</span>
+            <span className="text-sm text-black">Limited Stock</span>
           </label>
         </div>
       </FilterSection>
@@ -322,10 +322,10 @@ function Pagination({
   };
 
   return (
-    <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-200 pt-6">
-      <p className="text-sm text-gray-600">
-        Showing <span className="font-semibold text-gray-900">{startItem}–{endItem}</span>{' '}
-        of <span className="font-semibold text-gray-900">{totalItems}</span> products
+    <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-200 pt-6">
+      <p className="text-sm text-neutral-600 font-mono">
+        Showing <span className="font-semibold text-black">{startItem}–{endItem}</span>{' '}
+        of <span className="font-semibold text-black">{totalItems}</span> products
       </p>
 
       <div className="flex items-center gap-1">
@@ -333,7 +333,7 @@ function Pagination({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-black hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
           Prev
@@ -343,7 +343,7 @@ function Pagination({
         <div className="flex items-center gap-1">
           {getPageNumbers().map((page, idx) =>
             page === 'ellipsis' ? (
-              <span key={`ellipsis-${idx}`} className="px-2 py-2 text-gray-400 text-sm select-none">
+              <span key={`ellipsis-${idx}`} className="px-2 py-2 text-neutral-400 text-sm select-none">
                 …
               </span>
             ) : (
@@ -352,8 +352,8 @@ function Pagination({
                 onClick={() => onPageChange(page)}
                 className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
                   currentPage === page
-                    ? 'bg-red-600 text-white shadow-sm'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-black text-yellow-400 shadow-sm border border-yellow-400'
+                    : 'text-black hover:bg-neutral-100'
                 }`}
               >
                 {page}
@@ -366,7 +366,7 @@ function Pagination({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-black hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           Next
           <ChevronRight className="w-4 h-4" />
@@ -593,27 +593,35 @@ export default function BikeProductsClient({
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-24">
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-sm mb-4 text-white/90">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+      <div className="relative bg-black overflow-hidden mt-24">
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(115deg, #facc15 0px, #facc15 2px, transparent 2px, transparent 40px)',
+          }}
+        />
+        <div className="relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-center gap-2 text-sm mb-4 text-neutral-400 font-mono">
+            <Link href="/" className="hover:text-yellow-400 transition-colors">Home</Link>
             <ChevronDown className="w-4 h-4 -rotate-90" />
-            <Link href={`/brands/${bike.brandName.toLowerCase()}`} className="hover:text-white transition-colors">
+            <Link href={`/brands/${bike.brandName.toLowerCase()}`} className="hover:text-yellow-400 transition-colors">
               {bike.brandName}
             </Link>
             <ChevronDown className="w-4 h-4 -rotate-90" />
-            <span className="font-medium text-white">{bike.name}</span>
+            <span className="font-medium text-yellow-400">{bike.name}</span>
           </div>
           <div className="flex items-start justify-between gap-6">
             <div>
-              <p className="text-white/90 font-bold text-sm uppercase tracking-wide mb-2">
+              <p className="text-yellow-400 font-bold text-sm uppercase tracking-[0.25em] mb-2 font-mono">
                 {bike.brandName}
               </p>
-              <h1 className="text-4xl md:text-5xl font-bold mb-3 text-white">
+              <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tight text-white italic -skew-x-3 mb-3">
                 {bike.name}
               </h1>
+              <div className="h-1.5 w-20 bg-gradient-to-r from-yellow-400 to-yellow-200 rounded-full skew-x-[-20deg] mb-4" />
               {bike.description && (
-                <p className="text-lg text-white/95">{bike.description}</p>
+                <p className="text-lg text-neutral-300 max-w-2xl">{bike.description}</p>
               )}
             </div>
           </div>
@@ -622,20 +630,20 @@ export default function BikeProductsClient({
 
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Toolbar */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
           <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
               placeholder="Search products..."
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900"
+              className="w-full pl-12 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 text-black"
             />
             {searchQuery && (
               <button
                 onClick={() => { setSearchQuery(''); resetPage(); }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -646,18 +654,18 @@ export default function BikeProductsClient({
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 lg:hidden"
+                className="flex items-center gap-2 px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-900 border border-transparent hover:border-yellow-400 lg:hidden"
               >
                 <Filter className="w-4 h-4" />
                 Filters
                 {activeFiltersCount > 0 && (
-                  <span className="bg-white text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                  <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs font-bold">
                     {activeFiltersCount}
                   </span>
                 )}
               </button>
-              <div className="text-sm text-gray-700">
-                <span className="font-bold text-lg text-gray-900">
+              <div className="text-sm text-neutral-700 font-mono">
+                <span className="font-bold text-lg text-black">
                   {filteredProducts.length}
                 </span>{' '}
                 of {products.length} products
@@ -668,7 +676,7 @@ export default function BikeProductsClient({
               <select
                 value={sortBy}
                 onChange={(e) => { setSortBy(e.target.value); resetPage(); }}
-                className="px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm font-medium min-w-[180px] text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                className="px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg text-sm font-medium min-w-[180px] text-black focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -678,16 +686,16 @@ export default function BikeProductsClient({
                 <option value="discount">Highest Discount</option>
               </select>
 
-              <div className="hidden sm:flex gap-1 border border-gray-300 rounded-lg p-1">
+              <div className="hidden sm:flex gap-1 border border-neutral-300 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid-3')}
-                  className={`p-2 rounded ${viewMode === 'grid-3' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`p-2 rounded ${viewMode === 'grid-3' ? 'bg-black text-yellow-400' : 'text-neutral-600 hover:bg-neutral-100'}`}
                 >
                   <Grid3x3 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('grid-4')}
-                  className={`p-2 rounded ${viewMode === 'grid-4' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`p-2 rounded ${viewMode === 'grid-4' ? 'bg-black text-yellow-400' : 'text-neutral-600 hover:bg-neutral-100'}`}
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="3" width="7" height="7" strokeWidth="2" />
@@ -698,7 +706,7 @@ export default function BikeProductsClient({
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-black text-yellow-400' : 'text-neutral-600 hover:bg-neutral-100'}`}
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -709,12 +717,12 @@ export default function BikeProductsClient({
 
         {/* Active Filters Bar */}
         {activeFiltersCount > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
+              <h3 className="text-sm font-semibold text-black">Active Filters</h3>
               <button
                 onClick={clearAllFilters}
-                className="text-sm text-red-600 hover:text-red-700 font-medium"
+                className="text-sm text-black hover:text-yellow-600 font-medium underline decoration-yellow-400 underline-offset-4"
               >
                 Clear All
               </button>
@@ -765,10 +773,10 @@ export default function BikeProductsClient({
         <div className="flex gap-8">
           {/* Desktop Sidebar */}
           <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-24">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <SlidersHorizontal className="w-5 h-5" />
+            <div className="bg-white rounded-lg shadow-sm border border-neutral-200 sticky top-24">
+              <div className="p-4 border-b border-neutral-200 bg-black rounded-t-lg">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 uppercase tracking-wide">
+                  <SlidersHorizontal className="w-5 h-5 text-yellow-400" />
                   Filters
                 </h2>
               </div>
@@ -786,19 +794,19 @@ export default function BikeProductsClient({
                 onClick={() => setShowMobileFilters(false)}
               />
               <div className="absolute right-0 top-0 bottom-0 w-80 bg-white shadow-xl flex flex-col">
-                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                    <SlidersHorizontal className="w-5 h-5" />
+                <div className="p-4 border-b border-neutral-200 bg-black flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-white flex items-center gap-2 uppercase tracking-wide">
+                    <SlidersHorizontal className="w-5 h-5 text-yellow-400" />
                     Filters
                     {activeFiltersCount > 0 && (
-                      <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                      <span className="bg-yellow-400 text-black text-xs px-2 py-0.5 rounded-full font-bold">
                         {activeFiltersCount}
                       </span>
                     )}
                   </h2>
                   <button
                     onClick={() => setShowMobileFilters(false)}
-                    className="p-2 hover:bg-gray-100 rounded-lg"
+                    className="p-2 hover:bg-neutral-800 rounded-lg text-white"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -806,16 +814,16 @@ export default function BikeProductsClient({
                 <div className="flex-1 overflow-y-auto">
                   <FilterSidebar {...filterSidebarProps} />
                 </div>
-                <div className="p-4 border-t border-gray-200 flex gap-3">
+                <div className="p-4 border-t border-neutral-200 flex gap-3">
                   <button
                     onClick={clearAllFilters}
-                    className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium text-sm"
+                    className="flex-1 px-4 py-2.5 border border-neutral-300 text-black rounded-lg hover:bg-neutral-50 font-medium text-sm"
                   >
                     Clear All
                   </button>
                   <button
                     onClick={() => setShowMobileFilters(false)}
-                    className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-sm"
+                    className="flex-1 px-4 py-2.5 bg-black text-yellow-400 rounded-lg hover:bg-neutral-900 border border-transparent hover:border-yellow-400 font-medium text-sm"
                   >
                     Show {filteredProducts.length} Results
                   </button>
@@ -856,18 +864,18 @@ export default function BikeProductsClient({
                 />
               </>
             ) : (
-              <div className="bg-white rounded-xl shadow p-12 text-center">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-12 h-12 text-gray-400" />
+              <div className="bg-white rounded-xl shadow p-12 text-center border border-neutral-200">
+                <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-12 h-12 text-yellow-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-black uppercase text-black mb-2">
                   No Products Found
                 </h3>
-                <p className="text-gray-600 mb-4">Try adjusting your filters</p>
+                <p className="text-neutral-500 mb-4">Try adjusting your filters</p>
                 {activeFiltersCount > 0 && (
                   <button
                     onClick={clearAllFilters}
-                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    className="px-6 py-2 bg-black text-white rounded-lg hover:bg-neutral-900 border border-transparent hover:border-yellow-400 font-bold uppercase text-sm"
                   >
                     Clear Filters
                   </button>
@@ -892,24 +900,24 @@ function FilterSection({
   children,
 }: FilterSectionProps) {
   return (
-    <div className="border-b border-gray-200 last:border-b-0">
+    <div className="border-b border-neutral-200 last:border-b-0">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+        className="w-full flex items-center justify-between p-4 hover:bg-neutral-50"
       >
         <div className="flex items-center gap-2">
-          <span className="text-gray-600">{icon}</span>
-          <span className="font-semibold text-gray-900">{title}</span>
+          <span className="text-black">{icon}</span>
+          <span className="font-semibold text-black">{title}</span>
           {count != null && count > 0 && (
-            <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+            <span className="bg-yellow-400 text-black text-xs px-2 py-0.5 rounded-full font-bold">
               {count}
             </span>
           )}
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-400" />
+          <ChevronUp className="w-5 h-5 text-neutral-400" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-400" />
+          <ChevronDown className="w-5 h-5 text-neutral-400" />
         )}
       </button>
       {isExpanded && <div className="px-4 pb-4">{children}</div>}
@@ -919,10 +927,10 @@ function FilterSection({
 
 function FilterTag({ label, icon, onRemove }: FilterTagProps) {
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-sm rounded-full">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black text-yellow-400 text-sm rounded-full font-mono">
       {icon}
       {label}
-      <button onClick={onRemove} className="hover:bg-red-700 rounded-full p-0.5">
+      <button onClick={onRemove} className="hover:bg-neutral-800 rounded-full p-0.5">
         <X className="w-3.5 h-3.5" />
       </button>
     </span>
@@ -943,10 +951,10 @@ function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
     return (
       <div
         onClick={() => onProductClick(product.slug)}
-        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border overflow-hidden group cursor-pointer"
+        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-neutral-200 hover:border-yellow-400 overflow-hidden group cursor-pointer"
       >
         <div className="flex gap-4 p-4">
-          <div className="relative w-32 h-32 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
+          <div className="relative w-32 h-32 flex-shrink-0 bg-neutral-100 rounded-lg overflow-hidden">
             <Image
               src={product.thumbnail}
               alt={product.name}
@@ -954,46 +962,46 @@ function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
               className="object-cover group-hover:scale-105 transition-transform"
             />
             {hasDiscount && (
-              <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+              <span className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded">
                 -{discountPercent}%
               </span>
             )}
           </div>
           <div className="flex-1 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                <span className="font-medium text-gray-700">
+              <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1 font-mono">
+                <span className="font-medium text-neutral-700">
                   {product.category.name}
                 </span>
                 {brandName && (
                   <>
                     <span>·</span>
-                    <span className="font-medium text-red-500">{brandName}</span>
+                    <span className="font-medium text-yellow-600">{brandName}</span>
                   </>
                 )}
               </div>
-              <h3 className="font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
+              <h3 className="font-bold text-black mb-2 group-hover:text-yellow-600 transition-colors line-clamp-2">
                 {product.name}
               </h3>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-gray-900">
+                <span className="text-2xl font-black text-black tabular-nums">
                   ₹{finalPrice.toLocaleString('en-IN')}
                 </span>
                 {hasDiscount && (
-                  <span className="text-sm text-gray-400 line-through">
+                  <span className="text-sm text-neutral-400 line-through tabular-nums">
                     ₹{product.price.toLocaleString('en-IN')}
                   </span>
                 )}
               </div>
               {product.stock > 0 ? (
-                <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                  <div className="w-2 h-2 bg-green-600 rounded-full" />
+                <span className="text-sm text-black font-medium flex items-center gap-1">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full" />
                   In Stock
                 </span>
               ) : (
-                <span className="text-sm text-red-600 font-medium">
+                <span className="text-sm text-neutral-400 font-medium">
                   Out of Stock
                 </span>
               )}
@@ -1007,9 +1015,9 @@ function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
   return (
     <div
       onClick={() => onProductClick(product.slug)}
-      className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all border overflow-hidden group h-full flex flex-col cursor-pointer"
+      className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all border border-neutral-200 hover:border-yellow-400 overflow-hidden group h-full flex flex-col cursor-pointer"
     >
-      <div className="relative aspect-square bg-gray-50 overflow-hidden">
+      <div className="relative aspect-square bg-neutral-100 overflow-hidden">
         <Image
           src={product.thumbnail}
           alt={product.name}
@@ -1017,44 +1025,44 @@ function ProductCard({ product, viewMode, onProductClick }: ProductCardProps) {
           className="object-cover group-hover:scale-105 transition-transform"
         />
         {hasDiscount && (
-          <span className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+          <span className="absolute top-3 left-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black text-xs font-bold px-3 py-1 rounded-full shadow">
             -{discountPercent}%
           </span>
         )}
         {product.stock < 10 && product.stock > 0 && (
-          <span className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+          <span className="absolute top-3 right-3 bg-black text-yellow-400 text-xs font-semibold px-3 py-1 rounded-full shadow">
             Only {product.stock} left
           </span>
         )}
         {product.stock === 0 && (
-          <span className="absolute top-3 right-3 bg-gray-800 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+          <span className="absolute top-3 right-3 bg-neutral-800 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
             Out of Stock
           </span>
         )}
       </div>
       <div className="p-4 flex-1 flex flex-col">
-        <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
-          <span className="font-medium text-gray-700">
+        <div className="flex items-center gap-2 mb-2 text-xs text-neutral-500 font-mono">
+          <span className="font-medium text-neutral-700">
             {product.category.name}
           </span>
           {brandName && (
             <>
               <span>·</span>
-              <span className="font-medium text-red-500 truncate">
+              <span className="font-medium text-yellow-600 truncate">
                 {brandName}
               </span>
             </>
           )}
         </div>
-        <h3 className="text-base font-bold text-gray-900 mb-3 line-clamp-2 flex-1 group-hover:text-red-600 transition-colors">
+        <h3 className="text-base font-bold text-black mb-3 line-clamp-2 flex-1 group-hover:text-yellow-600 transition-colors">
           {product.name}
         </h3>
         <div className="flex items-center gap-2 mt-auto">
-          <span className="text-xl font-bold text-gray-900">
+          <span className="text-xl font-black text-black tabular-nums">
             ₹{finalPrice.toLocaleString('en-IN')}
           </span>
           {hasDiscount && (
-            <span className="text-sm text-gray-400 line-through">
+            <span className="text-sm text-neutral-400 line-through tabular-nums">
               ₹{product.price.toLocaleString('en-IN')}
             </span>
           )}

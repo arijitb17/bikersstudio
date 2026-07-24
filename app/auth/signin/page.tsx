@@ -45,20 +45,21 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4 pt-32">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 pt-32">
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mt-6 mb-2">
-            Welcome Back 👋
+          <h1 className="text-3xl font-black uppercase tracking-tight text-black mt-6 mb-2">
+            Welcome Back
           </h1>
-          <p className="text-gray-600">Sign in to continue shopping</p>
+          <div className="mx-auto h-1.5 w-16 bg-gradient-to-r from-yellow-400 to-yellow-200 rounded-full skew-x-[-20deg] mb-3" />
+          <p className="text-neutral-600">Sign in to continue shopping</p>
         </div>
 
         {/* Sign In Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-neutral-200">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            <div className="mb-6 p-4 bg-neutral-100 border-l-4 border-black rounded-lg text-black text-sm">
               {error}
             </div>
           )}
@@ -66,16 +67,16 @@ export default function SignInPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-black mb-2">
                 Email Address
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="placeholder-gray-600 text-gray-600 w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="placeholder-neutral-400 text-black w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
                   placeholder="your@email.com"
                   required
                 />
@@ -84,23 +85,23 @@ export default function SignInPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-black mb-2">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="placeholder-gray-600 text-gray-600 w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="placeholder-neutral-400 text-black w-full pl-10 pr-12 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
                   placeholder="••••••••"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -116,13 +117,13 @@ export default function SignInPage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  className="w-4 h-4 rounded border-neutral-300 accent-black focus:ring-yellow-400"
                 />
-                <span className="text-gray-600">Remember me</span>
+                <span className="text-neutral-600">Remember me</span>
               </label>
               <Link
                 href="/auth/forgot-password"
-                className="text-red-600 hover:text-red-700 font-medium"
+                className="text-black hover:text-yellow-600 font-medium"
               >
                 Forgot password?
               </Link>
@@ -132,7 +133,7 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-black hover:bg-neutral-900 text-white font-bold uppercase py-3 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed border border-transparent hover:border-yellow-400"
             >
               {loading ? (
                 "Signing in..."
@@ -148,10 +149,10 @@ export default function SignInPage() {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-neutral-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">
+              <span className="px-4 bg-white text-neutral-500">
                 Or continue with
               </span>
             </div>
@@ -160,19 +161,19 @@ export default function SignInPage() {
           {/* Google Sign In */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold py-3 rounded-lg transition-all flex items-center justify-center gap-3"
+            className="w-full border-2 border-neutral-300 hover:border-black text-black font-semibold py-3 rounded-lg transition-all flex items-center justify-center gap-3"
           >
-            <Chrome className="w-5 h-5 text-red-600" />
+            <Chrome className="w-5 h-5 text-black" />
             Sign in with Google
           </button>
 
           {/* Sign Up Link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
+          <p className="mt-6 text-center text-sm text-neutral-600">
         {/* eslint-disable-next-line react/no-unescaped-entities */}
             Don't have an account?{" "}
             <Link
               href="/auth/signup"
-              className="text-red-600 hover:text-red-700 font-semibold"
+              className="text-black hover:text-yellow-600 font-semibold underline decoration-yellow-400 underline-offset-4"
             >
               Sign up for free
             </Link>

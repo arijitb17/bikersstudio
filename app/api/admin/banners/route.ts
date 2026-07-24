@@ -16,6 +16,14 @@ async function requireAdmin(_req: NextRequest) {
   return { userId: user.id };
 }
 
+// Coerces incoming values (which may arrive as strings from form inputs)
+// into a valid integer for Prisma's `position` field.
+function toPosition(value: unknown, fallback = 0): number {
+  if (value === undefined || value === null || value === '') return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+}
+
 // Public GET (used on homepage — high traffic)
 export async function GET(_req: NextRequest) {
   const limited = await applyRateLimit(_req, API_LIMITER);
@@ -47,7 +55,7 @@ export async function POST(_req: NextRequest) {
         image: body.image,
         mobileImage: body.mobileImage || null,
         link: body.link || null,
-        position: body.position ?? 0,
+        position: toPosition(body.position, 0),
         isActive: body.isActive ?? true,
       },
     });

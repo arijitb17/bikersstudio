@@ -161,30 +161,42 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white py-16 mt-24">
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 text-sm mb-4 text-white/90">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
+      {/* Hero band */}
+      <div className="relative bg-black overflow-hidden mt-24">
+        <div
+          className="absolute inset-0 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(115deg, #facc15 0px, #facc15 2px, transparent 2px, transparent 40px)',
+          }}
+        />
+        <div className="relative max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-center gap-2 text-sm mb-4 text-neutral-400 font-mono">
+            <Link href="/" className="hover:text-yellow-400 transition-colors">Home</Link>
             <ChevronDown className="w-4 h-4 -rotate-90" />
-            <span className="font-medium text-white">{category.name}</span>
+            <span className="font-medium text-yellow-400">{category.name}</span>
           </div>
-          {category.description && <p className="text-lg text-white/95">{category.description}</p>}
+          <h1 className="text-3xl md:text-5xl font-black uppercase tracking-tight text-white italic -skew-x-3">
+            {category.name}
+          </h1>
+          <div className="mt-4 h-1.5 w-20 bg-gradient-to-r from-yellow-400 to-yellow-200 rounded-full skew-x-[-20deg]" />
+          {category.description && <p className="mt-5 text-lg text-neutral-300 max-w-2xl">{category.description}</p>}
         </div>
       </div>
 
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
           <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search products..."
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900"
+              className="w-full pl-12 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 text-black"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black">
                 <X className="w-5 h-5" />
               </button>
             )}
@@ -194,17 +206,17 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 lg:hidden"
+                className="flex items-center gap-2 px-4 py-2.5 bg-black text-white rounded-lg hover:bg-neutral-900 border border-transparent hover:border-yellow-400 lg:hidden"
               >
                 <Filter className="w-4 h-4" />Filters
                 {activeFiltersCount > 0 && (
-                  <span className="bg-white text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">{activeFiltersCount}</span>
+                  <span className="bg-yellow-400 text-black px-2 py-0.5 rounded-full text-xs font-bold">{activeFiltersCount}</span>
                 )}
               </button>
-              <div className="text-sm text-gray-700">
-                <span className="font-bold text-lg text-gray-900">{filteredProducts.length}</span> products
+              <div className="text-sm text-neutral-700 font-mono">
+                <span className="font-bold text-lg text-black">{filteredProducts.length}</span> products
                 {filteredProducts.length > 0 && (
-                  <span className="text-gray-500 ml-1">
+                  <span className="text-neutral-500 ml-1">
                     (showing {(currentPage - 1) * PRODUCTS_PER_PAGE + 1}–{Math.min(currentPage * PRODUCTS_PER_PAGE, filteredProducts.length)})
                   </span>
                 )}
@@ -215,7 +227,7 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm font-medium min-w-[180px] text-gray-900 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                className="px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg text-sm font-medium min-w-[180px] text-black focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
               >
                 <option value="featured">Featured</option>
                 <option value="price-low">Price: Low to High</option>
@@ -224,17 +236,17 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                 <option value="name-za">Name: Z to A</option>
               </select>
 
-              <div className="hidden sm:flex gap-1 border border-gray-300 rounded-lg p-1">
-                <button onClick={() => setViewMode('grid-3')} className={`p-2 rounded ${viewMode === 'grid-3' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+              <div className="hidden sm:flex gap-1 border border-neutral-300 rounded-lg p-1">
+                <button onClick={() => setViewMode('grid-3')} className={`p-2 rounded ${viewMode === 'grid-3' ? 'bg-black text-yellow-400' : 'text-neutral-600 hover:bg-neutral-100'}`}>
                   <Grid3x3 className="w-4 h-4" />
                 </button>
-                <button onClick={() => setViewMode('grid-4')} className={`p-2 rounded ${viewMode === 'grid-4' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                <button onClick={() => setViewMode('grid-4')} className={`p-2 rounded ${viewMode === 'grid-4' ? 'bg-black text-yellow-400' : 'text-neutral-600 hover:bg-neutral-100'}`}>
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <rect x="3" y="3" width="7" height="7" strokeWidth="2"/><rect x="14" y="3" width="7" height="7" strokeWidth="2"/>
                     <rect x="3" y="14" width="7" height="7" strokeWidth="2"/><rect x="14" y="14" width="7" height="7" strokeWidth="2"/>
                   </svg>
                 </button>
-                <button onClick={() => setViewMode('list')} className={`p-2 rounded ${viewMode === 'list' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}>
+                <button onClick={() => setViewMode('list')} className={`p-2 rounded ${viewMode === 'list' ? 'bg-black text-yellow-400' : 'text-neutral-600 hover:bg-neutral-100'}`}>
                   <List className="w-4 h-4" />
                 </button>
               </div>
@@ -243,20 +255,20 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
         </div>
 
         {activeFiltersCount > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Active Filters</h3>
-              <button onClick={clearAllFilters} className="text-sm text-red-600 hover:text-red-700 font-medium">Clear All</button>
+              <h3 className="text-sm font-semibold text-black">Active Filters</h3>
+              <button onClick={clearAllFilters} className="text-sm text-black hover:text-yellow-600 font-medium underline decoration-yellow-400 underline-offset-4">Clear All</button>
             </div>
             <div className="flex flex-wrap gap-2">
               {searchQuery && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-600 text-white text-sm rounded-full">
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-black text-yellow-400 text-sm rounded-full font-mono">
                   Search: &quot;{searchQuery}&quot;
                   <button onClick={() => setSearchQuery('')}><X className="w-3 h-3" /></button>
                 </span>
               )}
               {selectedBrands.map(b => (
-                <span key={b} className="inline-flex items-center gap-1 px-3 py-1 bg-red-600 text-white text-sm rounded-full">
+                <span key={b} className="inline-flex items-center gap-1 px-3 py-1 bg-black text-yellow-400 text-sm rounded-full font-mono">
                   {b}
                   <button onClick={() => setSelectedBrands(prev => prev.filter(x => x !== b))}>
                     <X className="w-3 h-3" />
@@ -269,10 +281,10 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
 
         <div className="flex gap-8">
           <aside className="hidden lg:block w-72 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-24">
-              <div className="p-4 border-b border-gray-200">
-                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                  <SlidersHorizontal className="w-5 h-5" />Filters
+            <div className="bg-white rounded-lg shadow-sm border border-neutral-200 sticky top-24">
+              <div className="p-4 border-b border-neutral-200 bg-black rounded-t-lg">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 uppercase tracking-wide">
+                  <SlidersHorizontal className="w-5 h-5 text-yellow-400" />Filters
                 </h2>
               </div>
               <div className="max-h-[calc(100vh-200px)] overflow-y-auto">
@@ -285,14 +297,14 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                 >
                   <div className="space-y-2">
                     {filterOptions.brands.map(brand => (
-                      <label key={brand} className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                      <label key={brand} className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded">
                         <input
                           type="checkbox"
                           checked={selectedBrands.includes(brand)}
                           onChange={(e) => setSelectedBrands(p => e.target.checked ? [...p, brand] : p.filter(b => b !== brand))}
-                          className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                          className="w-4 h-4 text-black rounded accent-black focus:ring-yellow-400"
                         />
-                        <span className="text-sm text-gray-900">{brand}</span>
+                        <span className="text-sm text-black">{brand}</span>
                       </label>
                     ))}
                   </div>
@@ -312,22 +324,22 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                       step="500"
                       value={priceRange[1]}
                       onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                      className="w-full accent-red-600"
+                      className="w-full accent-black"
                     />
                     <div className="flex gap-3">
                       <input
                         type="number"
                         value={priceRange[0]}
                         onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
+                        className="w-full px-3 py-2 border border-neutral-300 rounded text-sm text-black focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
                         placeholder="Min"
                       />
-                      <span className="text-gray-500">-</span>
+                      <span className="text-neutral-500">-</span>
                       <input
                         type="number"
                         value={priceRange[1]}
                         onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 100000])}
-                        className="w-full px-3 py-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-2 focus:ring-red-500"
+                        className="w-full px-3 py-2 border border-neutral-300 rounded text-sm text-black focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
                         placeholder="Max"
                       />
                     </div>
@@ -342,17 +354,17 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                   count={(inStockOnly ? 1 : 0) + (onSaleOnly ? 1 : 0) + (lowStockOnly ? 1 : 0)}
                 >
                   <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
-                      <span className="text-sm text-gray-900">In Stock Only</span>
+                    <label className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded">
+                      <input type="checkbox" checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className="w-4 h-4 accent-black rounded focus:ring-yellow-400" />
+                      <span className="text-sm text-black">In Stock Only</span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" checked={onSaleOnly} onChange={(e) => setOnSaleOnly(e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
-                      <span className="text-sm text-gray-900">On Sale</span>
+                    <label className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded">
+                      <input type="checkbox" checked={onSaleOnly} onChange={(e) => setOnSaleOnly(e.target.checked)} className="w-4 h-4 accent-black rounded focus:ring-yellow-400" />
+                      <span className="text-sm text-black">On Sale</span>
                     </label>
-                    <label className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded">
-                      <input type="checkbox" checked={lowStockOnly} onChange={(e) => setLowStockOnly(e.target.checked)} className="w-4 h-4 text-red-600 rounded focus:ring-red-500" />
-                      <span className="text-sm text-gray-900">Limited Stock</span>
+                    <label className="flex items-center gap-3 cursor-pointer hover:bg-neutral-50 p-2 rounded">
+                      <input type="checkbox" checked={lowStockOnly} onChange={(e) => setLowStockOnly(e.target.checked)} className="w-4 h-4 accent-black rounded focus:ring-yellow-400" />
+                      <span className="text-sm text-black">Limited Stock</span>
                     </label>
                   </div>
                 </FilterSection>
@@ -381,21 +393,21 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                     <button
                       onClick={() => goToPage(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 rounded-lg border border-neutral-300 text-sm font-medium text-black hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       ← Previous
                     </button>
 
                     {paginationItems.map((item, idx) =>
                       item === '...'
-                        ? <span key={`ellipsis-${idx}`} className="px-2 text-gray-400 select-none">…</span>
+                        ? <span key={`ellipsis-${idx}`} className="px-2 text-neutral-400 select-none">…</span>
                         : <button
                             key={item}
                             onClick={() => goToPage(item as number)}
                             className={`w-10 h-10 rounded-lg text-sm font-medium transition-colors ${
                               currentPage === item
-                                ? 'bg-red-600 text-white shadow-sm'
-                                : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                ? 'bg-black text-yellow-400 shadow-sm border border-yellow-400'
+                                : 'border border-neutral-300 text-black hover:bg-neutral-50'
                             }`}
                           >
                             {item}
@@ -405,7 +417,7 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                     <button
                       onClick={() => goToPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 rounded-lg border border-neutral-300 text-sm font-medium text-black hover:bg-neutral-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     >
                       Next →
                     </button>
@@ -413,14 +425,14 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
                 )}
               </>
             ) : (
-              <div className="bg-white rounded-xl shadow p-12 text-center">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-12 h-12 text-gray-400" />
+              <div className="bg-white rounded-xl shadow p-12 text-center border border-neutral-200">
+                <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-12 h-12 text-yellow-400" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No Products Found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your filters</p>
+                <h3 className="text-xl font-black uppercase text-black mb-2">No Products Found</h3>
+                <p className="text-neutral-500 mb-4">Try adjusting your filters</p>
                 {activeFiltersCount > 0 && (
-                  <button onClick={clearAllFilters} className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                  <button onClick={clearAllFilters} className="px-6 py-2 bg-black text-white rounded-lg hover:bg-neutral-900 border border-transparent hover:border-yellow-400 font-bold uppercase text-sm">
                     Clear Filters
                   </button>
                 )}
@@ -435,16 +447,16 @@ export default function EnhancedCategoryPage({ category }: { category: Category 
 
 function FilterSection({ title, icon, isExpanded, onToggle, count, children }: FilterSectionProps) {
   return (
-    <div className="border-b border-gray-200 last:border-b-0">
-      <button onClick={onToggle} className="w-full flex items-center justify-between p-4 hover:bg-gray-50">
+    <div className="border-b border-neutral-200 last:border-b-0">
+      <button onClick={onToggle} className="w-full flex items-center justify-between p-4 hover:bg-neutral-50">
         <div className="flex items-center gap-2">
-          <span className="text-gray-600">{icon}</span>
-          <span className="font-semibold text-gray-900">{title}</span>
+          <span className="text-black">{icon}</span>
+          <span className="font-semibold text-black">{title}</span>
           {count != null && count > 0 && (
-            <span className="bg-red-600 text-white text-xs px-2 py-0.5 rounded-full font-bold">{count}</span>
+            <span className="bg-yellow-400 text-black text-xs px-2 py-0.5 rounded-full font-bold">{count}</span>
           )}
         </div>
-        {isExpanded ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+        {isExpanded ? <ChevronUp className="w-5 h-5 text-neutral-400" /> : <ChevronDown className="w-5 h-5 text-neutral-400" />}
       </button>
       {isExpanded && <div className="px-4 pb-4">{children}</div>}
     </div>
@@ -461,9 +473,9 @@ function ProductCard({ product, viewMode }: ProductCardProps) {
   if (viewMode === 'list') {
     return (
       <Link href={`/products/${product.slug}`} prefetch>
-        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border overflow-hidden group">
+        <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all border border-neutral-200 hover:border-yellow-400 overflow-hidden group">
           <div className="flex gap-4 p-4">
-            <div className="relative w-32 h-32 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
+            <div className="relative w-32 h-32 flex-shrink-0 bg-neutral-100 rounded-lg overflow-hidden">
               <Image
                 src={product.thumbnail}
                 alt={product.name}
@@ -471,36 +483,36 @@ function ProductCard({ product, viewMode }: ProductCardProps) {
                 className="object-cover group-hover:scale-105 transition-transform"
               />
               {hasDiscount && (
-                <span className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded">
+                <span className="absolute top-2 left-2 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded">
                   -{discountPercent}%
                 </span>
               )}
             </div>
             <div className="flex-1 flex flex-col justify-between">
               <div>
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                  <span className="font-medium text-gray-700">{product.category.name}</span>
+                <div className="flex items-center gap-2 text-xs text-neutral-500 mb-1 font-mono">
+                  <span className="font-medium text-neutral-700">{product.category.name}</span>
                   {product.bike && (
                     <>
                       <span>•</span>
-                      <span className="text-gray-600">{product.bike.brand.name} {product.bike.name}</span>
+                      <span className="text-neutral-600">{product.bike.brand.name} {product.bike.name}</span>
                     </>
                   )}
                 </div>
-                <h3 className="font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-2">
+                <h3 className="font-bold text-black mb-2 group-hover:text-yellow-600 transition-colors line-clamp-2">
                   {product.name}
                 </h3>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-gray-900">₹{finalPrice.toLocaleString('en-IN')}</span>
+                  <span className="text-2xl font-black text-black tabular-nums">₹{finalPrice.toLocaleString('en-IN')}</span>
                   {hasDiscount && (
-                    <span className="text-sm text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
+                    <span className="text-sm text-neutral-400 line-through tabular-nums">₹{product.price.toLocaleString('en-IN')}</span>
                   )}
                 </div>
                 {product.stock > 0
-                  ? <span className="text-sm text-green-600 font-medium flex items-center gap-1"><div className="w-2 h-2 bg-green-600 rounded-full" />In Stock</span>
-                  : <span className="text-sm text-red-600 font-medium">Out of Stock</span>
+                  ? <span className="text-sm text-black font-medium flex items-center gap-1"><div className="w-2 h-2 bg-yellow-400 rounded-full" />In Stock</span>
+                  : <span className="text-sm text-neutral-400 font-medium">Out of Stock</span>
                 }
               </div>
             </div>
@@ -512,8 +524,8 @@ function ProductCard({ product, viewMode }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.slug}`} prefetch>
-      <div className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all border overflow-hidden group h-full flex flex-col">
-        <div className="relative aspect-square bg-gray-50 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm hover:shadow-xl transition-all border border-neutral-200 hover:border-yellow-400 overflow-hidden group h-full flex flex-col">
+        <div className="relative aspect-square bg-neutral-100 overflow-hidden">
           <Image
             src={product.thumbnail}
             alt={product.name}
@@ -521,38 +533,38 @@ function ProductCard({ product, viewMode }: ProductCardProps) {
             className="object-cover group-hover:scale-105 transition-transform"
           />
           {hasDiscount && (
-            <span className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow">
+            <span className="absolute top-3 left-3 bg-gradient-to-r from-yellow-400 to-yellow-300 text-black text-xs font-bold px-3 py-1 rounded-full shadow">
               -{discountPercent}%
             </span>
           )}
           {product.stock < 10 && product.stock > 0 && (
-            <span className="absolute top-3 right-3 bg-orange-500 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+            <span className="absolute top-3 right-3 bg-black text-yellow-400 text-xs font-semibold px-3 py-1 rounded-full shadow">
               Only {product.stock} left
             </span>
           )}
           {product.stock === 0 && (
-            <span className="absolute top-3 right-3 bg-gray-800 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
+            <span className="absolute top-3 right-3 bg-neutral-800 text-white text-xs font-semibold px-3 py-1 rounded-full shadow">
               Out of Stock
             </span>
           )}
         </div>
         <div className="p-4 flex-1 flex flex-col">
-          <div className="flex items-center gap-2 mb-2 text-xs text-gray-500">
-            <span className="font-medium text-gray-700">{product.category.name}</span>
+          <div className="flex items-center gap-2 mb-2 text-xs text-neutral-500 font-mono">
+            <span className="font-medium text-neutral-700">{product.category.name}</span>
             {product.bike && (
               <>
                 <span>•</span>
-                <span className="truncate text-gray-600">{product.bike.brand.name} {product.bike.name}</span>
+                <span className="truncate text-neutral-600">{product.bike.brand.name} {product.bike.name}</span>
               </>
             )}
           </div>
-          <h3 className="text-base font-bold text-gray-900 mb-3 line-clamp-2 flex-1 group-hover:text-red-600 transition-colors">
+          <h3 className="text-base font-bold text-black mb-3 line-clamp-2 flex-1 group-hover:text-yellow-600 transition-colors">
             {product.name}
           </h3>
           <div className="flex items-center gap-2 mt-auto">
-            <span className="text-xl font-bold text-gray-900">₹{finalPrice.toLocaleString('en-IN')}</span>
+            <span className="text-xl font-black text-black tabular-nums">₹{finalPrice.toLocaleString('en-IN')}</span>
             {hasDiscount && (
-              <span className="text-sm text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
+              <span className="text-sm text-neutral-400 line-through tabular-nums">₹{product.price.toLocaleString('en-IN')}</span>
             )}
           </div>
         </div>

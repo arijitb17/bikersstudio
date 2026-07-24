@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/components/CartContext';
-import { Loader2, MapPin, CreditCard, Tag } from 'lucide-react';
+import { Loader2, MapPin, CreditCard, Tag, ShieldCheck } from 'lucide-react';
 import Script from 'next/script';
 import AddressForm from '@/components/AddressForm';
 import Image from 'next/image';
@@ -193,7 +193,7 @@ const finalTotal = subtotal + shipping - discount;
           name: session?.user?.name || '',
           email: session?.user?.email || '',
         },
-        theme: { color: '#DC2626' },
+        theme: { color: '#000000' },
         modal: {
           ondismiss: () => setIsProcessing(false),
         },
@@ -210,8 +210,8 @@ const finalTotal = subtotal + shipping - discount;
 
   if (status === 'loading' || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -227,28 +227,28 @@ const finalTotal = subtotal + shipping - discount;
         onError={() => setScriptError(true)}
       />
       {scriptError && (
-        <p className="text-sm text-red-500 text-center mt-2">
+        <p className="text-sm text-neutral-700 bg-neutral-100 border border-neutral-300 rounded-lg py-2 text-center mt-2 mx-4">
           Payment gateway failed to load. Please disable your ad blocker and refresh.
         </p>
       )}
 
-      <div className="min-h-screen bg-gray-50 py-40">
+      <div className="min-h-screen bg-neutral-50 py-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Checkout</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-black mb-8">Checkout</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column */}
             <div className="lg:col-span-2 space-y-6">
               {/* Delivery Address */}
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <MapPin className="w-5 h-5 text-red-600" />
-                    <h2 className="text-xl font-semibold text-gray-700">Delivery Address</h2>
+                    <MapPin className="w-5 h-5 text-black" />
+                    <h2 className="text-xl font-black uppercase tracking-tight text-black">Delivery Address</h2>
                   </div>
                   <button
                     onClick={() => setShowAddressForm(!showAddressForm)}
-                    className="text-sm text-red-600 hover:text-red-700 font-medium"
+                    className="text-sm text-black hover:text-yellow-600 font-medium transition-colors"
                   >
                     {showAddressForm ? 'Cancel' : '+ Add New'}
                   </button>
@@ -258,10 +258,10 @@ const finalTotal = subtotal + shipping - discount;
 
                 {addresses.length === 0 && !showAddressForm ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">No saved addresses</p>
+                    <p className="text-neutral-500 mb-4 text-sm">No saved addresses</p>
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                      className="px-5 py-2.5 bg-black text-yellow-400 rounded-lg hover:bg-neutral-900 font-bold uppercase text-sm transition-colors"
                     >
                       Add New Address
                     </button>
@@ -273,8 +273,8 @@ const finalTotal = subtotal + shipping - discount;
                         key={address.id}
                         className={`block p-4 border-2 rounded-lg cursor-pointer transition-colors ${
                           selectedAddress === address.id
-                            ? 'border-red-600 bg-red-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-black bg-yellow-50'
+                            : 'border-neutral-200 hover:border-neutral-400'
                         }`}
                       >
                         <input
@@ -287,15 +287,15 @@ const finalTotal = subtotal + shipping - discount;
                         />
                         <div className="flex justify-between">
                           <div>
-                            <p className="font-semibold text-gray-900">{address.fullName}</p>
-                            <p className="text-sm text-gray-600 mt-1">{address.street}</p>
-                            <p className="text-sm text-gray-600">
+                            <p className="font-semibold text-black">{address.fullName}</p>
+                            <p className="text-sm text-neutral-600 mt-1">{address.street}</p>
+                            <p className="text-sm text-neutral-600">
                               {address.city}, {address.state} - {address.pincode}
                             </p>
-                            <p className="text-sm text-gray-600">Phone: {address.phone}</p>
+                            <p className="text-sm text-neutral-600">Phone: {address.phone}</p>
                           </div>
                           {address.isDefault && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded h-fit">
+                            <span className="text-xs bg-yellow-400 text-black px-2 py-1 rounded-full h-fit font-bold uppercase">
                               Default
                             </span>
                           )}
@@ -307,17 +307,17 @@ const finalTotal = subtotal + shipping - discount;
               </div>
 
               {/* Order Items */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-4 text-gray-600">Order Items</h2>
+              <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200">
+                <h2 className="text-xl font-black uppercase tracking-tight text-black mb-4">Order Items</h2>
                 <div className="space-y-4">
                   {items.map((item) => {
                     const price = item.salePrice || item.price;
                     return (
                       <div
                         key={item.id}
-                        className="flex gap-4 pb-4 border-b"
+                        className="flex gap-4 pb-4 border-b border-neutral-200 last:border-b-0"
                       >
-                        <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden">
+                        <div className="relative w-20 h-20 bg-neutral-100 rounded-lg flex-shrink-0 overflow-hidden">
                           <Image
                             src={item.thumbnail}
                             alt={item.name}
@@ -326,26 +326,26 @@ const finalTotal = subtotal + shipping - discount;
                           />
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                          <h3 className="font-semibold text-black">{item.name}</h3>
                           <div className="flex flex-wrap gap-2 mt-1">
                             {item.selectedSize && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-700 font-mono">
                                 Size: {item.selectedSize}
                               </span>
                             )}
                             {item.selectedColor && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-700 font-mono">
                                 Color: {item.selectedColor}
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-500 mt-1">Qty: {item.quantity}</p>
-                          <p className="text-sm font-semibold text-red-600 mt-1">
+                          <p className="text-sm text-neutral-500 mt-1">Qty: {item.quantity}</p>
+                          <p className="text-sm font-semibold text-black mt-1 tabular-nums">
                             Rs. {price.toFixed(2)} × {item.quantity}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-bold text-gray-900">
+                          <p className="font-black text-black tabular-nums">
                             Rs. {(price * item.quantity).toFixed(2)}
                           </p>
                         </div>
@@ -358,46 +358,46 @@ const finalTotal = subtotal + shipping - discount;
 
             {/* Right Column - Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                <h2 className="text-xl font-semibold mb-4 text-gray-600">Order Summary</h2>
+              <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200 sticky top-4">
+                <h2 className="text-xl font-black uppercase tracking-tight text-black mb-4">Order Summary</h2>
 
                 <div className="space-y-3 mb-4">
-  <div className="flex justify-between text-sm">
-    <span className="text-gray-600">Subtotal:</span>
-    <span className="font-semibold text-gray-600">Rs. {subtotal.toFixed(2)}</span>
-  </div>
-  <div className="flex justify-between text-sm">
-    <span className="text-gray-600">Shipping:</span>
-    <span className="font-semibold text-gray-600">Rs. 500.00</span>
-  </div>
-  <div className="flex justify-between text-xs text-gray-400">
-    <span>GST included in product prices</span>
-  </div>
-  {discount > 0 && appliedCoupon && (
-    <div className="flex justify-between text-sm">
-      <div className="flex items-center gap-1">
-        <Tag className="w-3 h-3 text-green-600" />
-        <span className="text-green-600">Coupon ({appliedCoupon.code}):</span>
-      </div>
-      <span className="font-semibold text-green-600">
-        - Rs. {discount.toFixed(2)}
-      </span>
-    </div>
-  )}
-  <div className="border-t pt-3">
-    <div className="flex justify-between text-lg">
-      <span className="font-bold text-gray-900">Total:</span>
-      <span className="font-bold text-2xl text-red-600">
-        Rs. {finalTotal.toFixed(2)}
-      </span>
-    </div>
-  </div>
-</div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Subtotal:</span>
+                    <span className="font-semibold text-black tabular-nums">Rs. {subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Shipping:</span>
+                    <span className="font-semibold text-black tabular-nums">Rs. 500.00</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-neutral-400">
+                    <span>GST included in product prices</span>
+                  </div>
+                  {discount > 0 && appliedCoupon && (
+                    <div className="flex justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <Tag className="w-3 h-3 text-black" />
+                        <span className="text-neutral-600">Coupon ({appliedCoupon.code}):</span>
+                      </div>
+                      <span className="font-semibold text-black tabular-nums">
+                        - Rs. {discount.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="border-t border-neutral-200 pt-3">
+                    <div className="flex justify-between text-lg items-center">
+                      <span className="font-black uppercase text-black">Total:</span>
+                      <span className="font-black text-2xl text-black bg-yellow-400 px-2 py-1 rounded tabular-nums">
+                        Rs. {finalTotal.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 <button
                   onClick={handlePayment}
                   disabled={isProcessing || !selectedAddress || !razorpayLoaded}
-                  className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-black hover:bg-neutral-900 disabled:bg-neutral-300 disabled:text-neutral-500 text-yellow-400 font-bold uppercase py-4 rounded-xl transition-colors flex items-center justify-center gap-2 border border-transparent hover:border-yellow-400"
                 >
                   {isProcessing ? (
                     <>
@@ -417,7 +417,8 @@ const finalTotal = subtotal + shipping - discount;
                   )}
                 </button>
 
-                <p className="text-xs text-gray-500 text-center mt-4">
+                <p className="text-xs text-neutral-500 text-center mt-4 flex items-center justify-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-neutral-400" />
                   Secure payment powered by Razorpay
                 </p>
               </div>

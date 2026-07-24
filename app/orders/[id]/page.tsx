@@ -23,7 +23,7 @@ interface OrderItem {
   price: number | { toNumber: () => number };
   subtotal: number | { toNumber: () => number };
   selectedSize?: string | null;
-  selectedColor?: string | null; // ← added
+  selectedColor?: string | null;
   product: {
     name: string;
     thumbnail: string;
@@ -113,7 +113,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   if (status === 'loading' || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+        <Loader2 className="w-8 h-8 animate-spin text-black" />
       </div>
     );
   }
@@ -130,14 +130,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const currentStepIndex = statusSteps.findIndex((step) => step.key === order.status);
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-40 pb-10">
+    <div className="min-h-screen bg-neutral-50 pt-40 pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {showSuccess && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-green-600" />
+          <div className="mb-6 bg-yellow-400 border border-black rounded-lg p-4 flex items-center gap-3">
+            <CheckCircle className="w-5 h-5 text-black" />
             <div>
-              <p className="font-semibold text-green-900">Payment Successful!</p>
-              <p className="text-sm text-green-700">Your order has been placed successfully.</p>
+              <p className="font-black uppercase text-black">Payment Successful!</p>
+              <p className="text-sm text-neutral-800">Your order has been placed successfully.</p>
             </div>
           </div>
         )}
@@ -146,26 +146,26 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
           <div>
             <button
               onClick={() => router.push('/orders')}
-              className="flex items-center gap-2 text-red-600 hover:text-red-700 mb-2"
+              className="flex items-center gap-2 text-black hover:text-yellow-600 mb-2 font-medium"
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Orders
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
-            <p className="text-gray-600 mt-1">Order #{order.orderNumber}</p>
+            <h1 className="text-3xl font-black uppercase tracking-tight text-black">Order Details</h1>
+            <p className="text-neutral-600 mt-1 font-mono">Order #{order.orderNumber}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6 text-gray-600">
+          <div className="lg:col-span-2 space-y-6">
             {/* Status Progress */}
             {order.status !== 'CANCELLED' && order.status !== 'REFUNDED' && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold mb-6">Order Status</h2>
+              <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200">
+                <h2 className="text-xl font-black uppercase tracking-tight text-black mb-6">Order Status</h2>
                 <div className="relative">
-                  <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200">
+                  <div className="absolute top-4 left-0 right-0 h-0.5 bg-neutral-200">
                     <div
-                      className="h-full bg-green-600 transition-all duration-500"
+                      className="h-full bg-black transition-all duration-500"
                       style={{
                         width: `${(currentStepIndex / (statusSteps.length - 1)) * 100}%`,
                       }}
@@ -177,8 +177,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             index <= currentStepIndex
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-200 text-gray-400'
+                              ? 'bg-black text-yellow-400'
+                              : 'bg-neutral-200 text-neutral-400'
                           }`}
                         >
                           {index < currentStepIndex ? (
@@ -190,8 +190,8 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         <p
                           className={`text-xs mt-2 text-center max-w-[80px] ${
                             index <= currentStepIndex
-                              ? 'text-gray-900 font-medium'
-                              : 'text-gray-500'
+                              ? 'text-black font-medium'
+                              : 'text-neutral-500'
                           }`}
                         >
                           {step.label}
@@ -201,14 +201,14 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
                 {order.trackingNumber && (
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                  <div className="mt-6 p-4 bg-neutral-100 rounded-lg border border-neutral-200">
                     <div className="flex items-center gap-2">
-                      <Truck className="w-5 h-5 text-blue-600" />
+                      <Truck className="w-5 h-5 text-black" />
                       <div>
-                        <p className="text-sm font-medium text-gray-900">Tracking Number</p>
-                        <p className="text-sm text-gray-600">{order.trackingNumber}</p>
+                        <p className="text-sm font-medium text-black">Tracking Number</p>
+                        <p className="text-sm text-neutral-700 font-mono">{order.trackingNumber}</p>
                         {order.courierService && (
-                          <p className="text-xs text-gray-500 mt-1">via {order.courierService}</p>
+                          <p className="text-xs text-neutral-500 mt-1">via {order.courierService}</p>
                         )}
                       </div>
                     </div>
@@ -218,12 +218,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             )}
 
             {/* Order Items */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4">Order Items</h2>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200">
+              <h2 className="text-xl font-black uppercase tracking-tight text-black mb-4">Order Items</h2>
               <div className="space-y-4">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
-                    <div className="relative w-20 h-20 bg-gray-100 rounded-lg flex-shrink-0">
+                  <div key={item.id} className="flex gap-4 pb-4 border-b border-neutral-200 last:border-b-0">
+                    <div className="relative w-20 h-20 bg-neutral-100 rounded-lg flex-shrink-0">
                       <Image
                         src={item.product.thumbnail}
                         alt={item.product.name}
@@ -234,29 +234,29 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <div className="flex-1">
                       <Link
                         href={`/products/${item.product.slug}`}
-                        className="font-semibold text-gray-900 hover:text-red-600"
+                        className="font-semibold text-black hover:text-yellow-600"
                       >
                         {item.product.name}
                       </Link>
                       <div className="flex flex-wrap gap-1 mt-1">
                         {item.selectedSize && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-700 font-mono">
                             Size: {item.selectedSize}
                           </span>
                         )}
                         {item.selectedColor && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-700 font-mono">
                             Color: {item.selectedColor}
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">Quantity: {item.quantity}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-neutral-600 mt-1">Quantity: {item.quantity}</p>
+                      <p className="text-sm text-neutral-600">
                         Price: Rs. {toNumber(item.price).toFixed(2)}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-gray-900">
+                      <p className="font-black text-black tabular-nums">
                         Rs. {toNumber(item.subtotal).toFixed(2)}
                       </p>
                     </div>
@@ -266,20 +266,20 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             </div>
 
             {/* Shipping Address */}
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200">
               <div className="flex items-center gap-2 mb-4">
-                <MapPin className="w-5 h-5 text-red-600" />
-                <h2 className="text-xl font-semibold">Shipping Address</h2>
+                <MapPin className="w-5 h-5 text-black" />
+                <h2 className="text-xl font-black uppercase tracking-tight text-black">Shipping Address</h2>
               </div>
-              <div className="text-gray-700">
-                <p className="font-semibold text-gray-900">{order.address.fullName}</p>
+              <div className="text-neutral-700">
+                <p className="font-semibold text-black">{order.address.fullName}</p>
                 <p className="mt-1">{order.address.street}</p>
                 <p>
                   {order.address.city}, {order.address.state}
                 </p>
                 <p>{order.address.pincode}</p>
                 <div className="flex items-center gap-2 mt-3 text-sm">
-                  <Phone className="w-4 h-4 text-gray-400" />
+                  <Phone className="w-4 h-4 text-neutral-400" />
                   <span>{order.address.phone}</span>
                 </div>
               </div>
@@ -288,24 +288,24 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-              <h2 className="text-xl font-semibold mb-4 text-gray-600">Order Summary</h2>
+            <div className="bg-white rounded-lg shadow-md p-6 border border-neutral-200 sticky top-4">
+              <h2 className="text-xl font-black uppercase tracking-tight text-black mb-4">Order Summary</h2>
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal:</span>
-                  <span className="font-semibold text-gray-600">
+                  <span className="text-neutral-600">Subtotal:</span>
+                  <span className="font-semibold text-black tabular-nums">
                     Rs. {toNumber(order.subtotal).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax (GST):</span>
-                  <span className="font-semibold text-gray-600">
+                  <span className="text-neutral-600">Tax (GST):</span>
+                  <span className="font-semibold text-black tabular-nums">
                     Rs. {toNumber(order.tax).toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping:</span>
-                  <span className="font-semibold text-gray-600">
+                  <span className="text-neutral-600">Shipping:</span>
+                  <span className="font-semibold text-black tabular-nums">
                     {toNumber(order.shippingCost) === 0
                       ? 'FREE'
                       : `Rs. ${toNumber(order.shippingCost).toFixed(2)}`}
@@ -313,16 +313,16 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
                 {toNumber(order.discount) > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-green-600">Discount:</span>
-                    <span className="font-semibold text-green-600">
+                    <span className="text-neutral-600">Discount:</span>
+                    <span className="font-semibold text-black tabular-nums">
                       - Rs. {toNumber(order.discount).toFixed(2)}
                     </span>
                   </div>
                 )}
-                <div className="border-t pt-3">
-                  <div className="flex justify-between text-lg">
-                    <span className="font-bold text-gray-900">Total:</span>
-                    <span className="font-bold text-2xl text-red-600 flex items-center">
+                <div className="border-t border-neutral-200 pt-3">
+                  <div className="flex justify-between text-lg items-center">
+                    <span className="font-black uppercase text-black">Total:</span>
+                    <span className="font-black text-2xl text-black flex items-center bg-yellow-400 px-2 py-1 rounded tabular-nums">
                       <IndianRupee className="w-5 h-5" />
                       {toNumber(order.total).toFixed(2)}
                     </span>
@@ -330,44 +330,46 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
 
-              <div className="border-t pt-4 space-y-3">
+              <div className="border-t border-neutral-200 pt-4 space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Payment Method:</span>
-                  <span className="font-semibold text-gray-600">{order.paymentMethod}</span>
+                  <span className="text-neutral-600 font-mono">Payment Method:</span>
+                  <span className="font-semibold text-black">{order.paymentMethod}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Payment Status:</span>
+                  <span className="text-neutral-600 font-mono">Payment Status:</span>
                   <span
-                    className={`font-semibold ${
-                      order.paymentStatus === 'COMPLETED' ? 'text-green-600' : 'text-yellow-600'
+                    className={`font-semibold px-2 py-0.5 rounded-full text-xs ${
+                      order.paymentStatus === 'COMPLETED'
+                        ? 'bg-yellow-400 text-black'
+                        : 'bg-neutral-200 text-neutral-800'
                     }`}
                   >
                     {order.paymentStatus}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Order Date:</span>
-                  <span className="font-semibold text-gray-600">
+                  <span className="text-neutral-600 font-mono">Order Date:</span>
+                  <span className="font-semibold text-black">
                     {new Date(order.createdAt).toLocaleDateString('en-IN')}
                   </span>
                 </div>
                 {order.deliveredAt && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Delivered On:</span>
-                    <span className="font-semibold">
+                    <span className="text-neutral-600 font-mono">Delivered On:</span>
+                    <span className="font-semibold text-black">
                       {new Date(order.deliveredAt).toLocaleDateString('en-IN')}
                     </span>
                   </div>
                 )}
               </div>
 
-              <div className="mt-6 pt-6 border-t">
-                <p className="text-xs text-gray-500 text-center">
+              <div className="mt-6 pt-6 border-t border-neutral-200">
+                <p className="text-xs text-neutral-500 text-center uppercase font-mono">
                   Need help? Contact our support team
                 </p>
-                <div className="flex items-center justify-center gap-2 mt-2 text-sm text-red-600">
+                <div className="flex items-center justify-center gap-2 mt-2 text-sm text-black">
                   <Mail className="w-4 h-4" />
-                  <a href="mailto:bikerstudio.com@gmail.com" className="hover:underline">
+                  <a href="mailto:bikerstudio.com@gmail.com" className="hover:text-yellow-600 hover:underline decoration-yellow-400 underline-offset-4">
                     bikerstudio.com@gmail.com
                   </a>
                 </div>

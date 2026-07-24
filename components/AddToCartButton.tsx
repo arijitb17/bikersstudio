@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from './CartContext';
-import { Check, ShoppingCart } from 'lucide-react';
+import { Check, ShoppingCart, Ban } from 'lucide-react';
 
 interface AddToCartButtonProps {
   disabled?: boolean;
@@ -60,38 +60,45 @@ export default function AddToCartButton({
     setTimeout(() => setIsAdded(false), 2000);
   };
 
-  const isDisabled = disabled || outOfStock || isAdded || isAtStockLimit;
+  const isBlocked = outOfStock || isAtStockLimit;
+  const isDisabled = disabled || isBlocked || isAdded;
+
+  const stateClasses = isAdded
+    ? 'bg-black text-white cursor-default'
+    : isBlocked
+    ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200'
+    : disabled
+    ? 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200'
+    : 'bg-gradient-to-r from-yellow-400 to-yellow-300 text-black hover:from-yellow-300 hover:to-yellow-200 active:scale-[0.98] shadow-md hover:shadow-lg hover:shadow-yellow-400/30';
 
   return (
     <button
       onClick={handleAddToCart}
       disabled={isDisabled}
-      className={`w-full font-bold py-4 rounded-xl transition-all duration-300 shadow-lg flex items-center justify-center gap-2
-        ${
-          isAdded
-            ? 'bg-green-600 text-white cursor-default'
-            : outOfStock || isAtStockLimit
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            : disabled
-            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-            : 'bg-red-600 hover:bg-red-700 text-white hover:scale-105 transform'
-        }`}
+      className={`w-full font-bold text-sm uppercase tracking-wide py-4 rounded-xl
+                  transition-all duration-300 ease-out
+                  flex items-center justify-center gap-2
+                  ${stateClasses}`}
     >
       {isAdded ? (
         <>
-          <Check className="w-5 h-5" />
-          Added to Cart!
+          <Check className="w-4 h-4" strokeWidth={3} />
+          Added to Cart
+        </>
+      ) : isBlocked ? (
+        <>
+          <Ban className="w-4 h-4" />
+          {isAtStockLimit ? `Max Stock (${stock})` : 'Out of Stock'}
+        </>
+      ) : disabled ? (
+        <>
+          <ShoppingCart className="w-4 h-4" />
+          Select a Size
         </>
       ) : (
         <>
-          <ShoppingCart className="w-5 h-5" />
-          {outOfStock
-            ? 'Out of Stock'
-            : isAtStockLimit
-            ? `Max stock reached (${stock})`
-            : disabled
-            ? 'Select a size first'
-            : 'Add to Cart'}
+          <ShoppingCart className="w-4 h-4" />
+          Add to Cart
         </>
       )}
     </button>

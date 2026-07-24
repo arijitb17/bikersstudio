@@ -78,7 +78,7 @@ export function ProductVariantShell({ baseProduct, colorVariants }: ProductVaria
       <div className="space-y-6">
 
         {/* Brand Badge */}
-        <div className="inline-flex items-center gap-2 bg-gradient-to-r from-red-50 to-orange-50 text-red-600 px-3 py-1.5 rounded-full font-bold text-sm border border-red-200">
+        <div className="inline-flex items-center gap-2 bg-black text-yellow-400 px-3 py-1.5 rounded-full font-bold text-sm font-mono">
           <Package className="w-4 h-4" />
           {baseProduct.brandName}
           {baseProduct.bikeName ? ` · ${baseProduct.bikeName}` : ''}
@@ -86,60 +86,69 @@ export function ProductVariantShell({ baseProduct, colorVariants }: ProductVaria
 
         {/* Title + Ratings */}
         <div>
-          <h1 className="text-3xl xl:text-4xl font-bold text-gray-900 mb-3 leading-tight">
+          <h1 className="text-3xl xl:text-4xl font-black uppercase tracking-tight text-black mb-3 leading-tight">
             {activeName}
           </h1>
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
+            <div className="flex items-center gap-2 bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded-lg">
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-4 h-4 ${i < Math.round(baseProduct.avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                  <Star key={i} className={`w-4 h-4 ${i < Math.round(baseProduct.avgRating) ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-300'}`} />
                 ))}
               </div>
-              <span className="text-sm font-bold text-gray-900">{baseProduct.avgRating.toFixed(1)}</span>
+              <span className="text-sm font-bold text-black">{baseProduct.avgRating.toFixed(1)}</span>
             </div>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-neutral-600 font-mono">
               {baseProduct.reviewCount} {baseProduct.reviewCount === 1 ? 'review' : 'reviews'}
             </span>
           </div>
         </div>
 
         {/* Pricing */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
-          {hasSize ? (
-            <>
-              <p className="text-sm text-gray-500 mb-1">Starting from</p>
-              <span className="text-4xl font-bold text-red-600">Rs. {lowestSizePrice!.toLocaleString()}</span>
-              <p className="text-sm text-gray-600 mt-1">Select a size below to see exact price</p>
-            </>
-          ) : activeSalePrice ? (
-            <>
-              <div className="flex items-baseline gap-3 mb-1">
-                <span className="text-4xl font-bold text-red-600">Rs. {activeSalePrice.toLocaleString()}</span>
-                <span className="text-xl text-gray-400 line-through">Rs. {activePrice.toLocaleString()}</span>
-                <span className="bg-red-600 text-white px-2.5 py-1 rounded-full font-bold text-sm">Save {activeDiscount}%</span>
-              </div>
-              <p className="text-sm text-gray-600">Inclusive of all taxes</p>
-            </>
-          ) : (
-            <>
-              <span className="text-4xl font-bold text-gray-900">Rs. {activePrice.toLocaleString()}</span>
-              <p className="text-sm text-gray-600 mt-1">Inclusive of all taxes</p>
-            </>
-          )}
+        <div className="bg-black rounded-xl p-5 relative overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage:
+                'repeating-linear-gradient(115deg, #facc15 0px, #facc15 2px, transparent 2px, transparent 40px)',
+            }}
+          />
+          <div className="relative">
+            {hasSize ? (
+              <>
+                <p className="text-sm text-neutral-400 mb-1 font-mono">Starting from</p>
+                <span className="text-4xl font-black text-yellow-400 tabular-nums">Rs. {lowestSizePrice!.toLocaleString()}</span>
+                <p className="text-sm text-neutral-400 mt-1">Select a size below to see exact price</p>
+              </>
+            ) : activeSalePrice ? (
+              <>
+                <div className="flex items-baseline gap-3 mb-1 flex-wrap">
+                  <span className="text-4xl font-black text-yellow-400 tabular-nums">Rs. {activeSalePrice.toLocaleString()}</span>
+                  <span className="text-xl text-neutral-500 line-through tabular-nums">Rs. {activePrice.toLocaleString()}</span>
+                  <span className="bg-yellow-400 text-black px-2.5 py-1 rounded-full font-bold text-sm">Save {activeDiscount}%</span>
+                </div>
+                <p className="text-sm text-neutral-400">Inclusive of all taxes</p>
+              </>
+            ) : (
+              <>
+                <span className="text-4xl font-black text-white tabular-nums">Rs. {activePrice.toLocaleString()}</span>
+                <p className="text-sm text-neutral-400 mt-1">Inclusive of all taxes</p>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Stock */}
-        <div className={`p-3 rounded-xl border-2 ${activeStock > 0 ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+        <div className={`p-3 rounded-xl border-2 ${activeStock > 0 ? 'bg-yellow-50 border-yellow-300' : 'bg-neutral-100 border-neutral-300'}`}>
           {activeStock > 0 ? (
-            <div className="flex items-center gap-3 text-green-700">
-              <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse" />
+            <div className="flex items-center gap-3 text-black">
+              <div className="w-2.5 h-2.5 bg-yellow-400 rounded-full animate-pulse" />
               <span className="font-bold text-sm">In Stock</span>
-              <span className="text-sm text-green-600">({activeStock} units available)</span>
+              <span className="text-sm text-neutral-600">({activeStock} units available)</span>
             </div>
           ) : (
-            <div className="flex items-center gap-3 text-red-600">
-              <div className="w-2.5 h-2.5 bg-red-500 rounded-full" />
+            <div className="flex items-center gap-3 text-neutral-600">
+              <div className="w-2.5 h-2.5 bg-neutral-500 rounded-full" />
               <span className="font-bold text-sm">Out of Stock</span>
             </div>
           )}
@@ -153,13 +162,13 @@ export function ProductVariantShell({ baseProduct, colorVariants }: ProductVaria
             { icon: RefreshCw, title: 'Easy Returns',  sub: '7 Days Policy'        },
             { icon: Package,   title: 'Secure Pack',   sub: 'Safe Delivery'        },
           ] as const).map(({ icon: Icon, title, sub }) => (
-            <div key={title} className="flex items-start gap-3 p-3 bg-white rounded-xl border border-gray-200 hover:border-red-300 hover:shadow-md transition-all">
-              <div className="w-9 h-9 bg-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Icon className="w-4 h-4 text-red-600" />
+            <div key={title} className="flex items-start gap-3 p-3 bg-white rounded-xl border border-neutral-200 hover:border-yellow-400 hover:shadow-md transition-all">
+              <div className="w-9 h-9 bg-black rounded-lg flex items-center justify-center flex-shrink-0">
+                <Icon className="w-4 h-4 text-yellow-400" />
               </div>
               <div>
-                <p className="font-bold text-gray-900 text-sm mb-0.5">{title}</p>
-                <p className="text-xs text-gray-600">{sub}</p>
+                <p className="font-bold text-black text-sm mb-0.5">{title}</p>
+                <p className="text-xs text-neutral-600">{sub}</p>
               </div>
             </div>
           ))}
@@ -185,9 +194,9 @@ export function ProductVariantShell({ baseProduct, colorVariants }: ProductVaria
         />
 
         {/* SKU */}
-        <div className="pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-500">
-            SKU: <span className="font-semibold text-gray-700">{baseProduct.sku}</span>
+        <div className="pt-4 border-t border-neutral-200">
+          <p className="text-sm text-neutral-500 font-mono">
+            SKU: <span className="font-semibold text-neutral-700">{baseProduct.sku}</span>
           </p>
         </div>
       </div>
