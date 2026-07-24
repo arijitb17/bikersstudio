@@ -44,7 +44,7 @@ function MegaMenuGrid({
 }) {
   return (
     <div
-      className="fixed left-0 right-0 top-[152px] w-full border-t border-yellow-600/30 shadow-xl z-50 animate-slideDown mega-menu"
+      className="fixed left-0 right-0 top-[152px] w-full border-t border-black/20 shadow-xl z-50 animate-slideDown mega-menu"
       style={{
         maxHeight: "60vh",
         overflowY: "auto",
@@ -55,7 +55,7 @@ function MegaMenuGrid({
         <div className={`grid grid-cols-${cols} gap-8`}>
           {Object.entries(data).map(([category, items]) => (
             <div key={category} className="space-y-3">
-              <h3 className="font-bold text-white text-base uppercase tracking-wide border-b border-black/20 pb-2">
+              <h3 className="font-bold text-black text-base uppercase tracking-wide border-b border-black/20 pb-2">
                 {category}
               </h3>
               <div className="space-y-2">
@@ -63,7 +63,7 @@ function MegaMenuGrid({
                   <Link
                     key={item.slug}
                     href={`/categories/${item.slug}`}
-                    className="block text-base text-white/80 hover:text-white hover:pl-2 transition-all"
+                    className="block text-base text-black/70 hover:text-black hover:pl-2 transition-all"
                     onClick={onClose}
                   >
                     {item.name}
@@ -90,6 +90,10 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const [menuStructure, setMenuStructure] = useState<MenuStructure>({});
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Mobile accordion state — only one brand and one section open at a time
+  const [mobileBrandOpen, setMobileBrandOpen] = useState<string | null>(null);
+  const [mobileSectionOpen, setMobileSectionOpen] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -141,6 +145,14 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Lock body scroll while the mobile menu is open
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   const handleDropdownToggle = (name: string) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
@@ -150,6 +162,8 @@ export default function Navbar() {
     setMobileMenuOpen(false);
     setUserMenuOpen(false);
     setShowResults(false);
+    setMobileBrandOpen(null);
+    setMobileSectionOpen(null);
   };
 
   const handleSignOut = () => signOut({ callbackUrl: "/" });
@@ -275,7 +289,7 @@ export default function Navbar() {
   </div>
 </div>
 
-            <div className="flex items-center gap-6 min-w-[120px] justify-end">
+            <div className="flex items-center gap-4 sm:gap-6 min-w-[80px] sm:min-w-[120px] justify-end">
               <button onClick={openCart} className="relative hidden sm:block hover:scale-110 transition-transform group">
                 <ShoppingCart className="w-7 h-7 text-white transition-colors" />
                 {itemCount > 0 && (
@@ -323,8 +337,25 @@ export default function Navbar() {
                 )}
               </div>
 
-              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden hover:bg-black/10 p-2 rounded-lg transition-colors">
-                {mobileMenuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+              {/* Mobile hamburger */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+                aria-expanded={mobileMenuOpen}
+                className="md:hidden relative flex items-center justify-center w-11 h-11 rounded-full bg-white/5 border border-yellow-500/25 active:scale-90 transition-all duration-200"
+              >
+                <span className="relative w-6 h-6">
+                  <Menu
+                    className={`w-6 h-6 text-white absolute inset-0 transition-all duration-200 ${
+                      mobileMenuOpen ? "opacity-0 rotate-90 scale-50" : "opacity-100 rotate-0 scale-100"
+                    }`}
+                  />
+                  <X
+                    className={`w-6 h-6 text-white absolute inset-0 transition-all duration-200 ${
+                      mobileMenuOpen ? "opacity-100 rotate-0 scale-100" : "opacity-0 -rotate-90 scale-50"
+                    }`}
+                  />
+                </span>
               </button>
             </div>
           </div>
@@ -347,7 +378,7 @@ export default function Navbar() {
               </button>
               {openDropdown === "brands" && (
                 <div
-                  className="fixed left-0 right-0 top-[152px] w-full border-t border-yellow-600/30 shadow-xl z-50 animate-slideDown mega-menu"
+                  className="fixed left-0 right-0 top-[152px] w-full border-t border-black/20 shadow-xl z-50 animate-slideDown mega-menu"
                   style={{
                     maxHeight: "60vh",
                     overflowY: "auto",
@@ -358,10 +389,10 @@ export default function Navbar() {
                     <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
                       {[...brands].sort((a, b) => b.bikes.length - a.bikes.length).map((brand) => (
                         <div key={brand.slug} className="space-y-3">
-                          <Link href={`/brands/${brand.slug}`} className="block font-bold text-white hover:text-white/70 transition-colors text-xl mb-4" onClick={closeAllMenus}>{brand.name}</Link>
+                          <Link href={`/brands/${brand.slug}`} className="block font-bold text-black hover:text-black/70 transition-colors text-xl mb-4" onClick={closeAllMenus}>{brand.name}</Link>
                           <div className="space-y-2">
                             {brand.bikes.map((bike) => (
-                              <Link key={bike.slug} href={`/bikes/${bike.slug}`} className="block text-base text-white/80 hover:text-white hover:pl-2 transition-all" onClick={closeAllMenus}>{bike.name}</Link>
+                              <Link key={bike.slug} href={`/bikes/${bike.slug}`} className="block text-base text-black/70 hover:text-black hover:pl-2 transition-all" onClick={closeAllMenus}>{bike.name}</Link>
                             ))}
                           </div>
                         </div>
@@ -392,87 +423,160 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu — reorganized into distinct card sections + accordions */}
       {mobileMenuOpen && (
         <div
-          className="md:hidden border-t border-yellow-600/30 max-h-[calc(100vh-80px)] overflow-y-auto"
+          className="md:hidden max-h-[calc(100vh-84px)] overflow-y-auto"
           style={{ background: "linear-gradient(180deg, #f0b414 0%, #e6a800 100%)" }}
         >
-          <div className="px-6 py-4 space-y-4">
+          <div className="px-4 py-5 space-y-4">
+
+            {/* Search */}
             <div className="relative">
-              <input type="text" placeholder="Search products..." className="w-full px-4 py-3 pr-12 rounded-lg bg-black/10 text-white placeholder:text-white/70 text-lg focus:outline-none focus:ring-2 focus:ring-black/30" />
-              <button className="absolute right-3 top-1/2 -translate-y-1/2"><Search className="w-5 h-5 text-white" /></button>
+              <input
+                type="text"
+                placeholder="Search products..."
+                className="w-full px-4 py-3.5 pr-12 rounded-xl bg-white text-black placeholder:text-black/40 text-base shadow-sm focus:outline-none focus:ring-2 focus:ring-black/30"
+              />
+              <button className="absolute right-4 top-1/2 -translate-y-1/2">
+                <Search className="w-5 h-5 text-black/50" />
+              </button>
             </div>
 
-            {session ? (
-              <div className="border-b border-black/10 pb-4">
-                <div className="flex items-center gap-3 mb-3">
-                  {session.user.image ? (
-                    <Image src={session.user.image} alt={session.user.name || "User"} width={40} height={40} className="rounded-full" />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-white text-yellow-800 flex items-center justify-center font-bold text-xl">{session.user.name?.[0]?.toUpperCase() || "U"}</div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-white text-lg">{session.user.name}</p>
-                    <p className="text-base text-white/70">{session.user.email}</p>
+            {/* Account card */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              {session ? (
+                <>
+                  <div className="flex items-center gap-3 px-4 py-4 border-b border-neutral-100">
+                    {session.user.image ? (
+                      <Image src={session.user.image} alt={session.user.name || "User"} width={40} height={40} className="rounded-full" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-black text-yellow-400 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                        {session.user.name?.[0]?.toUpperCase() || "U"}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-black text-base truncate">{session.user.name}</p>
+                      <p className="text-sm text-neutral-500 truncate">{session.user.email}</p>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Link href="/profile" className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white text-lg" onClick={closeAllMenus}><User className="w-5 h-5" /><span>My Profile</span></Link>
-                  <Link href="/orders" className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white text-lg" onClick={closeAllMenus}><Package className="w-5 h-5" /><span>My Orders</span></Link>
-                  {session.user.role === "ADMIN" && (
-                    <Link href="/admin" className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white text-lg" onClick={closeAllMenus}><Settings className="w-5 h-5" /><span>Admin Panel</span></Link>
-                  )}
-                  <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2 hover:bg-black/10 rounded-lg text-white w-full text-lg"><LogOut className="w-5 h-5" /><span>Sign Out</span></button>
-                </div>
-              </div>
-            ) : (
-              <Link href="/auth/signin" className="flex items-center justify-center gap-2 px-4 py-3 bg-white text-yellow-800 rounded-lg hover:bg-yellow-50 transition-colors font-semibold text-lg" onClick={closeAllMenus}><User className="w-5 h-5" />Sign In</Link>
-            )}
+                  <div>
+                    <Link href="/profile" className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 text-black text-base border-b border-neutral-100" onClick={closeAllMenus}>
+                      <User className="w-5 h-5 text-neutral-500" /><span>My Profile</span>
+                    </Link>
+                    <Link href="/orders" className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 text-black text-base border-b border-neutral-100" onClick={closeAllMenus}>
+                      <Package className="w-5 h-5 text-neutral-500" /><span>My Orders</span>
+                    </Link>
+                    {session.user.role === "ADMIN" && (
+                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 text-black text-base border-b border-neutral-100" onClick={closeAllMenus}>
+                        <Settings className="w-5 h-5 text-neutral-500" /><span>Admin Panel</span>
+                      </Link>
+                    )}
+                    <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-red-600 w-full text-base">
+                      <LogOut className="w-5 h-5" /><span>Sign Out</span>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <Link
+                  href="/auth/signin"
+                  className="flex items-center justify-center gap-2 px-4 py-3.5 bg-black text-yellow-400 font-semibold text-base"
+                  onClick={closeAllMenus}
+                >
+                  <User className="w-5 h-5" />Sign In
+                </Link>
+              )}
+            </div>
 
-            <button onClick={() => { openCart(); closeAllMenus(); }} className="flex items-center justify-between w-full px-4 py-3 hover:bg-black/10 rounded-lg">
+            {/* Cart card */}
+            <button
+              onClick={() => { openCart(); closeAllMenus(); }}
+              className="flex items-center justify-between w-full bg-white rounded-xl shadow-sm px-4 py-4"
+            >
               <div className="flex items-center gap-3">
-                <ShoppingCart className="w-6 h-6 text-white" />
-                <span className="font-medium text-white text-lg">Shopping Cart</span>
+                <ShoppingCart className="w-5 h-5 text-black" />
+                <span className="font-medium text-black text-base">Shopping Cart</span>
               </div>
-              {itemCount > 0 && <span className="bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-semibold">{itemCount}</span>}
+              {itemCount > 0 && (
+                <span className="bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-semibold">
+                  {itemCount}
+                </span>
+              )}
             </button>
 
-            <div className="space-y-4">
-              {/* Mobile: Shop by Bike */}
-              <div>
-                <div className="font-bold text-white mb-3 text-xl">Shop by Bike</div>
-                {brands.map((brand) => (
-                  <div key={brand.slug} className="mb-4">
-                    <Link href={`/brands/${brand.slug}`} className="block font-semibold text-white hover:text-white/70 mb-2 text-lg" onClick={closeAllMenus}>{brand.name}</Link>
-                    <div className="pl-4 space-y-1">
-                      {brand.bikes.map((bike) => (
-                        <Link key={bike.slug} href={`/bikes/${bike.slug}`} className="block text-base text-white/80 hover:text-white py-1" onClick={closeAllMenus}>{bike.name}</Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+            {/* Shop by Bike — accordion */}
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-neutral-100">
+                <span className="font-black text-black text-sm uppercase tracking-wide">Shop by Bike</span>
               </div>
-
-              {/* Mobile: dynamic sections */}
-              {menuSections.map(([key, data]) => (
-                <div key={key}>
-                  <div className="font-bold text-white mb-3 text-xl">
-                    {SECTION_LABELS[key] || key.replace(/([A-Z])/g, " $1").trim()}
-                  </div>
-                  {Object.entries(data).map(([category, items]) => (
-                    <div key={category} className="mb-4">
-                      <div className="font-semibold text-white text-base mb-2">{category}</div>
-                      <div className="pl-4 space-y-1">
-                        {items.map((item) => (
-                          <Link key={item.slug} href={`/categories/${item.slug}`} className="block text-base text-white/80 hover:text-white py-1" onClick={closeAllMenus}>{item.name}</Link>
+              {brands.map((brand, i) => {
+                const isOpen = mobileBrandOpen === brand.slug;
+                return (
+                  <div key={brand.slug} className={i !== brands.length - 1 ? "border-b border-neutral-100" : ""}>
+                    <button
+                      onClick={() => setMobileBrandOpen(isOpen ? null : brand.slug)}
+                      className="flex items-center justify-between w-full px-4 py-3 text-left"
+                    >
+                      <span className="font-semibold text-black text-base">{brand.name}</span>
+                      <ChevronDown className={`w-4 h-4 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="pb-2 px-4 space-y-1 bg-neutral-50">
+                        {brand.bikes.map((bike) => (
+                          <Link
+                            key={bike.slug}
+                            href={`/bikes/${bike.slug}`}
+                            className="block text-sm text-neutral-600 hover:text-black py-1.5"
+                            onClick={closeAllMenus}
+                          >
+                            {bike.name}
+                          </Link>
                         ))}
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
+                    )}
+                  </div>
+                );
+              })}
             </div>
+
+            {/* Dynamic sections — accordion */}
+            {menuSections.map(([key, data]) => {
+              const isOpen = mobileSectionOpen === key;
+              return (
+                <div key={key} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                  <button
+                    onClick={() => setMobileSectionOpen(isOpen ? null : key)}
+                    className="flex items-center justify-between w-full px-4 py-3.5 text-left"
+                  >
+                    <span className="font-black text-black text-sm uppercase tracking-wide">
+                      {SECTION_LABELS[key] || key.replace(/([A-Z])/g, " $1").trim()}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-neutral-400 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="border-t border-neutral-100">
+                      {Object.entries(data).map(([category, items], i, arr) => (
+                        <div key={category} className={i !== arr.length - 1 ? "px-4 py-3 border-b border-neutral-100" : "px-4 py-3"}>
+                          <div className="font-semibold text-black text-sm mb-2">{category}</div>
+                          <div className="space-y-1">
+                            {items.map((item) => (
+                              <Link
+                                key={item.slug}
+                                href={`/categories/${item.slug}`}
+                                className="block text-sm text-neutral-600 hover:text-black py-1"
+                                onClick={closeAllMenus}
+                              >
+                                {item.name}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

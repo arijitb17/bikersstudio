@@ -24,18 +24,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${poppins.variable} antialiased`}
-      >
-        <AuthProvider>
-          <CartWrapper>
-            <PageLoader>
-              <Navbar />
-              {children}
-            </PageLoader>
-          </CartWrapper>
-        </AuthProvider>
-      </body>
-    </html>
+  <body className={`${poppins.variable} antialiased`}>
+    <AuthProvider>
+      <CartWrapper>
+        <PageLoader>
+          <Navbar />
+
+          <main className="pt-[88px] md:pt-0">
+            {children}
+          </main>
+
+        </PageLoader>
+      </CartWrapper>
+    </AuthProvider>
+  </body>
+</html>
   );
 }

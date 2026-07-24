@@ -64,7 +64,7 @@ export default function HeroSection() {
 
   if (!mounted || loading) {
     return (
-      <div className="relative h-screen overflow-hidden mt-[80px] bg-black flex items-center justify-center">
+      <div className="hidden md:flex relative h-screen overflow-hidden mt-[80px] bg-black items-center justify-center">
         <div className="text-white text-xl">Loading...</div>
       </div>
     );
@@ -72,12 +72,12 @@ export default function HeroSection() {
 
   if (banners.length === 0) {
     return (
-      <div className="relative h-screen overflow-hidden mt-[80px] bg-gray-900" />
+      <div className="hidden md:block relative h-screen overflow-hidden mt-[80px] bg-gray-900" />
     );
   }
 
   return (
-    <div className="relative h-screen overflow-hidden mt-[80px]">
+    <div className="hidden md:block relative h-screen overflow-hidden mt-[80px]">
       {/* Slides Container */}
       <div className="relative w-full h-full">
         {banners.map((banner, index) => {
@@ -132,8 +132,6 @@ export default function HeroSection() {
       {/* Navigation Arrows - Only show if more than 1 banner */}
       {banners.length > 1 && (
         <>
-
-
           {/* Slide Indicators */}
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
             {banners.map((_, index) => (
