@@ -161,10 +161,40 @@ export default function Navbar() {
       <div className="border-b border-gray-200">
         <div className="w-full px-6 lg:px-12">
           <div className="flex items-center justify-between h-21">
-            <Link href="/" className="flex-shrink-0">
-              <Image src="/logo.png" alt="Logo" width={130} height={100} priority />
-            </Link>
-
+<Link href="/" className="flex-shrink-0 flex items-center gap-2 sm:gap-2.5 h-full">
+  <Image
+    src="/logo.png"
+    alt="Logo"
+    width={226}
+    height={353}
+    priority
+    className="h-14 sm:h-16 md:h-[68px] w-auto object-contain"
+  />
+  <div className="flex flex-col leading-none">
+    <span
+      className="font-black text-2xl sm:text-3xl md:text-4xl tracking-wide italic inline-block pr-1"
+      style={{
+        background: "linear-gradient(180deg, #ff3b30 0%, #b30000 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+        letterSpacing: "0.02em",
+        lineHeight: 1.1,
+      }}
+    >
+      BIKER&apos;S
+    </span>
+    <span
+      className="font-bold text-xs sm:text-sm md:text-base tracking-[0.3em] self-end -mt-1"
+      style={{
+        background: "linear-gradient(180deg, #ff3b30 0%, #b30000 100%)",
+        WebkitBackgroundClip: "text",
+        WebkitTextFillColor: "transparent",
+      }}
+    >
+      STUDIO
+    </span>
+  </div>
+</Link>
             <div className="hidden md:flex flex-1 max-w-3xl mx-12">
               <div className="relative w-full" ref={searchRef}>
                 <input
