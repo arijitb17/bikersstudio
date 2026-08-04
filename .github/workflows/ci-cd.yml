@@ -165,6 +165,7 @@ jobs:
 
             # ── Create directories on first deploy ──────────────────────
             mkdir -p ~/bikersstudio/nginx
+            mkdir -p ~/bikersstudio/certbot-webroot
 
             # ── Write .env file ─────────────────────────────────────────
             cat > ~/bikersstudio/.env << EOF
@@ -294,6 +295,7 @@ jobs:
                   - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
                   - /etc/letsencrypt:/etc/letsencrypt:ro
                   - uploads_data:/var/www/uploads:ro
+                  - ./certbot-webroot:/var/www/certbot
                 depends_on:
                   - app
                 networks:
@@ -333,7 +335,14 @@ jobs:
               server {
                 listen 80;
                 server_name bikerstudioindia.store www.bikerstudioindia.store;
-                return 301 https://$host$request_uri;
+
+                location /.well-known/acme-challenge/ {
+                  root /var/www/certbot;
+                }
+
+                location / {
+                  return 301 https://$host$request_uri;
+                }
               }
               server {
                 listen 443 ssl http2;
