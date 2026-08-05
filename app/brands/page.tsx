@@ -72,18 +72,17 @@ export default async function AllBrandsPage() {
                 <span className="absolute bottom-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-neutral-700 group-hover:bg-yellow-400 transition-colors" />
 
                 {/* logo */}
-                <div className="flex-1 w-full flex items-center justify-center">
-                  {brand.logo && (
-                    <Image
-                      src={brand.logo}
-                      alt={brand.name}
-                      width={90}
-                      height={64}
-                      className="object-contain max-h-14 w-auto brightness-0 invert opacity-70
-                                 group-hover:opacity-100 transition-all duration-300"
-                    />
-                  )}
-                </div>
+                <div className="flex-1 w-full flex items-center justify-center bg-white rounded-lg p-2">
+  {brand.logo && (
+    <Image
+      src={brand.logo}
+      alt={brand.name}
+      width={90}
+      height={64}
+      className="object-contain max-h-14 w-auto opacity-90 group-hover:opacity-100 transition-all duration-300"
+    />
+  )}
+</div>
 
                 {/* plate label */}
                 <div className="w-full pt-2 border-t border-neutral-800 group-hover:border-yellow-400/40 transition-colors">
